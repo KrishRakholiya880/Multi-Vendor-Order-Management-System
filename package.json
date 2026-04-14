@@ -1,0 +1,30 @@
+{
+  "name": "multi-vendor-order-management-system",
+  "version": "1.0.0",
+  "description": "Node.js | Express | MySQL | Redis — Backend API for a multi-vendor platform with role-based access, order lifecycle management, stock control, caching, and structured logging.",
+  "homepage": "https://github.com/KrishRakholiya880/Multi-Vendor-Order-Management-System#readme",
+  "bugs": {
+    "url": "https://github.com/KrishRakholiya880/Multi-Vendor-Order-Management-System/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/KrishRakholiya880/Multi-Vendor-Order-Management-System.git"
+  },
+  "license": "ISC",
+  "author": "Krish Rakholiya",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "dev": "nodemon src/server.js"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.14"
+  },
+  "dependencies": {
+    "dotenv-safe": "^9.1.0",
+    "express": "^5.2.1",
+    "mysql2": "^3.22.0",
+    "redis": "^5.11.0",
+    "sequelize": "^6.37.8"
+  }
+}
