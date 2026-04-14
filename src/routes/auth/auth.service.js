@@ -1,7 +1,7 @@
 const { Op } = require("sequelize");
 const { sequelize } = require("../../db/models");
 const authDb = require("../../dbUtils/authDb");
-const { hashPassword } = require("../../helper/bcrypt");
+const { hashPassword, comparePassword } = require("../../helper/bcrypt");
 const { generateAccessAndRefreshTokens } = require("../../helper/authHelper");
 
 // register
@@ -42,4 +42,43 @@ const register = async (body) => {
   return { data, accessToken, refreshToken };
 };
 
-module.exports = { register };
+const login = async (body) => {
+  const { email, password } = body;
+
+  const query = {
+    email: {
+      [Op.eq]: `${email}`,
+    },
+  };
+
+  const existingUser = await authDb.findOne(query);
+
+  if (!existingUser) {
+    throw new Error("USER_NOT_FOUND");
+  }
+
+  const isSamePassword = await comparePassword(
+    password,
+    existingUser?.password,
+  );
+
+  if (!isSamePassword) {
+    throw new Error("WRONG_PASSWORD");
+  }
+
+  const { accessToken, refreshToken } = generateAccessAndRefreshTokens(
+    existingUser.toJSON(),
+  );
+
+  const data = {
+    fullname: existingUser.fullname,
+    email: existingUser.email,
+    phoneNumber: existingUser.phoneNumber,
+    role: existingUser.role,
+    isActive: existingUser.isActive,
+  };
+
+  return { data, accessToken, refreshToken };
+};
+
+module.exports = { register, login };
