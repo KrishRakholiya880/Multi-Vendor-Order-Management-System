@@ -13,4 +13,11 @@ module.exports = {
       message: "user already exists!!!",
     },
   },
+  WRONG_PASSWORD: {
+    httpStatusCode: 400,
+    body: {
+      code: "bad request",
+      message: "wrong password!!!",
+    },
+  },
 };
