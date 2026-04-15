@@ -2,7 +2,10 @@ const { Op } = require("sequelize");
 const { sequelize } = require("../../db/models");
 const authDb = require("../../dbUtils/authDb");
 const { hashPassword, comparePassword } = require("../../helper/bcrypt");
-const { generateAccessAndRefreshTokens } = require("../../helper/authHelper");
+const {
+  generateAccessAndRefreshTokens,
+  decodeRefreshToken,
+} = require("../../helper/authHelper");
 
 // register
 const register = async (body) => {
@@ -100,4 +103,21 @@ const logout = async (refreshToken) => {
   return result;
 };
 
-module.exports = { register, login, logout };
+// refreshToken
+const refreshToken = async (oldRefreshToken) => {
+  if (!oldRefreshToken) {
+    throw new Error("REFRESH_TOKEN_REQUIRED");
+  }
+
+  const decodedData = decodeRefreshToken(oldRefreshToken);
+
+  const { accessToken, refreshToken } = generateAccessAndRefreshTokens({
+    id: decodedData?.id,
+  });
+
+  await authDb.update({ refreshToken: refreshToken }, { id: decodedData.id });
+
+  return { accessToken, refreshToken };
+};
+
+module.exports = { register, login, logout, refreshToken };

@@ -13,5 +13,6 @@ router
   .route("/login")
   .post(validate(authValidation.login), authController.login);
 router.route("/logout").post(authController.logout);
+router.route("/refresh").post(authController.refreshToken);
 
 module.exports = router;

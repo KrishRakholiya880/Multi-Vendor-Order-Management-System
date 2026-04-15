@@ -22,4 +22,13 @@ const generateAccessAndRefreshTokens = (data) => {
   }
 };
 
-module.exports = { generateAccessAndRefreshTokens };
+const decodeRefreshToken = (oldRefreshToken) => {
+  try {
+    const decodedData = jwt.decode(oldRefreshToken, REFRESH_TOKEN_SECRET);
+    return decodedData;
+  } catch (error) {
+    console.log(error?.message || error);
+  }
+};
+
+module.exports = { generateAccessAndRefreshTokens, decodeRefreshToken };
