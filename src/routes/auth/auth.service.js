@@ -44,6 +44,7 @@ const register = async (body) => {
   return { data, accessToken, refreshToken };
 };
 
+// login
 const login = async (body) => {
   const { email, password } = body;
 
@@ -68,9 +69,11 @@ const login = async (body) => {
     throw new Error("WRONG_PASSWORD");
   }
 
-  const { accessToken, refreshToken } = generateAccessAndRefreshTokens(
-    existingUser.toJSON(),
-  );
+  const { accessToken, refreshToken } = generateAccessAndRefreshTokens({
+    id: existingUser.id,
+  });
+
+  await authDb.update({ refreshToken: refreshToken }, { id: existingUser.id });
 
   const data = {
     fullname: existingUser.fullname,
@@ -83,4 +86,18 @@ const login = async (body) => {
   return { data, accessToken, refreshToken };
 };
 
-module.exports = { register, login };
+// logout
+const logout = async (refreshToken) => {
+  if (!refreshToken) {
+    throw new Error("REFRESH_TOKEN_REQUIRED");
+  }
+
+  const result = await authDb.update(
+    { refreshToken: null },
+    { refreshToken: refreshToken },
+  );
+
+  return result;
+};
+
+module.exports = { register, login, logout };

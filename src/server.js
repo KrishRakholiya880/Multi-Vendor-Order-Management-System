@@ -9,9 +9,11 @@ const PORT = application.PORT || 9000;
 const indexRoute = require("./routes/indexRoute");
 // errorHandler
 const errorHandler = require("../src/middleware/errorHandler");
+const cookieParser = require("cookie-parser");
 
 // middlewares
 app.use(express.json());
+app.use(cookieParser());
 
 // routes
 app.use("/api", indexRoute);
