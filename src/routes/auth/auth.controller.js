@@ -80,8 +80,30 @@ const logout = async (req, res, next) => {
   }
 };
 
+// refreshToken
+const refreshToken = async (req, res, next) => {
+  const refreshToken = req.cookies.refreshToken;
+  try {
+    const result = await authService.refreshToken(refreshToken);
+
+    // cookie
+    res.cookie("userdata", result?.data);
+    res.cookie("accessToken", result?.accessToken);
+    res.cookie("refreshToken", result?.refreshToken);
+
+    return res.status(200).json({
+      status: true,
+      message: "Refresh token sent successfully!!!",
+      data: result,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   register,
   login,
   logout,
+  refreshToken,
 };
