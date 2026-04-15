@@ -20,4 +20,11 @@ module.exports = {
       message: "wrong password!!!",
     },
   },
+  REFRESH_TOKEN_REQUIRED: {
+    httpStatusCode: 404,
+    body: {
+      code: "not found",
+      message: "Refresh token not provided!!!",
+    },
+  },
 };

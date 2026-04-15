@@ -6,7 +6,7 @@ const findOne = async (query = {}) => {
     const result = await user.findOne({
       where: query,
     });
-    return result;
+    return result.toJSON();
   } catch (error) {
     console.log(error.message || error);
   }

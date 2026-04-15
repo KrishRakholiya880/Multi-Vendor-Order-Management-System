@@ -23,7 +23,9 @@ const register = async (req, res, next) => {
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
-    return res.status(200).json({ status: true, result });
+    return res
+      .status(200)
+      .json({ status: true, message: "User registered successfully", result });
   } catch (error) {
     next(error);
   }
@@ -52,7 +54,27 @@ const login = async (req, res, next) => {
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
-    return res.status(200).json({ status: true, result });
+    return res
+      .status(200)
+      .json({ status: true, message: "User login successfully", result });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// logout
+const logout = async (req, res, next) => {
+  const refreshToken = req.cookies.refreshToken;
+  try {
+    await authService.logout(refreshToken);
+
+    res.clearCookie("userdata");
+    res.clearCookie("accessToken");
+    res.clearCookie("refreshToken");
+
+    return res
+      .status(200)
+      .json({ status: true, message: "User logout successfully" });
   } catch (error) {
     next(error);
   }
@@ -61,4 +83,5 @@ const login = async (req, res, next) => {
 module.exports = {
   register,
   login,
+  logout,
 };
