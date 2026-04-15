@@ -33,6 +33,11 @@ module.exports = {
         type: DataTypes.STRING,
         defaultValue: "customer",
       },
+      refreshToken: {
+        type: DataTypes.STRING(500),
+        allowNull: true,
+        defaultValue: null,
+      },
       createdAt: {
         allowNull: false,
         type: DataTypes.DATE,
