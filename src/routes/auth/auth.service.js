@@ -27,9 +27,11 @@ const register = async (body) => {
 
   const result = await authDb.create(newBody);
 
-  const { accessToken, refreshToken } = generateAccessAndRefreshTokens(
-    result.toJSON(),
-  );
+  const { accessToken, refreshToken } = generateAccessAndRefreshTokens({
+    id: result.id,
+  });
+
+  await authDb.update({ refreshToken: refreshToken }, { id: result.id });
 
   const data = {
     fullname: result.fullname,
