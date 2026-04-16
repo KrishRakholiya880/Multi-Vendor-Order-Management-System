@@ -1,0 +1,30 @@
+module.exports = {
+  USER_NOT_FOUND: {
+    httpStatusCode: 404,
+    body: {
+      code: "not_found",
+      message: "user not found!!!",
+    },
+  },
+  USER_EXISTS: {
+    httpStatusCode: 400,
+    body: {
+      code: "duplicate",
+      message: "user already exists!!!",
+    },
+  },
+  WRONG_PASSWORD: {
+    httpStatusCode: 400,
+    body: {
+      code: "bad request",
+      message: "wrong password!!!",
+    },
+  },
+  REFRESH_TOKEN_REQUIRED: {
+    httpStatusCode: 404,
+    body: {
+      code: "not found",
+      message: "Refresh token not provided!!!",
+    },
+  },
+};
