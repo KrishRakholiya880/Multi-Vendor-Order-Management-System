@@ -1,4 +1,5 @@
 module.exports = {
+  // Authentication
   USER_NOT_FOUND: {
     httpStatusCode: 404,
     body: {
@@ -32,6 +33,22 @@ module.exports = {
     body: {
       code: "invalid",
       message: "Refresh token was invalid or expired!!!",
+    },
+  },
+
+  // Products
+  PRODUCTS_NOT_FOUND: {
+    httpStatusCode: 404,
+    body: {
+      code: "not_found",
+      message: "products not found!!!",
+    },
+  },
+  PRODUCT_NOT_FOUND: {
+    httpStatusCode: 404,
+    body: {
+      code: "not_found",
+      message: "product not found!!!",
     },
   },
 };
