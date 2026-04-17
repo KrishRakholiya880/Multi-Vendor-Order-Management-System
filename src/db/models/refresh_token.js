@@ -1,7 +1,7 @@
 "use strict";
 const { Model } = require("sequelize");
 module.exports = (sequelize, DataTypes) => {
-  class user extends Model {
+  class refresh_token extends Model {
     /**
      * Helper method for defining associations.
      * This method is not a part of Sequelize lifecycle.
@@ -11,7 +11,7 @@ module.exports = (sequelize, DataTypes) => {
       // define association here
     }
   }
-  user.init(
+  refresh_token.init(
     {
       id: {
         allowNull: false,
@@ -19,29 +19,16 @@ module.exports = (sequelize, DataTypes) => {
         primaryKey: true,
         type: DataTypes.INTEGER,
       },
-      full_name: {
-        type: DataTypes.STRING,
-      },
-      email: {
-        allowNull: false,
-        type: DataTypes.STRING,
-        unique: true,
-      },
-      hash_password: {
+      token: {
         type: DataTypes.STRING,
         allowNull: false,
       },
-      phone_number: {
-        type: DataTypes.STRING,
-        unique: true,
+      user_id: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
       },
-      is_active: {
-        type: DataTypes.BOOLEAN,
-        defaultValue: true,
-      },
-      role: {
-        type: DataTypes.ENUM(["customer", "vendor", "admin"]),
-        defaultValue: "customer",
+      expires_at: {
+        type: DataTypes.DATE,
         allowNull: false,
       },
       created_at: {
@@ -49,20 +36,15 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.DATE,
         defaultValue: DataTypes.NOW,
       },
-      updated_at: {
-        allowNull: false,
-        type: DataTypes.DATE,
-        defaultValue: DataTypes.NOW,
-      },
     },
     {
       sequelize,
-      modelName: "user",
-      tableName: "users",
+      modelName: "refresh_token",
+      tableName: "refresh_tokens",
       underscored: true,
       createdAt: false,
       updatedAt: false,
     },
   );
-  return user;
+  return refresh_token;
 };
