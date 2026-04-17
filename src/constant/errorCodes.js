@@ -27,4 +27,11 @@ module.exports = {
       message: "Refresh token not provided!!!",
     },
   },
+  INVALID_REFRESH_TOKEN: {
+    httpStatusCode: 401,
+    body: {
+      code: "invalid",
+      message: "Refresh token was invalid or expired!!!",
+    },
+  },
 };

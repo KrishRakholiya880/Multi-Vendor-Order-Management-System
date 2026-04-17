@@ -9,7 +9,7 @@ module.exports = {
         primaryKey: true,
         type: DataTypes.INTEGER,
       },
-      fullname: {
+      full_name: {
         type: DataTypes.STRING,
       },
       email: {
@@ -17,33 +17,29 @@ module.exports = {
         type: DataTypes.STRING,
         unique: true,
       },
-      password: {
+      hash_password: {
         type: DataTypes.STRING,
         allowNull: false,
       },
-      phoneNumber: {
+      phone_number: {
         type: DataTypes.STRING,
         unique: true,
       },
-      isActive: {
+      is_active: {
         type: DataTypes.BOOLEAN,
         defaultValue: true,
       },
       role: {
-        type: DataTypes.STRING,
+        type: DataTypes.ENUM(["customer", "vendor", "admin"]),
         defaultValue: "customer",
+        allowNull: false,
       },
-      refreshToken: {
-        type: DataTypes.STRING(500),
-        allowNull: true,
-        defaultValue: null,
-      },
-      createdAt: {
+      created_at: {
         allowNull: false,
         type: DataTypes.DATE,
         defaultValue: DataTypes.NOW,
       },
-      updatedAt: {
+      updated_at: {
         allowNull: false,
         type: DataTypes.DATE,
         defaultValue: DataTypes.NOW,
