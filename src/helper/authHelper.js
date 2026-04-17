@@ -1,20 +1,17 @@
 const jwt = require("jsonwebtoken");
+const { v4: uuidv4 } = require("uuid");
 
 const { tokenKeys } = require("../config");
 
 const ACCESS_TOKEN_SECRET = tokenKeys?.ACCESS_TOKEN_SECRET;
 const ACCESS_TOKEN_EXPIRY = tokenKeys?.ACCESS_TOKEN_EXPIRY;
-const REFRESH_TOKEN_SECRET = tokenKeys?.REFRESH_TOKEN_SECRET;
-const REFRESH_TOKEN_EXPIRY = tokenKeys?.REFRESH_TOKEN_EXPIRY;
 
 const generateAccessAndRefreshTokens = (data) => {
   try {
     const accessToken = jwt.sign(data, ACCESS_TOKEN_SECRET, {
       expiresIn: ACCESS_TOKEN_EXPIRY,
     });
-    const refreshToken = jwt.sign(data, REFRESH_TOKEN_SECRET, {
-      expiresIn: REFRESH_TOKEN_EXPIRY,
-    });
+    const refreshToken = uuidv4();
 
     return { accessToken, refreshToken };
   } catch (error) {
@@ -22,13 +19,13 @@ const generateAccessAndRefreshTokens = (data) => {
   }
 };
 
-const decodeRefreshToken = (oldRefreshToken) => {
+const decodeToken = (oldToken) => {
   try {
-    const decodedData = jwt.decode(oldRefreshToken, REFRESH_TOKEN_SECRET);
+    const decodedData = jwt.decode(oldToken, ACCESS_TOKEN_SECRET);
     return decodedData;
   } catch (error) {
     console.log(error?.message || error);
   }
 };
 
-module.exports = { generateAccessAndRefreshTokens, decodeRefreshToken };
+module.exports = { generateAccessAndRefreshTokens, decodeToken };

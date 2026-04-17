@@ -24,7 +24,7 @@ const register = async (req, res, next) => {
     });
 
     return res
-      .status(200)
+      .status(201)
       .json({ status: true, message: "User registered successfully", result });
   } catch (error) {
     next(error);
@@ -87,7 +87,6 @@ const refreshToken = async (req, res, next) => {
     const result = await authService.refreshToken(refreshToken);
 
     // cookie
-    res.cookie("userdata", result?.data);
     res.cookie("accessToken", result?.accessToken);
     res.cookie("refreshToken", result?.refreshToken);
 
@@ -101,9 +100,22 @@ const refreshToken = async (req, res, next) => {
   }
 };
 
+// profile
+const profile = async (req, res, next) => {
+  const accessToken = req.cookies.accessToken;
+  try {
+    const result = await authService.profile(accessToken);
+
+    return res.status(200).json({ status: true, result });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   register,
   login,
   logout,
   refreshToken,
+  profile,
 };
