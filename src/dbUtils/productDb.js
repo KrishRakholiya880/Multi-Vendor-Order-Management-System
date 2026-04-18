@@ -29,7 +29,18 @@ const findAll = async (query = {}, page, limit, attributes = {}) => {
   }
 };
 
+// create
+const create = async (data) => {
+  try {
+    const result = await product.create(data);
+    return result;
+  } catch (error) {
+    console.log(error?.message || error);
+  }
+};
+
 module.exports = {
   findOne,
   findAll,
+  create,
 };

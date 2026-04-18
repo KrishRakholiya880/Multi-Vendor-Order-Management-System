@@ -13,6 +13,23 @@ const getProducts = async (req, res, next) => {
   }
 };
 
+// createProduct
+const createProduct = async (req, res, next) => {
+  const body = req.body;
+  body.vendor_id = req.user.id;
+
+  try {
+    const result = await productService.createProduct(body);
+
+    return res
+      .status(201)
+      .json({ status: true, message: "Product created!!!", result });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   getProducts,
+  createProduct,
 };
