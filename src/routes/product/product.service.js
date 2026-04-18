@@ -5,13 +5,15 @@ const productDb = require("../../dbUtils/productDb");
 // getProducts
 const getProducts = async (search, page = 1, limit = 30) => {
   // const t = await sequelize.transaction()
-
-  const query = {
-    [Op.or]: [
-      { name: { [Op.like]: `${search}` } },
-      { description: { [Op.like]: `${search}` } },
-    ],
-  };
+  let query;
+  if (search) {
+    query = {
+      [Op.or]: [
+        { name: { [Op.like]: `${search}` } },
+        { description: { [Op.like]: `${search}` } },
+      ],
+    };
+  }
 
   const result = await productDb.findAll(query, page, limit, {});
 
@@ -22,6 +24,18 @@ const getProducts = async (search, page = 1, limit = 30) => {
   return result;
 };
 
+// createProduct
+const createProduct = async (data) => {
+  const result = productDb.create(data);
+
+  if (!result) {
+    throw new Error("Error while add product!!!");
+  }
+
+  return result;
+};
+
 module.exports = {
   getProducts,
+  createProduct,
 };

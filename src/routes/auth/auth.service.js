@@ -103,11 +103,24 @@ const login = async (body) => {
     id: existingUser.id,
   });
 
-  // update refresh token to refresh_token db
-  await refreshTokenDb.update(
-    { token: refreshToken },
-    { user_id: existingUser?.id },
-  );
+  const existingToken = await refreshTokenDb.findOne({
+    user_id: existingUser?.id,
+  });
+
+  const refreshTokenData = {
+    user_id: existingUser?.id,
+    token: refreshToken,
+    expires_at: expiryDate(),
+  };
+
+  if (!existingToken) {
+    await refreshTokenDb.create(refreshTokenData);
+  } else {
+    await refreshTokenDb.update(
+      { token: refreshToken },
+      { user_id: existingUser?.id },
+    );
+  }
 
   // removes hash_pasword from response
   delete existingUser?.hash_password;
@@ -154,7 +167,12 @@ const refreshToken = async (oldRefreshToken) => {
     id: result?.user_id,
   });
 
-  await refreshTokenDb.update({ token: refreshToken }, { id: result?.user_id });
+  console.log(result);
+
+  await refreshTokenDb.update(
+    { token: refreshToken },
+    { user_id: result?.user_id },
+  );
 
   return { accessToken, refreshToken };
 };
