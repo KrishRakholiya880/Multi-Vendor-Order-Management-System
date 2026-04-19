@@ -2,8 +2,8 @@ const authService = require("./auth.service");
 
 // register
 const register = async (req, res, next) => {
+  const body = req.body;
   try {
-    const body = req.body;
     const result = await authService.register(body);
 
     // cookie
@@ -33,8 +33,8 @@ const register = async (req, res, next) => {
 
 // login
 const login = async (req, res, next) => {
+  const body = req.body;
   try {
-    const body = req.body;
     const result = await authService.login(body);
 
     // cookie
@@ -64,7 +64,7 @@ const login = async (req, res, next) => {
 
 // logout
 const logout = async (req, res, next) => {
-  const refreshToken = req.cookies.refreshToken;
+  const refreshToken = req.cookies?.refreshToken;
   try {
     await authService.logout(refreshToken);
 
@@ -82,7 +82,7 @@ const logout = async (req, res, next) => {
 
 // refreshToken
 const refreshToken = async (req, res, next) => {
-  const refreshToken = req.cookies.refreshToken;
+  const refreshToken = req.cookies?.refreshToken;
   try {
     const result = await authService.refreshToken(refreshToken);
 
@@ -93,7 +93,7 @@ const refreshToken = async (req, res, next) => {
     return res.status(200).json({
       status: true,
       message: "Refresh token sent successfully!!!",
-      data: result,
+      result,
     });
   } catch (error) {
     next(error);

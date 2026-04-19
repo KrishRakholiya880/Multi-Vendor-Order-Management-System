@@ -4,7 +4,7 @@ const router = express.Router();
 
 const validate = require("../../middleware/validate");
 const productValidation = require("./product.validation");
-const authController = require("./product.controller");
+const productController = require("./product.controller");
 const {
   isVendorOrAdmin,
   isUserLoggedIn,
@@ -12,16 +12,19 @@ const {
 
 router
   .route("/")
-  .get(
-    isUserLoggedIn,
-    validate(productValidation.getProducts),
-    authController.getProducts,
-  )
+  .get(validate(productValidation.getProducts), productController.getProducts)
   .post(
     isUserLoggedIn,
     isVendorOrAdmin,
     validate(productValidation.createProduct),
-    authController.createProduct,
+    productController.createProduct,
+  );
+
+router
+  .route("/:id")
+  .get(
+    validate(productValidation.getProductById),
+    productController.getProductById,
   );
 
 module.exports = router;
