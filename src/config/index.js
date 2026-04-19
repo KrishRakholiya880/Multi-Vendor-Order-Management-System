@@ -1,6 +1,6 @@
-const dotenfSafe = require("dotenv-safe");
+const dotenvSafe = require("dotenv-safe");
 
-dotenfSafe.config({
+dotenvSafe.config({
   path: ".env",
   sample: ".env.example",
   allowEmptyValues: true,

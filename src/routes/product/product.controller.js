@@ -2,12 +2,23 @@ const productService = require("./product.service");
 
 // getProducts
 const getProducts = async (req, res, next) => {
+  const { search, page, limit } = req.params;
   try {
-    const { search, page, limit } = req.params;
-
     const result = await productService.getProducts(search, page, limit);
 
-    return res.status(200).json({ result });
+    return res.status(200).json({ status: true, result });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// getProductById
+const getProductById = async (req, res, next) => {
+  const { id } = req.params;
+  try {
+    const result = await productService.getProductById(id);
+
+    return res.status(200).json({ status: true, result });
   } catch (error) {
     next(error);
   }
@@ -31,5 +42,6 @@ const createProduct = async (req, res, next) => {
 
 module.exports = {
   getProducts,
+  getProductById,
   createProduct,
 };

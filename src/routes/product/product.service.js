@@ -15,10 +15,41 @@ const getProducts = async (search, page = 1, limit = 30) => {
     };
   }
 
-  const result = await productDb.findAll(query, page, limit, {});
+  const result = await productDb.findAll(query, page, limit, [
+    "id",
+    "name",
+    "description",
+    ["category_id", "category"],
+    ["vendor_id", "vendor"],
+    "status",
+  ]);
 
   if (!result || (Array.isArray(result) && result.length === 0)) {
     throw new Error("PRODUCTS_NOT_FOUND");
+  }
+
+  return result;
+};
+
+// getProductById
+const getProductById = async (id) => {
+  const query = {
+    id: {
+      [Op.eq]: `${id}`,
+    },
+  };
+
+  const result = await productDb.findOne(query, [
+    "id",
+    "name",
+    "description",
+    ["category_id", "category"],
+    ["vendor_id", "vendor"],
+    "status",
+  ]);
+
+  if (!result) {
+    throw new Error("PRODUCT_NOT_FOUND");
   }
 
   return result;
@@ -37,5 +68,6 @@ const createProduct = async (data) => {
 
 module.exports = {
   getProducts,
+  getProductById,
   createProduct,
 };

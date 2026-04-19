@@ -96,7 +96,7 @@ const login = async (body) => {
   );
 
   if (!isSamePassword) {
-    throw new Error("WRONG_PASSWORD");
+    throw new Error("INVALID_PASSWORD");
   }
 
   const { accessToken, refreshToken } = generateAccessAndRefreshTokens({
@@ -136,7 +136,9 @@ const logout = async (refreshToken) => {
   }
 
   const query = {
-    token: refreshToken,
+    token: {
+      [OP.eq]: `${refreshToken}`,
+    },
   };
 
   const result = await refreshTokenDb.remove(query);
@@ -151,7 +153,9 @@ const refreshToken = async (oldRefreshToken) => {
   }
 
   const query = {
-    token: oldRefreshToken,
+    token: {
+      [OP.eq]: `${oldRefreshToken}`,
+    },
   };
 
   const result = await refreshTokenDb.findOne(query);
@@ -167,8 +171,6 @@ const refreshToken = async (oldRefreshToken) => {
     id: result?.user_id,
   });
 
-  console.log(result);
-
   await refreshTokenDb.update(
     { token: refreshToken },
     { user_id: result?.user_id },
@@ -182,7 +184,9 @@ const profile = async (accessToken) => {
   // const t = sequelize.transaction();
   const decodedData = decodeToken(accessToken);
   const query = {
-    id: decodedData?.id,
+    id: {
+      [OP.eq]: `${decodedData.id}`,
+    },
   };
 
   const result = await authDb.findOne(query, [

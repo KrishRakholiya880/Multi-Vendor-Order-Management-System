@@ -1,12 +1,13 @@
 const { product } = require("../db/models");
 
 // findOne
-const findOne = async (query = {}) => {
+const findOne = async (query = {}, attributes = {}) => {
   try {
     const result = await product.findOne({
       where: query,
+      attributes,
     });
-    return result;
+    return result.toJSON() || result;
   } catch (error) {
     console.log(error?.message || error);
   }

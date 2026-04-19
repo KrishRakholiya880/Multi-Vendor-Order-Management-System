@@ -21,7 +21,14 @@ const createProduct = {
   }),
 };
 
+const getProductById = {
+  params: Joi.object({
+    id: Joi.number().integer().optional(),
+  }),
+};
+
 module.exports = {
   getProducts,
+  getProductById,
   createProduct,
 };
