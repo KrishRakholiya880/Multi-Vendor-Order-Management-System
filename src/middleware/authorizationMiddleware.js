@@ -1,5 +1,6 @@
 const { decodeToken } = require("../helper/authHelper");
 const authDb = require("../dbUtils/authDb");
+const productDb = require("../dbUtils/productDb");
 
 const isUserLoggedIn = async (req, res, next) => {
   const accessToken = req.cookies.accessToken;
@@ -41,7 +42,28 @@ const isVendorOrAdmin = async (req, res, next) => {
   throw new Error("ACCESS_DENIED");
 };
 
+const checkVendorProductOrNot = async (req, res, next) => {
+  const user = req.user;
+  const role = req.user?.role;
+  if (role === "vendor") {
+    const { id } = req.params;
+
+    const product = await productDb.findOne({ id: id });
+
+    if (product?.vendor_id !== user?.id) {
+      throw new Error("ACCESS_DENIED_FOR_PRODUCT");
+    }
+
+    req.user = user;
+    next();
+  } else {
+    req.user = user;
+    next();
+  }
+};
+
 module.exports = {
   isUserLoggedIn,
   isVendorOrAdmin,
+  checkVendorProductOrNot,
 };

@@ -3,18 +3,19 @@ const { sequelize } = require("../../db/models");
 const productDb = require("../../dbUtils/productDb");
 
 // getProducts
-const getProducts = async (search, page = 1, limit = 30) => {
+const getProducts = async (search, page, limit) => {
   // const t = await sequelize.transaction()
   let query;
   if (search) {
+    const cleanSearch = search.replace(/^"|"$/g, "");
+
     query = {
       [Op.or]: [
-        { name: { [Op.like]: `${search}` } },
-        { description: { [Op.like]: `${search}` } },
+        { name: { [Op.like]: `%${cleanSearch}%` } },
+        { description: { [Op.like]: `%${cleanSearch}%` } },
       ],
     };
   }
-
   const result = await productDb.findAll(query, page, limit, [
     "id",
     "name",
@@ -60,7 +61,24 @@ const createProduct = async (data) => {
   const result = productDb.create(data);
 
   if (!result) {
-    throw new Error("Error while add product!!!");
+    throw new Error("PRODUCT_CREATION_FAILED");
+  }
+
+  return result;
+};
+
+// updateProduct
+const updateProduct = async (data, id) => {
+  const query = {
+    id: {
+      [Op.eq]: `${id}`,
+    },
+  };
+
+  const result = await productDb.update(data, query);
+
+  if (!result) {
+    throw new Error("PRODUCT_UPDATE_FAILED");
   }
 
   return result;
@@ -70,4 +88,5 @@ module.exports = {
   getProducts,
   getProductById,
   createProduct,
+  updateProduct,
 };
