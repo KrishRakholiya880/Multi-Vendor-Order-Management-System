@@ -8,13 +8,13 @@ module.exports = {
       "Users",
       [
         {
-          full_name: "Raj Patel",
-          email: "rajpatel@gmail.com",
+          full_name: "Admin",
+          email: "admin1@gmail.com",
           hash_password:
-            "$2b$10$1UlyT8TB.SveVurF9uv/huMCYpGrKluOeNKV68EFZiCTZlKkS1jom",
-          phone_number: "2345676543",
+            "$2b$10$xJU550Im8Va76FlKTTrkMun8oFX3mVBbuu28x0rIXWM4k4WneQxOG",
+          phone_number: "2398765432",
           is_active: true,
-          role: "vendor",
+          role: "admin",
           created_at: new Date(),
           updated_at: new Date(),
         },
@@ -25,10 +25,6 @@ module.exports = {
 
   async down(queryInterface, Sequelize) {
     // Use bulkDelete. It's safer to delete by a specific field like email or ID
-    return queryInterface.bulkDelete(
-      "Users",
-      { email: "rajpatel@gmail.com" },
-      {},
-    );
+    return queryInterface.bulkDelete("Users", {});
   },
 };

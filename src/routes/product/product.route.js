@@ -8,6 +8,7 @@ const productController = require("./product.controller");
 const {
   isVendorOrAdmin,
   isUserLoggedIn,
+  checkVendorProductOrNot,
 } = require("../../middleware/authorizationMiddleware");
 
 router
@@ -25,6 +26,13 @@ router
   .get(
     validate(productValidation.getProductById),
     productController.getProductById,
+  )
+  .patch(
+    isUserLoggedIn,
+    isVendorOrAdmin,
+    checkVendorProductOrNot,
+    validate(productValidation.updateProduct),
+    productController.updateProduct,
   );
 
 module.exports = router;

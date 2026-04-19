@@ -27,8 +27,25 @@ const getProductById = {
   }),
 };
 
+const updateProduct = {
+  params: Joi.object({
+    id: Joi.number().integer().optional(),
+  }),
+  body: Joi.object({
+    name: Joi.string().trim().min(3).max(50).optional(),
+    description: Joi.string().trim().min(10).max(200).optional(),
+    category_id: Joi.number().optional(),
+    status: Joi.string()
+      .valid("active", "inactive", "out_of_stock")
+      .default("active"),
+    price: Joi.number().precision(2).positive().optional(),
+    stock: Joi.number().integer().min(0).positive().default(0),
+  }),
+};
+
 module.exports = {
   getProducts,
   getProductById,
   createProduct,
+  updateProduct,
 };

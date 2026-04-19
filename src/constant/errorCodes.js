@@ -15,6 +15,13 @@ module.exports = {
         "You do not have the necessary permissions to perform this action!!!",
     },
   },
+  ACCESS_DENIED_FOR_PRODUCT: {
+    httpStatusCode: 403,
+    body: {
+      code: "forbidden",
+      message: "You can't update/delete another vendor's products!!!",
+    },
+  },
   ACCESS_TOKEN_REQUIRED: {
     httpStatusCode: 401,
     body: {
@@ -81,6 +88,20 @@ module.exports = {
     body: {
       code: "not_found",
       message: "product not found!!!",
+    },
+  },
+  PRODUCT_CREATION_FAILED: {
+    httpStatusCode: 500,
+    body: {
+      code: "creation_failed",
+      message: "Failed to add the product!!!",
+    },
+  },
+  PRODUCT_UPDATE_FAILED: {
+    httpStatusCode: 500,
+    body: {
+      code: "update_failed",
+      message: "Failed to update the product!!!",
     },
   },
 };

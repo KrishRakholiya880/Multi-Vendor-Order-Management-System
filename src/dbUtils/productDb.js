@@ -40,8 +40,19 @@ const create = async (data) => {
   }
 };
 
+// update
+const update = async (data, query, attributes = {}) => {
+  const result = await product.update(data, {
+    where: query,
+    attributes,
+  });
+
+  return result;
+};
+
 module.exports = {
   findOne,
   findAll,
   create,
+  update,
 };

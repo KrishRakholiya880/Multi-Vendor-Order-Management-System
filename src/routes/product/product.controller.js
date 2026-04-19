@@ -2,9 +2,13 @@ const productService = require("./product.service");
 
 // getProducts
 const getProducts = async (req, res, next) => {
-  const { search, page, limit } = req.params;
+  const { search, page, limit } = req.query;
   try {
-    const result = await productService.getProducts(search, page, limit);
+    const result = await productService.getProducts(
+      search,
+      Number(page) || 1,
+      Number(limit) || 30,
+    );
 
     return res.status(200).json({ status: true, result });
   } catch (error) {
@@ -40,8 +44,33 @@ const createProduct = async (req, res, next) => {
   }
 };
 
+// updateProduct
+const updateProduct = async (req, res, next) => {
+  const body = req.body;
+  const { id } = req.params;
+
+  let updateData = {};
+
+  for (const el of Object.keys(body)) {
+    if (body[el] !== undefined) {
+      updateData[el] = body[el];
+    }
+  }
+
+  try {
+    const result = await productService.updateProduct(updateData, id);
+
+    return res
+      .status(200)
+      .json({ status: true, message: "Product updated!!!" });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   getProducts,
   getProductById,
   createProduct,
+  updateProduct,
 };
