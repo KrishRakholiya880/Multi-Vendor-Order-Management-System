@@ -84,10 +84,24 @@ const changeProductStatusById = async (req, res, next) => {
   }
 };
 
+// removeProductById
+const removeProductById = async (req, res, next) => {
+  const { id } = req.params;
+
+  try {
+    const result = await productService.removeProductById(id);
+
+    return res.status(200).json({ status: true, message: "Product removed!!" });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   getProducts,
   getProductById,
   createProduct,
   updateProduct,
   changeProductStatusById,
+  removeProductById,
 };

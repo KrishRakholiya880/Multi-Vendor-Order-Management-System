@@ -33,6 +33,13 @@ router
     checkVendorProductOrNot,
     validate(productValidation.updateProduct),
     productController.updateProduct,
+  )
+  .delete(
+    isUserLoggedIn,
+    isVendorOrAdmin,
+    checkVendorProductOrNot,
+    validate(productValidation.removeProductById),
+    productController.removeProductById,
   );
 
 router

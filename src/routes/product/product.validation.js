@@ -23,13 +23,13 @@ const createProduct = {
 
 const getProductById = {
   params: Joi.object({
-    id: Joi.number().integer().optional(),
+    id: Joi.number().integer().required(),
   }),
 };
 
 const updateProduct = {
   params: Joi.object({
-    id: Joi.number().integer().optional(),
+    id: Joi.number().integer().required(),
   }),
   body: Joi.object({
     name: Joi.string().trim().min(3).max(50).optional(),
@@ -49,10 +49,17 @@ const changeProductStatus = {
   }),
 };
 
+const removeProductById = {
+  params: Joi.object({
+    id: Joi.number().integer().required(),
+  }),
+};
+
 module.exports = {
   getProducts,
   getProductById,
   createProduct,
   updateProduct,
   changeProductStatus,
+  removeProductById,
 };
