@@ -21,6 +21,11 @@ module.exports = {
         type: DataTypes.INTEGER,
         allowNull: false,
       },
+      sku: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        unqiue: true,
+      },
       status: {
         type: DataTypes.ENUM(["active", "inactive", "out_of_stock"]),
         defaultValue: "active",

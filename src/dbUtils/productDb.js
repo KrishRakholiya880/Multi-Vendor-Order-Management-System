@@ -7,7 +7,7 @@ const findOne = async (query = {}, attributes = {}) => {
       where: query,
       attributes,
     });
-    return result.toJSON() || result;
+    return result.toJSON();
   } catch (error) {
     console.log(error?.message || error);
   }
@@ -24,7 +24,7 @@ const findAll = async (query = {}, page, limit, attributes = {}) => {
       offset,
       attributes,
     });
-    return result;
+    return result.toJSON();
   } catch (error) {
     console.log(error?.message || error);
   }
@@ -34,7 +34,7 @@ const findAll = async (query = {}, page, limit, attributes = {}) => {
 const create = async (data) => {
   try {
     const result = await product.create(data);
-    return result;
+    return result.toJSON();
   } catch (error) {
     console.log(error?.message || error);
   }

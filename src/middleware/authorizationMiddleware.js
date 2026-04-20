@@ -50,14 +50,16 @@ const checkVendorProductOrNot = async (req, res, next) => {
 
     const product = await productDb.findOne({ id: id });
 
+    if (!product) {
+      throw new Error("PRODUCT_NOT_FOUND");
+    }
+
     if (product?.vendor_id !== user?.id) {
       throw new Error("ACCESS_DENIED_FOR_PRODUCT");
     }
 
-    req.user = user;
     next();
   } else {
-    req.user = user;
     next();
   }
 };

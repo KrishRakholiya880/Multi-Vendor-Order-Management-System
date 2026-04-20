@@ -18,6 +18,39 @@ module.exports = {
           created_at: new Date(),
           updated_at: new Date(),
         },
+        {
+          full_name: "Raj Patel",
+          email: "rajpatel@gmail.com",
+          hash_password:
+            "$2b$10$yMj1yZXkxWvrAINd0emeUuWmOCwf2ar64vg9j3JKMZWpIiCEEW/Rq",
+          phone_number: "2300765432",
+          is_active: true,
+          role: "vendor",
+          created_at: new Date(),
+          updated_at: new Date(),
+        },
+        {
+          full_name: "Meet Patel",
+          email: "meetpatel@gmail.com",
+          hash_password:
+            "$2b$10$yMj1yZXkxWvrAINd0emeUuWmOCwf2ar64vg9j3JKMZWpIiCEEW/Rq",
+          phone_number: "2398763432",
+          is_active: true,
+          role: "vendor",
+          created_at: new Date(),
+          updated_at: new Date(),
+        },
+        {
+          full_name: "Jeet Patel",
+          email: "jeetpatel@gmail.com",
+          hash_password:
+            "$2b$10$yMj1yZXkxWvrAINd0emeUuWmOCwf2ar64vg9j3JKMZWpIiCEEW/Rq",
+          phone_number: "2678763432",
+          is_active: false,
+          role: "vendor",
+          created_at: new Date(),
+          updated_at: new Date(),
+        },
       ],
       {},
     );
