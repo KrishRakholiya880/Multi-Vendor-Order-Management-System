@@ -19,7 +19,7 @@ module.exports = {
     httpStatusCode: 403,
     body: {
       code: "forbidden",
-      message: "You can't update/delete another vendor's products!!!",
+      message: "You can't update/delete other vendor's products!!!",
     },
   },
   ACCESS_TOKEN_REQUIRED: {
@@ -102,6 +102,14 @@ module.exports = {
     body: {
       code: "update_failed",
       message: "Failed to update the product!!!",
+    },
+  },
+  PRODUCT_UPDATE_STATUS_FAILED: {
+    httpStatusCode: 400,
+    body: {
+      code: "update_failed",
+      message:
+        "Status of Product already same. You can't update status with same status!!!",
     },
   },
 };

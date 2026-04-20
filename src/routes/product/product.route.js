@@ -35,4 +35,14 @@ router
     productController.updateProduct,
   );
 
+router
+  .route("/changeStatus/:id")
+  .patch(
+    isUserLoggedIn,
+    isVendorOrAdmin,
+    checkVendorProductOrNot,
+    validate(productValidation.changeProductStatus),
+    productController.changeProductStatusById,
+  );
+
 module.exports = router;

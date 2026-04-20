@@ -84,9 +84,35 @@ const updateProduct = async (data, id) => {
   return result;
 };
 
+// changeProductStatusById
+const changeProductStatusById = async (id, status) => {
+  const query = {
+    id: {
+      [Op.eq]: `${id}`,
+    },
+  };
+
+  const isProductExists = await productDb.findOne(query);
+
+  if (!isProductExists) {
+    throw new Error("PRODUCT_NOT_FOUND");
+  }
+
+  if (isProductExists?.status === status) {
+    throw new Error("PRODUCT_UPDATE_STATUS_FAILED");
+  }
+
+  const result = await productDb.update({ status: status }, query);
+
+  if (result === 0) {
+    throw new Error("PRODUCT_UPDATE_FAILED");
+  }
+};
+
 module.exports = {
   getProducts,
   getProductById,
   createProduct,
   updateProduct,
+  changeProductStatusById,
 };

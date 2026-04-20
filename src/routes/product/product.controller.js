@@ -68,9 +68,26 @@ const updateProduct = async (req, res, next) => {
   }
 };
 
+// changeProductStatusById
+const changeProductStatusById = async (req, res, next) => {
+  const { id } = req.params;
+  const { status } = req.body;
+
+  try {
+    const result = await productService.changeProductStatusById(id, status);
+
+    return res
+      .status(200)
+      .json({ status: true, message: "Product status changed!!!" });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   getProducts,
   getProductById,
   createProduct,
   updateProduct,
+  changeProductStatusById,
 };

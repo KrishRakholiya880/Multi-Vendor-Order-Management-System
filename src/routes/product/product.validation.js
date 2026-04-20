@@ -43,9 +43,16 @@ const updateProduct = {
   }),
 };
 
+const changeProductStatus = {
+  body: Joi.object({
+    status: Joi.string().valid("active", "inactive", "out_of_stock").required(),
+  }),
+};
+
 module.exports = {
   getProducts,
   getProductById,
   createProduct,
   updateProduct,
+  changeProductStatus,
 };
