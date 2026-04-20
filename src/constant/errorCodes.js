@@ -90,6 +90,13 @@ module.exports = {
       message: "product not found!!!",
     },
   },
+  PRODUCT_EXISTS: {
+    httpStatusCode: 409,
+    body: {
+      code: "duplicate_product",
+      message: "product already exists!!!",
+    },
+  },
   PRODUCT_CREATION_FAILED: {
     httpStatusCode: 500,
     body: {

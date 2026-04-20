@@ -44,8 +44,8 @@ const createProduct = async (req, res, next) => {
   }
 };
 
-// updateProduct
-const updateProduct = async (req, res, next) => {
+// updateProductById
+const updateProductById = async (req, res, next) => {
   const body = req.body;
   const { id } = req.params;
 
@@ -58,7 +58,7 @@ const updateProduct = async (req, res, next) => {
   }
 
   try {
-    const result = await productService.updateProduct(updateData, id);
+    const result = await productService.updateProductById(updateData, id);
 
     return res
       .status(200)
@@ -101,7 +101,7 @@ module.exports = {
   getProducts,
   getProductById,
   createProduct,
-  updateProduct,
+  updateProductById,
   changeProductStatusById,
   removeProductById,
 };

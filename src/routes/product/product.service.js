@@ -2,6 +2,20 @@ const { Op } = require("sequelize");
 const { sequelize } = require("../../db/models");
 const productDb = require("../../dbUtils/productDb");
 
+// generateRandomString
+const generateRandomString = () => {
+  const chars =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  // Randomly choose length 8 or 9
+  const length = Math.floor(Math.random() * 2) + 8;
+
+  let result = "";
+  for (let i = 0; i < length; i++) {
+    result += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return result;
+};
+
 // getProducts
 const getProducts = async (search, page, limit) => {
   // const t = await sequelize.transaction()
@@ -58,22 +72,54 @@ const getProductById = async (id) => {
 
 // createProduct
 const createProduct = async (data) => {
-  const result = productDb.create(data);
+  let newDataObj;
+
+  if (data?.sku) {
+    newDataObj = { ...data };
+  } else {
+    newDataObj = {
+      sku: generateRandomString(),
+      ...data,
+    };
+  }
+
+  const query = {
+    sku: {
+      [Op.eq]: `${newDataObj?.sku}`,
+    },
+  };
+
+  const isProductExists = await productDb.findOne(query);
+
+  if (isProductExists) {
+    throw new Error("PRODUCT_EXISTS");
+  }
+
+  const result = await productDb.create(newDataObj);
 
   if (!result) {
     throw new Error("PRODUCT_CREATION_FAILED");
   }
 
+  delete result?.created_at;
+  delete result?.updated_at;
+
   return result;
 };
 
-// updateProduct
-const updateProduct = async (data, id) => {
+// updateProductById
+const updateProductById = async (data, id) => {
   const query = {
     id: {
       [Op.eq]: `${id}`,
     },
   };
+
+  const isProductExists = await productDb.findOne(query);
+
+  if (!isProductExists) {
+    throw new Error("PRODUCT_NOT_FOUND");
+  }
 
   const result = await productDb.update(data, query);
 
@@ -107,6 +153,8 @@ const changeProductStatusById = async (id, status) => {
   if (result === 0) {
     throw new Error("PRODUCT_UPDATE_FAILED");
   }
+
+  return result;
 };
 
 // removeProductById
@@ -136,7 +184,7 @@ module.exports = {
   getProducts,
   getProductById,
   createProduct,
-  updateProduct,
+  updateProductById,
   changeProductStatusById,
   removeProductById,
 };

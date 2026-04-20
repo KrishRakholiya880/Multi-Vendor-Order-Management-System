@@ -13,6 +13,7 @@ const createProduct = {
     name: Joi.string().trim().min(3).max(50).required(),
     description: Joi.string().trim().min(10).max(200).required(),
     category_id: Joi.number().required(),
+    sku: Joi.string().min(8).max(9).optional(),
     status: Joi.string()
       .valid("active", "inactive", "out_of_stock")
       .default("active"),
@@ -27,7 +28,7 @@ const getProductById = {
   }),
 };
 
-const updateProduct = {
+const updateProductById = {
   params: Joi.object({
     id: Joi.number().integer().required(),
   }),
@@ -35,6 +36,7 @@ const updateProduct = {
     name: Joi.string().trim().min(3).max(50).optional(),
     description: Joi.string().trim().min(10).max(200).optional(),
     category_id: Joi.number().optional(),
+    sku: Joi.string().min(8).max(9).optional(),
     status: Joi.string()
       .valid("active", "inactive", "out_of_stock")
       .default("active"),
@@ -43,7 +45,7 @@ const updateProduct = {
   }),
 };
 
-const changeProductStatus = {
+const changeProductStatusById = {
   body: Joi.object({
     status: Joi.string().valid("active", "inactive", "out_of_stock").required(),
   }),
@@ -59,7 +61,7 @@ module.exports = {
   getProducts,
   getProductById,
   createProduct,
-  updateProduct,
-  changeProductStatus,
+  updateProductById,
+  changeProductStatusById,
   removeProductById,
 };

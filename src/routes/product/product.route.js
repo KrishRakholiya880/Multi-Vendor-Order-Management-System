@@ -31,8 +31,8 @@ router
     isUserLoggedIn,
     isVendorOrAdmin,
     checkVendorProductOrNot,
-    validate(productValidation.updateProduct),
-    productController.updateProduct,
+    validate(productValidation.updateProductById),
+    productController.updateProductById,
   )
   .delete(
     isUserLoggedIn,
@@ -48,7 +48,7 @@ router
     isUserLoggedIn,
     isVendorOrAdmin,
     checkVendorProductOrNot,
-    validate(productValidation.changeProductStatus),
+    validate(productValidation.changeProductStatusById),
     productController.changeProductStatusById,
   );
 
