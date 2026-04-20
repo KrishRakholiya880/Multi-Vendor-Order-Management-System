@@ -112,4 +112,11 @@ module.exports = {
         "Status of Product already same. You can't update status with same status!!!",
     },
   },
+  PRODUCT_REMOVE_FAILED: {
+    httpStatusCode: 500,
+    body: {
+      code: "remove_failed",
+      message: "Failed to remove the product!!!",
+    },
+  },
 };

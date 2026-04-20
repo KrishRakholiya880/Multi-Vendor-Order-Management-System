@@ -109,10 +109,34 @@ const changeProductStatusById = async (id, status) => {
   }
 };
 
+// removeProductById
+const removeProductById = async (id) => {
+  const query = {
+    id: {
+      [Op.eq]: `${id}`,
+    },
+  };
+
+  const isProductExists = await productDb.findOne(query);
+
+  if (!isProductExists) {
+    throw new Error("PRODUCT_NOT_FOUND");
+  }
+
+  const result = await productDb.destroy(query);
+
+  if (result === 0) {
+    throw new Error("PRODUCT_REMOVE_FAILED");
+  }
+
+  return result;
+};
+
 module.exports = {
   getProducts,
   getProductById,
   createProduct,
   updateProduct,
   changeProductStatusById,
+  removeProductById,
 };

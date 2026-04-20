@@ -49,9 +49,19 @@ const update = async (data, query) => {
   return result;
 };
 
+// destroy
+const destroy = async (query) => {
+  const result = await product.destroy({
+    where: query,
+  });
+
+  return result;
+};
+
 module.exports = {
   findOne,
   findAll,
   create,
   update,
+  destroy,
 };
