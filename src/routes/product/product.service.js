@@ -20,13 +20,18 @@ const generateRandomString = () => {
 const getProducts = async (search, page, limit) => {
   // const t = await sequelize.transaction()
   let query;
-  if (search) {
-    const cleanSearch = search.replace(/^"|"$/g, "");
 
+  query = {
+    status: {
+      [Op.eq]: "active",
+    },
+  };
+  if (search) {
     query = {
+      ...query,
       [Op.or]: [
-        { name: { [Op.like]: `%${cleanSearch}%` } },
-        { description: { [Op.like]: `%${cleanSearch}%` } },
+        { name: { [Op.like]: `%${search}%` } },
+        { description: { [Op.like]: `%${search}%` } },
       ],
     };
   }
