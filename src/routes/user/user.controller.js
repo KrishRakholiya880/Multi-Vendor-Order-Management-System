@@ -30,7 +30,32 @@ const createUser = async (req, res, next) => {
   }
 };
 
+// updateUserById
+const updateUserById = async (req, res, next) => {
+  const { id } = req.params;
+  const body = req.body;
+
+  let updateData = {};
+
+  for (const el of Object.keys(body)) {
+    if (body[el] !== undefined) {
+      updateData[el] = body[el];
+    }
+  }
+
+  console.log(updateData);
+
+  try {
+    const result = await userService.updateUserById(updateData, id);
+
+    return res.status(200).json({ status: true, message: "User updated!!!" });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   getUsers,
   createUser,
+  updateUserById,
 };
