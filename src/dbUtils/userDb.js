@@ -40,8 +40,22 @@ const create = async (data) => {
   }
 };
 
+// update
+const update = async (data, query) => {
+  try {
+    const result = await user.update(data, {
+      where: query,
+    });
+
+    return result;
+  } catch (error) {
+    console.log(error?.message || error);
+  }
+};
+
 module.exports = {
   findOne,
   findAll,
   create,
+  update,
 };

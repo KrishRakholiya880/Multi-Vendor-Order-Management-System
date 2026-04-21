@@ -55,7 +55,49 @@ const createUser = async (body) => {
   return result;
 };
 
+// updateUserById
+const updateUserById = async (data, id) => {
+  const { password } = data;
+
+  let query;
+  let newBody;
+
+  query = {
+    id: {
+      [Op.eq]: `${id}`,
+    },
+  };
+
+  const existingUser = await userDb.findOne(query);
+
+  if (!existingUser) {
+    throw new Error("USER_NOT_FOUND");
+  }
+
+  if (password) {
+    const hashedPassword = await hashPassword(password);
+
+    newBody = {
+      hash_password: hashedPassword,
+      ...data,
+    };
+  } else {
+    newBody = {
+      ...data,
+    };
+  }
+
+  const result = await userDb.update(newBody, query);
+
+  if (result === 0) {
+    throw new Error("USER_NOT_FOUND");
+  }
+
+  return result;
+};
+
 module.exports = {
   getUsers,
   createUser,
+  updateUserById,
 };

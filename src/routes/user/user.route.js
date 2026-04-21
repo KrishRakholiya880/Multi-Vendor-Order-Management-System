@@ -27,4 +27,19 @@ router
     userController.createUser,
   );
 
+router
+  .route("/:id")
+  .patch(
+    isUserLoggedIn,
+    isAdmin,
+    validate(userValidation.updateUserById),
+    userController.updateUserById,
+  );
+//   .post(
+//     isUserLoggedIn,
+//     isAdmin,
+//     validate(userValidation.createUser),
+//     userController.createUser,
+//   );
+
 module.exports = router;
