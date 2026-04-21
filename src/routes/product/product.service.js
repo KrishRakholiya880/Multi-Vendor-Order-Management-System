@@ -1,6 +1,7 @@
 const { Op } = require("sequelize");
 const { sequelize } = require("../../db/models");
 const productDb = require("../../dbUtils/productDb");
+const { category } = require("../../db/models");
 
 // generateRandomString
 const generateRandomString = () => {
@@ -35,14 +36,13 @@ const getProducts = async (search, page, limit) => {
       ],
     };
   }
-  const result = await productDb.findAll(query, page, limit, [
-    "id",
-    "name",
-    "description",
-    ["category_id", "category"],
-    ["vendor_id", "vendor"],
-    "status",
-  ]);
+  const result = await productDb.findAll(
+    query,
+    page,
+    limit,
+    ["id", "name", "description", "category_id", "vendor_id", "status"],
+    { model: category, as: "category", attributes: ["id", "name"] },
+  );
 
   if (!result || (Array.isArray(result) && result.length === 0)) {
     throw new Error("PRODUCTS_NOT_FOUND");
@@ -59,14 +59,11 @@ const getProductById = async (id) => {
     },
   };
 
-  const result = await productDb.findOne(query, [
-    "id",
-    "name",
-    "description",
-    ["category_id", "category"],
-    ["vendor_id", "vendor"],
-    "status",
-  ]);
+  const result = await productDb.findOne(
+    query,
+    ["id", "name", "description", "category_id", "vendor_id", "status"],
+    { model: category, as: "category", attributes: ["id", "name"] },
+  );
 
   if (!result) {
     throw new Error("PRODUCT_NOT_FOUND");
