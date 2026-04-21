@@ -19,9 +19,9 @@ const generateAccessAndRefreshTokens = (data) => {
   }
 };
 
-const decodeToken = (oldToken) => {
+const decodeToken = (token) => {
   try {
-    const decodedData = jwt.decode(oldToken, ACCESS_TOKEN_SECRET);
+    const decodedData = jwt.decode(token, ACCESS_TOKEN_SECRET);
     return decodedData;
   } catch (error) {
     console.log(error?.message || error);
