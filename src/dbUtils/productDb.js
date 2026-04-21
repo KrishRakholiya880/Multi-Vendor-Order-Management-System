@@ -1,11 +1,12 @@
-const { product } = require("../db/models");
+const { product, category } = require("../db/models");
 
 // findOne
-const findOne = async (query = {}, attributes = {}) => {
+const findOne = async (query = {}, attributes = {}, include) => {
   try {
     const result = await product.findOne({
       where: query,
       attributes,
+      include,
     });
     return result.toJSON();
   } catch (error) {
@@ -14,7 +15,7 @@ const findOne = async (query = {}, attributes = {}) => {
 };
 
 // findAll
-const findAll = async (query = {}, page, limit, attributes = {}) => {
+const findAll = async (query = {}, page, limit, attributes = {}, include) => {
   const offset = (page - 1) * limit;
 
   try {
@@ -23,6 +24,7 @@ const findAll = async (query = {}, page, limit, attributes = {}) => {
       limit,
       offset,
       attributes,
+      include,
     });
     return result;
   } catch (error) {
