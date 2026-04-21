@@ -24,7 +24,7 @@ const findAll = async (query = {}, page, limit, attributes = {}) => {
       offset,
       attributes,
     });
-    return result.toJSON();
+    return result;
   } catch (error) {
     console.log(error?.message || error);
   }

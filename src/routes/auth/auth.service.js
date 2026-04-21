@@ -137,7 +137,7 @@ const logout = async (refreshToken) => {
 
   const query = {
     token: {
-      [OP.eq]: `${refreshToken}`,
+      [Op.eq]: `${refreshToken}`,
     },
   };
 
@@ -154,7 +154,7 @@ const refreshToken = async (oldRefreshToken) => {
 
   const query = {
     token: {
-      [OP.eq]: `${oldRefreshToken}`,
+      [Op.eq]: `${oldRefreshToken}`,
     },
   };
 
@@ -185,7 +185,7 @@ const profile = async (accessToken) => {
   const decodedData = decodeToken(accessToken);
   const query = {
     id: {
-      [OP.eq]: `${decodedData.id}`,
+      [Op.eq]: `${decodedData.id}`,
     },
   };
 
