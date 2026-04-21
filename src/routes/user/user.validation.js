@@ -31,8 +31,15 @@ const updateUserById = {
   }).required(),
 };
 
+const removeUserById = {
+  params: Joi.object({
+    id: Joi.number().integer().required(),
+  }).required(),
+};
+
 module.exports = {
   getUsers,
   createUser,
   updateUserById,
+  removeUserById,
 };

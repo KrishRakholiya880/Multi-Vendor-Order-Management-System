@@ -34,12 +34,12 @@ router
     isAdmin,
     validate(userValidation.updateUserById),
     userController.updateUserById,
+  )
+  .delete(
+    isUserLoggedIn,
+    isAdmin,
+    validate(userValidation.removeUserById),
+    userController.removeUserById,
   );
-//   .post(
-//     isUserLoggedIn,
-//     isAdmin,
-//     validate(userValidation.createUser),
-//     userController.createUser,
-//   );
 
 module.exports = router;
