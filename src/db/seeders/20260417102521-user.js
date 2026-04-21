@@ -5,7 +5,7 @@ module.exports = {
   async up(queryInterface, Sequelize) {
     // Use bulkInsert and wrap the object in an array []
     return queryInterface.bulkInsert(
-      "Users",
+      "users",
       [
         {
           full_name: "Admin",
@@ -58,6 +58,6 @@ module.exports = {
 
   async down(queryInterface, Sequelize) {
     // Use bulkDelete. It's safer to delete by a specific field like email or ID
-    return queryInterface.bulkDelete("Users", {});
+    return queryInterface.bulkDelete("users", {});
   },
 };

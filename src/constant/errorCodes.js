@@ -74,6 +74,20 @@ module.exports = {
       message: "The password you entered is incorrect. Please try again!!!",
     },
   },
+  ONLY_ADMIN_ACCESS: {
+    httpStatusCode: 401,
+    body: {
+      code: "unauthorized",
+      message: "Only admins can perform this action!!!",
+    },
+  },
+  ONLY_VENDOR_ACCESS: {
+    httpStatusCode: 401,
+    body: {
+      code: "unauthorized",
+      message: "Only vendors can perform this action!!!",
+    },
+  },
 
   // Products
   PRODUCTS_NOT_FOUND: {
@@ -124,6 +138,50 @@ module.exports = {
     body: {
       code: "remove_failed",
       message: "Failed to remove the product!!!",
+    },
+  },
+
+  // Categories
+  CATEGORIES_NOT_FOUND: {
+    httpStatusCode: 404,
+    body: {
+      code: "not_found",
+      message: "Categories not found!!!",
+    },
+  },
+  CATEGORY_NOT_FOUND: {
+    httpStatusCode: 404,
+    body: {
+      code: "not_found",
+      message: "Category not found!!!",
+    },
+  },
+  CATEGORY_EXISTS: {
+    httpStatusCode: 409,
+    body: {
+      code: "duplicate_category",
+      message: "category already exists!!!",
+    },
+  },
+  CATEGORY_CREATION_FAILED: {
+    httpStatusCode: 500,
+    body: {
+      code: "creation_failed",
+      message: "Failed to add the category!!!",
+    },
+  },
+  CATEGORY_UPDATE_FAILED: {
+    httpStatusCode: 500,
+    body: {
+      code: "update_failed",
+      message: "Failed to update the category!!!",
+    },
+  },
+  CATEGORY_REMOVE_FAILED: {
+    httpStatusCode: 500,
+    body: {
+      code: "remove_failed",
+      message: "Failed to remove the category!!!",
     },
   },
 };
