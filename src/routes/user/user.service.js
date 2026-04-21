@@ -96,8 +96,34 @@ const updateUserById = async (data, id) => {
   return result;
 };
 
+// removeUserById
+const removeUserById = async (id) => {
+  let query;
+
+  query = {
+    id: {
+      [Op.eq]: `${id}`,
+    },
+  };
+
+  const isExist = await userDb.findOne(query);
+
+  if (!isExist) {
+    throw new Error("USER_NOT_FOUND");
+  }
+
+  const result = await userDb.remove(query);
+
+  if (result === 0) {
+    throw new Error("USER_NOT_FOUND");
+  }
+
+  return result;
+};
+
 module.exports = {
   getUsers,
   createUser,
   updateUserById,
+  removeUserById,
 };

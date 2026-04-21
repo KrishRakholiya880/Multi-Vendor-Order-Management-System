@@ -53,9 +53,23 @@ const update = async (data, query) => {
   }
 };
 
+// remove
+const remove = async (query) => {
+  try {
+    const result = await user.destroy({
+      where: query,
+    });
+
+    return result;
+  } catch (error) {
+    console.log(error?.message || error);
+  }
+};
+
 module.exports = {
   findOne,
   findAll,
   create,
   update,
+  remove,
 };

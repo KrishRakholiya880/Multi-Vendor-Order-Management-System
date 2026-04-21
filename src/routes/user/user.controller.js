@@ -54,8 +54,22 @@ const updateUserById = async (req, res, next) => {
   }
 };
 
+// removeUserById
+const removeUserById = async (req, res, next) => {
+  const { id } = req.params;
+
+  try {
+    const result = await userService.removeUserById(id);
+
+    return res.status(200).json({ status: true, message: "User removed!!!" });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   getUsers,
   createUser,
   updateUserById,
+  removeUserById,
 };
