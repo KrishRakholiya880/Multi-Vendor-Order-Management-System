@@ -19,12 +19,12 @@ router
     isAdmin,
     validate(userValidation.getUsers),
     userController.getUsers,
+  )
+  .post(
+    isUserLoggedIn,
+    isAdmin,
+    validate(userValidation.createUser),
+    userController.createUser,
   );
-// router
-//   .route("/login")
-//   .post(validate(userValidation.login), userController.login);
-// router.route("/logout").post(userController.logout);
-// router.route("/refresh").post(userController.refreshToken);
-// router.route("/profile").get(userController.profile);
 
 module.exports = router;
