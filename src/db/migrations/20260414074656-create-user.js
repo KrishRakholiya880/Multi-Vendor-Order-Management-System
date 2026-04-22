@@ -25,9 +25,10 @@ module.exports = {
         type: DataTypes.STRING,
         unique: true,
       },
-      is_active: {
-        type: DataTypes.BOOLEAN,
-        defaultValue: true,
+      status: {
+        type: DataTypes.ENUM(["active", "inactive"]),
+        defaultValue: "active",
+        allowNull: false,
       },
       role: {
         type: DataTypes.ENUM(["customer", "vendor", "admin"]),

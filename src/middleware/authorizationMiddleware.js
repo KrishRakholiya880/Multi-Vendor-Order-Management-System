@@ -20,7 +20,7 @@ const isUserLoggedIn = async (req, res, next) => {
     "full_name",
     "email",
     "phone_number",
-    "is_active",
+    "status",
     "role",
   ]);
 

@@ -57,7 +57,7 @@ module.exports = {
     httpStatusCode: 404,
     body: {
       code: "not_found",
-      message: "No user account was found with the provided credentials!!!",
+      message: "No user account was found!!!",
     },
   },
   USER_EXISTS: {
