@@ -115,6 +115,33 @@ const updateUserById = async (data, id) => {
   return result;
 };
 
+// changeUserStatusById
+const changeUserStatusById = async (id, status) => {
+  const query = {
+    id: {
+      [Op.eq]: `${id}`,
+    },
+  };
+
+  const isUserExists = await userDb.findOne(query);
+
+  if (!isUserExists) {
+    throw new Error("USER_NOT_FOUND");
+  }
+
+  if (isUserExists?.status === status) {
+    throw new Error("USER_UPDATE_STATUS_FAILED");
+  }
+
+  const result = await userDb.update({ status: status }, query);
+
+  if (result === 0) {
+    throw new Error("USER_UPDATE_FAILED");
+  }
+
+  return result;
+};
+
 // removeUserById
 const removeUserById = async (id) => {
   let query;
@@ -161,5 +188,6 @@ module.exports = {
   getUserById,
   createUser,
   updateUserById,
+  changeUserStatusById,
   removeUserById,
 };

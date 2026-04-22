@@ -66,6 +66,22 @@ const updateUserById = async (req, res, next) => {
   }
 };
 
+// changeUserStatusById
+const changeUserStatusById = async (req, res, next) => {
+  const { id } = req.params;
+  const { status } = req.body;
+
+  try {
+    const result = await userService.changeUserStatusById(id, status);
+
+    return res
+      .status(200)
+      .json({ status: true, message: "Users status changed!!!" });
+  } catch (error) {
+    next(error);
+  }
+};
+
 // removeUserById
 const removeUserById = async (req, res, next) => {
   const { id } = req.params;
@@ -84,5 +100,6 @@ module.exports = {
   getUserById,
   createUser,
   updateUserById,
+  changeUserStatusById,
   removeUserById,
 };

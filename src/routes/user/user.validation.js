@@ -20,7 +20,10 @@ const createUser = {
     email: Joi.string().email().required(),
     password: Joi.string().min(6).max(15).required(),
     phone_number: Joi.string().length(10).required(),
-    status: Joi.boolean().optional().default("active"),
+    status: Joi.string()
+      .optional()
+      .valid("active", "inactive")
+      .default("active"),
   }).required(),
 };
 
@@ -33,8 +36,17 @@ const updateUserById = {
     email: Joi.string().email().optional(),
     password: Joi.string().min(6).max(15).optional(),
     phone_number: Joi.string().length(10).optional(),
-    status: Joi.boolean().optional().default("active"),
+    status: Joi.string()
+      .optional()
+      .valid("active", "inactive")
+      .default("active"),
   }).required(),
+};
+
+const changeUserStatusById = {
+  body: Joi.object({
+    status: Joi.string().valid("active", "inactive").required(),
+  }),
 };
 
 const removeUserById = {
@@ -49,4 +61,5 @@ module.exports = {
   createUser,
   updateUserById,
   removeUserById,
+  changeUserStatusById,
 };

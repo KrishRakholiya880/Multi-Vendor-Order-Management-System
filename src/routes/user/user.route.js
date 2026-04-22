@@ -48,4 +48,13 @@ router
     userController.removeUserById,
   );
 
+router
+  .route("/changeStatus/:id")
+  .patch(
+    isUserLoggedIn,
+    isAdmin,
+    validate(userValidation.changeUserStatusById),
+    userController.changeUserStatusById,
+  );
+
 module.exports = router;
