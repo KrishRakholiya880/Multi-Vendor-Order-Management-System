@@ -2,38 +2,51 @@
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, DataTypes) {
-    await queryInterface.createTable("users", {
+    await queryInterface.createTable("products", {
       id: {
         allowNull: false,
         autoIncrement: true,
         primaryKey: true,
         type: DataTypes.INTEGER,
       },
-      full_name: {
-        type: DataTypes.STRING,
-      },
-      email: {
-        allowNull: false,
-        type: DataTypes.STRING,
-        unique: true,
-      },
-      hash_password: {
+      name: {
         type: DataTypes.STRING,
         allowNull: false,
       },
-      phone_number: {
+      description: {
         type: DataTypes.STRING,
-        unique: true,
+        allowNull: false,
+      },
+      category_id: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+      },
+      sku: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        unqiue: true,
       },
       status: {
-        type: DataTypes.ENUM(["active", "inactive"]),
+        type: DataTypes.ENUM(["active", "inactive", "out_of_stock"]),
         defaultValue: "active",
         allowNull: false,
       },
-      role: {
-        type: DataTypes.ENUM(["customer", "vendor", "admin"]),
-        defaultValue: "customer",
+      vendor_id: {
+        type: DataTypes.INTEGER,
         allowNull: false,
+      },
+      price: {
+        type: DataTypes.DECIMAL(10, 2),
+        allowNull: false,
+      },
+      stock: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        defaultValue: 0,
+        validate: {
+          min: 0,
+          isInt: true,
+        },
       },
       created_at: {
         allowNull: false,
@@ -48,6 +61,6 @@ module.exports = {
     });
   },
   async down(queryInterface, DataTypes) {
-    await queryInterface.dropTable("users");
+    await queryInterface.dropTable("products");
   },
 };

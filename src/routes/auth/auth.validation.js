@@ -6,14 +6,14 @@ const register = {
     email: Joi.string().email().required(),
     password: Joi.string().min(6).max(15).required(),
     phone_number: Joi.string().length(10).optional(),
-    is_active: Joi.boolean().optional().default(true),
-  }),
+    status: Joi.boolean().optional().default(true),
+  }).required(),
 };
 const login = {
   body: Joi.object({
     email: Joi.string().email().required(),
     password: Joi.string().min(6).max(15).required(),
-  }),
+  }).required(),
 };
 
 module.exports = {
