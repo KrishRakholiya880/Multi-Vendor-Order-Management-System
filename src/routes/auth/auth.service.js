@@ -205,4 +205,46 @@ const profile = async (accessToken) => {
   return result;
 };
 
-module.exports = { register, login, logout, refreshToken, profile };
+// changePassword
+const changePassword = async (user_id, data) => {
+  let query;
+
+  query = {
+    id: {
+      [Op.eq]: `${user_id}`,
+    },
+  };
+
+  const existingUser = await authDb.findOne(query, ["hash_password"]);
+
+  if (!existingUser) {
+    throw new Error("USER_NOT_FOUND");
+  }
+
+  const isSamePassword = await comparePassword(
+    data.old_password,
+    existingUser?.hash_password,
+  );
+
+  if (!isSamePassword) {
+    throw new Error("INVALID_PASSWORD");
+  }
+
+  const newHashedPassword = await hashPassword(data.new_password);
+
+  const result = await authDb.update(
+    { hash_password: newHashedPassword },
+    query,
+  );
+
+  return result;
+};
+
+module.exports = {
+  register,
+  login,
+  logout,
+  refreshToken,
+  profile,
+  changePassword,
+};
