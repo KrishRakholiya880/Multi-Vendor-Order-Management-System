@@ -112,10 +112,21 @@ const profile = async (req, res, next) => {
   }
 };
 
+// changePassword
+const changePassword = async (req, res, next) => {
+  const user_id = req?.user?.id;
+  const body = req.body;
+
+  const result = await authService.changePassword(user_id, body);
+
+  return res.status(200).json({ status: true, message: "Password changed!!!" });
+};
+
 module.exports = {
   register,
   login,
   logout,
   refreshToken,
   profile,
+  changePassword,
 };
