@@ -74,6 +74,35 @@ module.exports = {
       message: "The password you entered is incorrect. Please try again!!!",
     },
   },
+  USER_CREATION_FAILED: {
+    httpStatusCode: 500,
+    body: {
+      code: "creation_failed",
+      message: "Failed to add the user!!!",
+    },
+  },
+  USER_UPDATE_FAILED: {
+    httpStatusCode: 500,
+    body: {
+      code: "update_failed",
+      message: "Failed to update the user!!!",
+    },
+  },
+  USER_UPDATE_STATUS_FAILED: {
+    httpStatusCode: 400,
+    body: {
+      code: "update_failed",
+      message:
+        "Status of user already same. You can't update status with same status!!!",
+    },
+  },
+  USER_REMOVE_FAILED: {
+    httpStatusCode: 500,
+    body: {
+      code: "remove_failed",
+      message: "Failed to remove the user!!!",
+    },
+  },
   ONLY_ADMIN_ACCESS: {
     httpStatusCode: 401,
     body: {
