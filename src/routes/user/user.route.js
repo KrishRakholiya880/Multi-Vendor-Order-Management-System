@@ -29,6 +29,12 @@ router
 
 router
   .route("/:id")
+  .get(
+    isUserLoggedIn,
+    isAdmin,
+    validate(userValidation.getUserById),
+    userController.getUserById,
+  )
   .patch(
     isUserLoggedIn,
     isAdmin,

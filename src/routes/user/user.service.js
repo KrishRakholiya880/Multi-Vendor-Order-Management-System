@@ -20,6 +20,23 @@ const getUsers = async (search, page, limit) => {
   return result;
 };
 
+// getUserById
+const getUserById = async (search, page, limit) => {
+  const query = {
+    id: {
+      [Op.eq]: `${id}`,
+    },
+  };
+
+  const result = await userDb.findOne(query);
+
+  if (!result) {
+    throw new Error("USER_NOT_FOUND");
+  }
+
+  return result;
+};
+
 // createUser
 const createUser = async (body) => {
   const { email, password } = body;
@@ -123,6 +140,7 @@ const removeUserById = async (id) => {
 
 module.exports = {
   getUsers,
+  getUserById,
   createUser,
   updateUserById,
   removeUserById,
