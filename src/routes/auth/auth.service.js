@@ -81,7 +81,7 @@ const login = async (body) => {
     "full_name",
     "email",
     "phone_number",
-    "is_active",
+    "status",
     "role",
     "hash_password",
   ]);
@@ -194,9 +194,14 @@ const profile = async (accessToken) => {
     "full_name",
     "email",
     "phone_number",
-    "is_active",
+    "status",
     "role",
   ]);
+
+  if (!result) {
+    throw new Error("USER_DATA_NOT_FOUND");
+  }
+
   return result;
 };
 
