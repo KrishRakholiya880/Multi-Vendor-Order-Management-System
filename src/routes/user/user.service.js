@@ -1,5 +1,7 @@
 const { Op } = require("sequelize");
 const userDb = require("../../dbUtils/userDb");
+const refreshTokenDb = require("../../dbUtils/refreshTokenDb");
+const productDb = require("../../dbUtils/productDb");
 const { hashPassword } = require("../../helper/bcrypt");
 
 // getUsers
@@ -157,6 +159,22 @@ const removeUserById = async (id) => {
   }
 
   const result = await userDb.remove(query);
+
+  query = {
+    user_id: {
+      [Op.eq]: `${id}`,
+    },
+  };
+  await refreshTokenDb.remove(query);
+
+  if (isExist?.role === "vendor") {
+    query = {
+      vendor_id: {
+        [Op.eq]: `${id}`,
+      },
+    };
+    await productDb.remove(query);
+  }
 
   if (result === 0) {
     throw new Error("USER_NOT_FOUND");
