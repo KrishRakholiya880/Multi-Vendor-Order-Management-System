@@ -12,7 +12,7 @@ const findOne = async (
       attributes,
       transaction,
     });
-    return result.toJSON() || null;
+    return result;
   } catch (error) {
     console.log(error.message || error);
   }

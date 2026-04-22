@@ -173,7 +173,7 @@ const removeProductById = async (id) => {
     throw new Error("PRODUCT_NOT_FOUND");
   }
 
-  const result = await productDb.destroy(query);
+  const result = await productDb.remove(query);
 
   if (result === 0) {
     throw new Error("PRODUCT_REMOVE_FAILED");

@@ -8,7 +8,7 @@ const findOne = async (query = {}, attributes = {}, include) => {
       attributes,
       include,
     });
-    return result.toJSON();
+    return result;
   } catch (error) {
     console.log(error?.message || error);
   }
@@ -51,8 +51,8 @@ const update = async (data, query) => {
   return result;
 };
 
-// destroy
-const destroy = async (query) => {
+// remove
+const remove = async (query) => {
   const result = await product.destroy({
     where: query,
   });
@@ -65,5 +65,5 @@ module.exports = {
   findAll,
   create,
   update,
-  destroy,
+  remove,
 };
