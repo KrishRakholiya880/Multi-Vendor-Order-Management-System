@@ -60,6 +60,13 @@ module.exports = {
       message: "No user account was found!!!",
     },
   },
+  USER_DATA_NOT_FOUND: {
+    httpStatusCode: 404,
+    body: {
+      code: "not_found",
+      message: "User data not found!!!",
+    },
+  },
   USER_EXISTS: {
     httpStatusCode: 409,
     body: {

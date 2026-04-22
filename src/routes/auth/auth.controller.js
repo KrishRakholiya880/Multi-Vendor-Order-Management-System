@@ -102,7 +102,7 @@ const refreshToken = async (req, res, next) => {
 
 // profile
 const profile = async (req, res, next) => {
-  const accessToken = req.cookies.accessToken;
+  const accessToken = req.cookies?.accessToken;
   try {
     const result = await authService.profile(accessToken);
 
