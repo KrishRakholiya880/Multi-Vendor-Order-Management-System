@@ -1,9 +1,9 @@
 const Joi = require("joi");
 
-const getVendorDetails = {
-  params: {
+const getVendorDetailsById = {
+  params: Joi.object({
     id: Joi.number().integer().positive().required(),
-  },
+  }),
 };
 
 const createVendorDetails = {
@@ -22,6 +22,6 @@ const createVendorDetails = {
 };
 
 module.exports = {
-  getVendorDetails,
+  getVendorDetailsById,
   createVendorDetails,
 };

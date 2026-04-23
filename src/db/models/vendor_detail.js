@@ -10,7 +10,7 @@ module.exports = (sequelize, DataTypes) => {
     static associate(models) {
       vendor_detail.belongsTo(models.user, {
         foreignKey: "user_id",
-        as: "vendor_detail",
+        as: "user_data",
       });
     }
   }
