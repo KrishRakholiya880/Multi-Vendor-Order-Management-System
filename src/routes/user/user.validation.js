@@ -36,6 +36,10 @@ const updateUserById = {
     email: Joi.string().email().optional(),
     password: Joi.string().min(6).max(15).optional(),
     phone_number: Joi.string().length(10).optional(),
+    role: Joi.string()
+      .optional()
+      .valid("vendor", "customer")
+      .default("customer"),
     status: Joi.string()
       .optional()
       .valid("active", "inactive")
