@@ -8,7 +8,6 @@ const getVendorDetailsById = {
 
 const createVendorDetails = {
   body: Joi.object({
-    user_id: Joi.number().integer().positive().required(),
     company_name: Joi.string().trim().required(),
     company_email: Joi.string().email().trim().required(),
     company_phone_number: Joi.string().length(10).trim().required(),
@@ -34,8 +33,15 @@ const updateVendorDetailsById = {
   }).required(),
 };
 
+const removeVendorDetailsById = {
+  params: Joi.object({
+    id: Joi.number().integer().positive().required(),
+  }).required(),
+};
+
 module.exports = {
   getVendorDetailsById,
   createVendorDetails,
   updateVendorDetailsById,
+  removeVendorDetailsById,
 };

@@ -65,9 +65,25 @@ const updateVendorDetailsById = async (req, res, next) => {
   }
 };
 
+// removeVendorDetailsById
+const removeVendorDetailsById = async (req, res, next) => {
+  const { id } = req.params;
+
+  try {
+    const result = await vendorDetailsService.removeVendorDetailsById(id);
+
+    return res
+      .status(201)
+      .json({ status: true, message: "vendor details removed!!!" });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   getVendorDetailsById,
   getAllVendorDetails,
   createVendorDetails,
   updateVendorDetailsById,
+  removeVendorDetailsById,
 };

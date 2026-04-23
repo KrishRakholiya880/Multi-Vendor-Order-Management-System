@@ -100,9 +100,33 @@ const updateVendorDetailsById = async (data, id) => {
   return result;
 };
 
+// removeVendorDetailsById
+const removeVendorDetailsById = async (id) => {
+  const query = {
+    id: {
+      [Op.eq]: `${id}`,
+    },
+  };
+
+  const isVendorDetailsExists = await vendorDetailsDb.findOne(query);
+
+  if (!isVendorDetailsExists) {
+    throw new Error("VENDOR_DETAILS_NOT_FOUND");
+  }
+
+  const result = await vendorDetailsDb.remove(query);
+
+  if (result === 0) {
+    throw new Error("VENDOR_DETAIL_DELETE_FAILED");
+  }
+
+  return result;
+};
+
 module.exports = {
   getVendorDetailsById,
   getAllVendorDetails,
   createVendorDetails,
   updateVendorDetailsById,
+  removeVendorDetailsById,
 };
