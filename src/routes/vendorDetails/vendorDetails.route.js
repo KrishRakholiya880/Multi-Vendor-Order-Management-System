@@ -32,6 +32,12 @@ router
     isVendorOrAdmin,
     validate(vendorDetailsValidation.getVendorDetailsById),
     vendorDetailsController.getVendorDetailsById,
+  )
+  .patch(
+    isUserLoggedIn,
+    isVendorOrAdmin,
+    validate(vendorDetailsValidation.updateVendorDetailsById),
+    vendorDetailsController.updateVendorDetailsById,
   );
 
 module.exports = router;

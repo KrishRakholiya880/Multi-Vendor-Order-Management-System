@@ -69,6 +69,34 @@ const createVendorDetails = async (data) => {
 
   const result = await vendorDetailsDb.create(newData);
 
+  if (!result) {
+    throw new Error("VENDOR_DETAIL_CREATE_FAILED");
+  }
+
+  return result;
+};
+
+// updateVendorDetailsById
+const updateVendorDetailsById = async (data, id) => {
+  let query;
+  query = {
+    id: {
+      [Op.eq]: `${id}`,
+    },
+  };
+
+  const isVendorDetailsExists = await vendorDetailsDb.findOne(query);
+
+  if (!isVendorDetailsExists) {
+    throw new Error("VENDOR_DETAILS_NOT_FOUND");
+  }
+
+  const result = await vendorDetailsDb.update(data, query);
+
+  if (result === 0) {
+    throw new Error("VENDOR_DETAIL_UPDATE_FAILED");
+  }
+
   return result;
 };
 
@@ -76,4 +104,5 @@ module.exports = {
   getVendorDetailsById,
   getAllVendorDetails,
   createVendorDetails,
+  updateVendorDetailsById,
 };

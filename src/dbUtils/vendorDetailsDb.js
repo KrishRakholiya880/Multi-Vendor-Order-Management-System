@@ -36,8 +36,21 @@ const create = async (data) => {
   }
 };
 
+const update = async (data, query) => {
+  try {
+    const result = await vendor_detail.update(data, {
+      where: query,
+    });
+
+    return result.toJSON() || result;
+  } catch (error) {
+    console.log(error?.message || error);
+  }
+};
+
 module.exports = {
   findAll,
   findOne,
   create,
+  update,
 };
