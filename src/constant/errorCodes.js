@@ -220,4 +220,13 @@ module.exports = {
       message: "Failed to remove the category!!!",
     },
   },
+
+  // vendorDetails
+  USER_DETAILS_ALREADY_FILLED: {
+    httpStatusCode: 400,
+    body: {
+      code: "details_aleady_exists",
+      message: "Vendor's details already filled!!!",
+    },
+  },
 };
