@@ -236,4 +236,18 @@ module.exports = {
       message: "Vendor's details already filled!!!",
     },
   },
+  VENDOR_DETAIL_CREATE_FAILED: {
+    httpStatusCode: 500,
+    body: {
+      code: "update_failed",
+      message: "Failed to create the vendor details!!!",
+    },
+  },
+  VENDOR_DETAIL_UPDATE_FAILED: {
+    httpStatusCode: 500,
+    body: {
+      code: "update_failed",
+      message: "Failed to update the vendor details!!!",
+    },
+  },
 };

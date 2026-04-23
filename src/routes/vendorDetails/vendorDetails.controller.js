@@ -38,8 +38,36 @@ const createVendorDetails = async (req, res, next) => {
   }
 };
 
+// updateVendorDetailsById
+const updateVendorDetailsById = async (req, res, next) => {
+  const { id } = req.params;
+  const body = req.body;
+
+  let updateData = {};
+
+  for (const el of Object.keys(body)) {
+    if (body[el] !== undefined) {
+      updateData[el] = body[el];
+    }
+  }
+
+  try {
+    const result = await vendorDetailsService.updateVendorDetailsById(
+      updateData,
+      id,
+    );
+
+    return res
+      .status(201)
+      .json({ status: true, message: "vendor details updated!!!" });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   getVendorDetailsById,
   getAllVendorDetails,
   createVendorDetails,
+  updateVendorDetailsById,
 };

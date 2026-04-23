@@ -21,7 +21,21 @@ const createVendorDetails = {
   }),
 };
 
+const updateVendorDetailsById = {
+  params: Joi.object({
+    id: Joi.number().integer().positive().required(),
+  }).required(),
+  body: Joi.object({
+    company_name: Joi.string().trim().optional(),
+    company_email: Joi.string().email().trim().optional(),
+    company_phone_number: Joi.string().length(10).trim().optional(),
+    company_city: Joi.string().min(2).max(15).trim().optional(),
+    company_address: Joi.string().min(5).max(50).trim().optional(),
+  }).required(),
+};
+
 module.exports = {
   getVendorDetailsById,
   createVendorDetails,
+  updateVendorDetailsById,
 };
