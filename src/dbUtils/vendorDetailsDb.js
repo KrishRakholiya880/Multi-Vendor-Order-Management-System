@@ -1,5 +1,15 @@
 const { vendor_detail, user } = require("../db/models");
 
+const findAll = async (query = {}) => {
+  try {
+    const result = await vendor_detail.findAll();
+
+    return result;
+  } catch (error) {
+    console.log(error?.message || error);
+  }
+};
+
 const findOne = async (query = {}) => {
   try {
     const result = await vendor_detail.findOne({
@@ -27,6 +37,7 @@ const create = async (data) => {
 };
 
 module.exports = {
+  findAll,
   findOne,
   create,
 };

@@ -2,6 +2,17 @@ const { Op } = require("sequelize");
 const vendorDetailsDb = require("../../dbUtils/vendorDetailsDb");
 const userDb = require("../../dbUtils/userDb");
 
+// getAllVendorDetails
+const getAllVendorDetails = async () => {
+  const vendorDetails = await vendorDetailsDb.findAll();
+
+  if (!vendorDetails) {
+    throw new Error("VENDOR_DETAILS_NOT_FOUND");
+  }
+
+  return vendorDetails;
+};
+
 // createVendorDetails
 const createVendorDetails = async (data) => {
   const { user_id } = data;
@@ -45,4 +56,4 @@ const createVendorDetails = async (data) => {
   return result;
 };
 
-module.exports = { createVendorDetails };
+module.exports = { getAllVendorDetails, createVendorDetails };

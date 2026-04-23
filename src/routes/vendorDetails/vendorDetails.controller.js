@@ -1,5 +1,16 @@
 const vendorDetailsService = require("./vendorDetails.service");
 
+// getAllVendorDetails
+const getAllVendorDetails = async (req, res, next) => {
+  try {
+    const result = await vendorDetailsService.getAllVendorDetails();
+
+    return res.status(201).json({ status: true, result });
+  } catch (error) {
+    next(error);
+  }
+};
+
 // createVendorDetails
 const createVendorDetails = async (req, res, next) => {
   const userData = req?.user;
@@ -16,5 +27,6 @@ const createVendorDetails = async (req, res, next) => {
 };
 
 module.exports = {
+  getAllVendorDetails,
   createVendorDetails,
 };
