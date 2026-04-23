@@ -38,6 +38,12 @@ router
     isVendorOrAdmin,
     validate(vendorDetailsValidation.updateVendorDetailsById),
     vendorDetailsController.updateVendorDetailsById,
+  )
+  .delete(
+    isUserLoggedIn,
+    isVendorOrAdmin,
+    validate(vendorDetailsValidation.removeVendorDetailsById),
+    vendorDetailsController.removeVendorDetailsById,
   );
 
 module.exports = router;

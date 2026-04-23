@@ -239,7 +239,7 @@ module.exports = {
   VENDOR_DETAIL_CREATE_FAILED: {
     httpStatusCode: 500,
     body: {
-      code: "update_failed",
+      code: "create_failed",
       message: "Failed to create the vendor details!!!",
     },
   },
@@ -248,6 +248,13 @@ module.exports = {
     body: {
       code: "update_failed",
       message: "Failed to update the vendor details!!!",
+    },
+  },
+  VENDOR_DETAIL_DELETE_FAILED: {
+    httpStatusCode: 500,
+    body: {
+      code: "remove_failed",
+      message: "Failed to remove the vendor details!!!",
     },
   },
 };
