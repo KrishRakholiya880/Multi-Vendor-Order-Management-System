@@ -222,6 +222,13 @@ module.exports = {
   },
 
   // vendorDetails
+  VENDOR_DETAILS_NOT_FOUND: {
+    httpStatusCode: 404,
+    body: {
+      code: "details_not_found",
+      message: "Vendor's details not found!!!",
+    },
+  },
   USER_DETAILS_ALREADY_FILLED: {
     httpStatusCode: 400,
     body: {

@@ -8,28 +8,22 @@ const vendorDetailsController = require("./vendorDetails.controller");
 const {
   isUserLoggedIn,
   isVendor,
+  isVendorOrAdmin,
 } = require("../../middleware/authorizationMiddleware");
 
 router
   .route("/")
+  .get(
+    isUserLoggedIn,
+    isVendorOrAdmin,
+    // validate(vendorDetailsValidation.getVendorDetails),
+    vendorDetailsController.getAllVendorDetails,
+  )
   .post(
     isUserLoggedIn,
     isVendor,
     validate(vendorDetailsValidation.createVendorDetails),
     vendorDetailsController.createVendorDetails,
   );
-// router
-//   .route("/login")
-//   .post(validate(vendorDetailsValidation.login), vendorDetailsController.login);
-// router.route("/logout").post(vendorDetailsController.logout);
-// router.route("/refresh").post(vendorDetailsController.refreshToken);
-// router.route("/profile").get(vendorDetailsController.profile);
-// router
-//   .route("/changePassword")
-//   .patch(
-//     isUserLoggedIn,
-//     validate(vendorDetailsValidation.changePassword),
-//     vendorDetailsController.changePassword,
-//   );
 
 module.exports = router;
