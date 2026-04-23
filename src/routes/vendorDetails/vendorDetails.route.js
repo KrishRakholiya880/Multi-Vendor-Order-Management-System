@@ -16,7 +16,6 @@ router
   .get(
     isUserLoggedIn,
     isVendorOrAdmin,
-    // validate(vendorDetailsValidation.getVendorDetails),
     vendorDetailsController.getAllVendorDetails,
   )
   .post(
@@ -24,6 +23,15 @@ router
     isVendor,
     validate(vendorDetailsValidation.createVendorDetails),
     vendorDetailsController.createVendorDetails,
+  );
+
+router
+  .route("/:id")
+  .get(
+    isUserLoggedIn,
+    isVendorOrAdmin,
+    validate(vendorDetailsValidation.getVendorDetailsById),
+    vendorDetailsController.getVendorDetailsById,
   );
 
 module.exports = router;

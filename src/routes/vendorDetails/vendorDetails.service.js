@@ -2,6 +2,22 @@ const { Op } = require("sequelize");
 const vendorDetailsDb = require("../../dbUtils/vendorDetailsDb");
 const userDb = require("../../dbUtils/userDb");
 
+// getVendorDetailsById
+const getVendorDetailsById = async (id) => {
+  const query = {
+    id: {
+      [Op.eq]: `${id}`,
+    },
+  };
+  const vendorDetails = await vendorDetailsDb.findOne(query);
+
+  if (!vendorDetails) {
+    throw new Error("VENDOR_DETAILS_NOT_FOUND");
+  }
+
+  return vendorDetails;
+};
+
 // getAllVendorDetails
 const getAllVendorDetails = async () => {
   const vendorDetails = await vendorDetailsDb.findAll();
@@ -56,4 +72,8 @@ const createVendorDetails = async (data) => {
   return result;
 };
 
-module.exports = { getAllVendorDetails, createVendorDetails };
+module.exports = {
+  getVendorDetailsById,
+  getAllVendorDetails,
+  createVendorDetails,
+};

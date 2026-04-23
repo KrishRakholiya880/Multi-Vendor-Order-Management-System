@@ -16,7 +16,7 @@ const findOne = async (query = {}) => {
       where: query,
       include: {
         model: user,
-        as: "vendor_detail",
+        as: "user_data",
       },
     });
 
