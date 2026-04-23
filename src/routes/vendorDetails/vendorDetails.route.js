@@ -9,18 +9,15 @@ const {
   isUserLoggedIn,
   isVendor,
   isVendorOrAdmin,
+  isAdmin,
 } = require("../../middleware/authorizationMiddleware");
 
 router
   .route("/")
-  .get(
-    isUserLoggedIn,
-    isVendorOrAdmin,
-    vendorDetailsController.getAllVendorDetails,
-  )
+  .get(isUserLoggedIn, isAdmin, vendorDetailsController.getAllVendorDetails)
   .post(
     isUserLoggedIn,
-    isVendor,
+    isVendorOrAdmin,
     validate(vendorDetailsValidation.createVendorDetails),
     vendorDetailsController.createVendorDetails,
   );

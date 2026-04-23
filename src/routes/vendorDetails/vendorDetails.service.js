@@ -3,13 +3,36 @@ const vendorDetailsDb = require("../../dbUtils/vendorDetailsDb");
 const userDb = require("../../dbUtils/userDb");
 
 // getVendorDetailsById
-const getVendorDetailsById = async (id) => {
-  const query = {
+const getVendorDetailsById = async (paramsId, decodedToken) => {
+  const { id: tokenId } = decodedToken;
+  let query;
+  let vendorDetails;
+
+  query = {
     id: {
-      [Op.eq]: `${id}`,
+      [Op.eq]: `${tokenId}`,
     },
   };
-  const vendorDetails = await vendorDetailsDb.findOne(query);
+
+  const userData = await userDb.findOne(query);
+
+  if (userData?.role === "vendor") {
+    query = {
+      user_id: {
+        [Op.eq]: `${tokenId}`,
+      },
+    };
+    vendorDetails = await vendorDetailsDb.findOne(query);
+  }
+
+  if (userData?.role === "admin") {
+    query = {
+      user_id: {
+        [Op.eq]: `${paramsId}`,
+      },
+    };
+    vendorDetails = await vendorDetailsDb.findOne(query);
+  }
 
   if (!vendorDetails) {
     throw new Error("VENDOR_DETAILS_NOT_FOUND");

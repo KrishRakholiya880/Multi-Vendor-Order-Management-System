@@ -1,10 +1,17 @@
+const { decodeToken } = require("../../helper/authHelper");
 const vendorDetailsService = require("./vendorDetails.service");
 
 // getVendorDetailsById
 const getVendorDetailsById = async (req, res, next) => {
   const { id } = req.params;
+  const accessToken = req.cookies.accessToken;
+  const decodedToken = decodeToken(accessToken);
+
   try {
-    const result = await vendorDetailsService.getVendorDetailsById(id);
+    const result = await vendorDetailsService.getVendorDetailsById(
+      id,
+      decodedToken,
+    );
 
     return res.status(201).json({ status: true, result });
   } catch (error) {
