@@ -23,7 +23,7 @@ const getUsers = async (search, page, limit) => {
 };
 
 // getUserById
-const getUserById = async (search, page, limit) => {
+const getUserById = async (id) => {
   const query = {
     id: {
       [Op.eq]: `${id}`,
@@ -34,6 +34,10 @@ const getUserById = async (search, page, limit) => {
 
   if (!result) {
     throw new Error("USER_NOT_FOUND");
+  }
+
+  if (result?.role !== "vendor") {
+    delete result?.vendor_detail;
   }
 
   return result;

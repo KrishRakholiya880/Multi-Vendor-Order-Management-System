@@ -1,13 +1,18 @@
-const { user } = require("../db/models");
+const { user, vendor_detail } = require("../db/models");
 
 // findOne
 const findOne = async (query = {}) => {
   try {
     const result = await user.findOne({
       where: query,
+      include: {
+        model: vendor_detail,
+        as: "vendor_detail",
+        required: false,
+      },
     });
 
-    return result;
+    return result.toJSON();
   } catch (error) {
     console.log(error?.message || error);
   }

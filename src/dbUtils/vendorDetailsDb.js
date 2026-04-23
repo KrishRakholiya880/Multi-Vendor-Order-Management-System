@@ -1,0 +1,32 @@
+const { vendor_detail, user } = require("../db/models");
+
+const findOne = async (query = {}) => {
+  try {
+    const result = await vendor_detail.findOne({
+      where: query,
+      include: {
+        model: user,
+        as: "vendor_detail",
+      },
+    });
+
+    return result;
+  } catch (error) {
+    console.log(error?.message || error);
+  }
+};
+
+const create = async (data) => {
+  try {
+    const result = await vendor_detail.create(data);
+
+    return result.toJSON() || result;
+  } catch (error) {
+    console.log(error?.message || error);
+  }
+};
+
+module.exports = {
+  findOne,
+  create,
+};
