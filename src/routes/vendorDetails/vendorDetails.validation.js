@@ -7,6 +7,9 @@ const getVendorDetailsById = {
 };
 
 const createVendorDetails = {
+  params: Joi.object({
+    id: Joi.number().integer().positive().required(),
+  }).optional(),
   body: Joi.object({
     company_name: Joi.string().trim().required(),
     company_email: Joi.string().email().trim().required(),

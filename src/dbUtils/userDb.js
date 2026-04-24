@@ -1,4 +1,4 @@
-const { user, vendor_detail } = require("../db/models");
+const { user, vendor_detail, product } = require("../db/models");
 
 // findOne
 const findOne = async (query = {}) => {
@@ -19,16 +19,17 @@ const findOne = async (query = {}) => {
 };
 
 // findAll
-const findAll = async (query = {}, page, limit) => {
+const findAll = async (query = {}, page, limit, include = {}) => {
   const offset = (page - 1) * limit;
   try {
     const result = await user.findAll({
       where: query,
       limit,
       offset,
+      include,
     });
 
-    return result;
+    return result.map((item) => item.toJSON());
   } catch (error) {
     console.log(error?.message || error);
   }

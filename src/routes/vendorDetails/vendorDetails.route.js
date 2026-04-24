@@ -14,13 +14,7 @@ const {
 
 router
   .route("/")
-  .get(isUserLoggedIn, isAdmin, vendorDetailsController.getAllVendorDetails)
-  .post(
-    isUserLoggedIn,
-    isVendorOrAdmin,
-    validate(vendorDetailsValidation.createVendorDetails),
-    vendorDetailsController.createVendorDetails,
-  );
+  .get(isUserLoggedIn, isAdmin, vendorDetailsController.getAllVendorDetails);
 
 router
   .route("/:id")
@@ -29,6 +23,12 @@ router
     isVendorOrAdmin,
     validate(vendorDetailsValidation.getVendorDetailsById),
     vendorDetailsController.getVendorDetailsById,
+  )
+  .post(
+    isUserLoggedIn,
+    isVendorOrAdmin,
+    validate(vendorDetailsValidation.createVendorDetails),
+    vendorDetailsController.createVendorDetails,
   )
   .patch(
     isUserLoggedIn,

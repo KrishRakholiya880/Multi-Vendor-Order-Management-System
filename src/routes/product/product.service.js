@@ -1,7 +1,7 @@
 const { Op } = require("sequelize");
 const { sequelize } = require("../../db/models");
 const productDb = require("../../dbUtils/productDb");
-const { category } = require("../../db/models");
+const { category, user } = require("../../db/models");
 
 // generateRandomString
 const generateRandomString = () => {
@@ -18,31 +18,70 @@ const generateRandomString = () => {
 };
 
 // getProducts
-const getProducts = async (search, page, limit) => {
+const getProducts = async (userData, search, page, limit) => {
   // const t = await sequelize.transaction()
-  let query;
+  let query = {};
+  let result;
 
-  query = {
-    status: {
-      [Op.eq]: "active",
-    },
-  };
-  if (search) {
+  if (userData?.role === "customer" || userData?.role === "admin") {
     query = {
-      ...query,
-      [Op.or]: [
-        { name: { [Op.like]: `%${search}%` } },
-        { description: { [Op.like]: `%${search}%` } },
-      ],
+      status: {
+        [Op.eq]: "active",
+      },
     };
+
+    if (search) {
+      query = {
+        ...query,
+        [Op.or]: [
+          { name: { [Op.like]: `%${search}%` } },
+          { description: { [Op.like]: `%${search}%` } },
+        ],
+      };
+    }
+    const include = [
+      { model: category, as: "category", attributes: ["id", "name"] },
+    ];
+
+    if (userData?.role === "admin") {
+      include.push({
+        model: user,
+        as: "vendor",
+        attributes: ["id", "full_name"],
+      });
+    }
+    result = await productDb.findAll(
+      query,
+      page,
+      limit,
+      ["id", "name", "description", "category_id", "vendor_id", "status"],
+      include,
+    );
+  } else {
+    query = {
+      vendor_id: {
+        [Op.eq]: `${userId}`,
+      },
+    };
+
+    if (search) {
+      query = {
+        ...query,
+        [Op.or]: [
+          { name: { [Op.like]: `%${search}%` } },
+          { description: { [Op.like]: `%${search}%` } },
+        ],
+      };
+    }
+
+    result = await productDb.findAll(
+      query,
+      page,
+      limit,
+      {},
+      { model: category, as: "category", attributes: ["id", "name"] },
+    );
   }
-  const result = await productDb.findAll(
-    query,
-    page,
-    limit,
-    ["id", "name", "description", "category_id", "vendor_id", "status"],
-    { model: category, as: "category", attributes: ["id", "name"] },
-  );
 
   if (!result || (Array.isArray(result) && result.length === 0)) {
     throw new Error("PRODUCTS_NOT_FOUND");

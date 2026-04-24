@@ -102,9 +102,9 @@ const refreshToken = async (req, res, next) => {
 
 // profile
 const profile = async (req, res, next) => {
-  const accessToken = req.cookies?.accessToken;
+  const userData = req.user;
   try {
-    const result = await authService.profile(accessToken);
+    const result = await authService.profile(userData);
 
     return res.status(200).json({ status: true, result });
   } catch (error) {

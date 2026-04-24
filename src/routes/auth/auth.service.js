@@ -3,12 +3,10 @@ const { sequelize } = require("../../db/models");
 // dbUtils
 const authDb = require("../../dbUtils/authDb");
 const refreshTokenDb = require("../../dbUtils/refreshTokenDb");
+const userDb = require("../../dbUtils/userDb");
 // helper
 const { hashPassword, comparePassword } = require("../../helper/bcrypt");
-const {
-  generateAccessAndRefreshTokens,
-  decodeToken,
-} = require("../../helper/authHelper");
+const { generateAccessAndRefreshTokens } = require("../../helper/authHelper");
 // config
 const { tokenKeys } = require("../../config/index");
 
@@ -180,34 +178,29 @@ const refreshToken = async (oldRefreshToken) => {
 };
 
 // profile
-const profile = async (accessToken) => {
-  // const t = sequelize.transaction();
-  const decodedData = decodeToken(accessToken);
-  const query = {
-    id: {
-      [Op.eq]: `${decodedData.id}`,
-    },
-  };
+const profile = async (userData) => {
+  let query = {};
+  let result;
 
-  const result = await authDb.findOne(query, [
-    "id",
-    "full_name",
-    "email",
-    "phone_number",
-    "status",
-    "role",
-  ]);
-
-  if (!result) {
-    throw new Error("USER_DATA_NOT_FOUND");
+  if (userData?.role === "vendor") {
+    query = {
+      id: {
+        [Op.eq]: `${userData?.id}`,
+      },
+    };
+    result = await userDb.findOne(query);
+    if (!result) {
+      throw new Error("USER_DATA_NOT_FOUND");
+    }
+    return result;
+  } else {
+    return userData;
   }
-
-  return result;
 };
 
 // changePassword
 const changePassword = async (user_id, data) => {
-  let query;
+  let query = {};
 
   query = {
     id: {

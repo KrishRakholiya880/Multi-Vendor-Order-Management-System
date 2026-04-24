@@ -15,7 +15,7 @@ router
   .post(validate(authValidation.login), authController.login);
 router.route("/logout").post(authController.logout);
 router.route("/refresh").post(authController.refreshToken);
-router.route("/profile").get(authController.profile);
+router.route("/profile").get(isUserLoggedIn, authController.profile);
 router
   .route("/changePassword")
   .patch(

@@ -3,23 +3,14 @@ const vendorDetailsDb = require("../../dbUtils/vendorDetailsDb");
 const userDb = require("../../dbUtils/userDb");
 
 // getVendorDetailsById
-const getVendorDetailsById = async (paramsId, decodedToken) => {
-  const { id: tokenId } = decodedToken;
-  let query;
+const getVendorDetailsById = async (paramsId, userData) => {
+  let query = {};
   let vendorDetails;
-
-  query = {
-    id: {
-      [Op.eq]: `${tokenId}`,
-    },
-  };
-
-  const userData = await userDb.findOne(query);
 
   if (userData?.role === "vendor") {
     query = {
       user_id: {
-        [Op.eq]: `${tokenId}`,
+        [Op.eq]: `${userData.id}`,
       },
     };
     vendorDetails = await vendorDetailsDb.findOne(query);
@@ -53,44 +44,65 @@ const getAllVendorDetails = async () => {
 };
 
 // createVendorDetails
-const createVendorDetails = async (data) => {
-  const { user_id } = data;
-  let query;
+const createVendorDetails = async (data, paramsId) => {
+  let query = {};
+  let userDetails;
   let newData;
+  let result;
 
-  query = {
-    id: {
-      [Op.eq]: `${user_id}`,
-    },
-  };
+  if (data.userData?.role === "vendor") {
+    query = {
+      user_id: {
+        [Op.eq]: `${user_id}`,
+      },
+    };
 
-  const userData = await userDb.findOne(query);
+    const isDetailsExists = await vendorDetailsDb.findOne(query);
 
-  query = {
-    user_id: {
-      [Op.eq]: `${user_id}`,
-    },
-  };
+    if (isDetailsExists?.id) {
+      throw new Error("USER_DETAILS_ALREADY_FILLED");
+    }
 
-  const isDetailsExists = await vendorDetailsDb.findOne(query);
+    newData = {
+      user_id,
+      vendor_status: data.userData?.status,
+      ...data,
+    };
 
-  if (
-    isDetailsExists?.company_name &&
-    isDetailsExists?.company_email &&
-    isDetailsExists?.company_phone_number &&
-    isDetailsExists?.company_address &&
-    isDetailsExists?.company_city
-  ) {
-    throw new Error("USER_DETAILS_ALREADY_FILLED");
+    result = await vendorDetailsDb.create(newData);
+  } else {
+    query = {
+      id: {
+        [Op.eq]: `${paramsId}`,
+      },
+    };
+
+    userDetails = await userDb.findOne(query);
+
+    if (userDetails?.role === "customer") {
+      throw new Error("USER_IS_CUSTOMER");
+    }
+
+    query = {
+      user_id: {
+        [Op.eq]: `${userDetails?.id}`,
+      },
+    };
+
+    const isDetailsExists = await vendorDetailsDb.findOne(query);
+
+    if (isDetailsExists?.id) {
+      throw new Error("USER_DETAILS_ALREADY_FILLED");
+    }
+
+    newData = {
+      ...data,
+      user_id: paramsId,
+      vendor_status: userDetails?.status,
+    };
+
+    result = await vendorDetailsDb.create(newData);
   }
-
-  newData = {
-    user_id,
-    vendor_status: userData?.status,
-    ...data,
-  };
-
-  const result = await vendorDetailsDb.create(newData);
 
   if (!result) {
     throw new Error("VENDOR_DETAIL_CREATE_FAILED");
@@ -101,7 +113,7 @@ const createVendorDetails = async (data) => {
 
 // updateVendorDetailsById
 const updateVendorDetailsById = async (data, id) => {
-  let query;
+  let query = {};
   query = {
     id: {
       [Op.eq]: `${id}`,

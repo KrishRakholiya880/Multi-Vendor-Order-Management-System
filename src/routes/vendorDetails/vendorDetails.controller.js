@@ -1,19 +1,17 @@
-const { decodeToken } = require("../../helper/authHelper");
 const vendorDetailsService = require("./vendorDetails.service");
 
 // getVendorDetailsById
 const getVendorDetailsById = async (req, res, next) => {
   const { id } = req.params;
-  const accessToken = req.cookies.accessToken;
-  const decodedToken = decodeToken(accessToken);
+  const userData = req.user;
 
   try {
     const result = await vendorDetailsService.getVendorDetailsById(
       id,
-      decodedToken,
+      userData,
     );
 
-    return res.status(201).json({ status: true, result });
+    return res.status(200).json({ status: true, result });
   } catch (error) {
     next(error);
   }
@@ -24,7 +22,7 @@ const getAllVendorDetails = async (req, res, next) => {
   try {
     const result = await vendorDetailsService.getAllVendorDetails();
 
-    return res.status(201).json({ status: true, result });
+    return res.status(200).json({ status: true, result });
   } catch (error) {
     next(error);
   }
@@ -32,10 +30,14 @@ const getAllVendorDetails = async (req, res, next) => {
 
 // createVendorDetails
 const createVendorDetails = async (req, res, next) => {
+  const { id } = req.params;
   const userData = req?.user;
-  const body = { ...req.body, user_id: userData?.id };
+  const body = { ...req.body, userData };
   try {
-    const result = await vendorDetailsService.createVendorDetails(body);
+    const result = await vendorDetailsService.createVendorDetails(
+      body,
+      Number(id),
+    );
 
     return res
       .status(201)
@@ -65,7 +67,7 @@ const updateVendorDetailsById = async (req, res, next) => {
     );
 
     return res
-      .status(201)
+      .status(200)
       .json({ status: true, message: "vendor details updated!!!" });
   } catch (error) {
     next(error);
@@ -80,7 +82,7 @@ const removeVendorDetailsById = async (req, res, next) => {
     const result = await vendorDetailsService.removeVendorDetailsById(id);
 
     return res
-      .status(201)
+      .status(200)
       .json({ status: true, message: "vendor details removed!!!" });
   } catch (error) {
     next(error);

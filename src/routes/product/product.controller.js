@@ -3,8 +3,11 @@ const productService = require("./product.service");
 // getProducts
 const getProducts = async (req, res, next) => {
   const { search, page, limit } = req.query;
+  const userdata = req.user;
+
   try {
     const result = await productService.getProducts(
+      userdata,
       search,
       Number(page) || 1,
       Number(limit) || 30,

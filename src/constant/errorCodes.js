@@ -257,4 +257,11 @@ module.exports = {
       message: "Failed to remove the vendor details!!!",
     },
   },
+  USER_IS_CUSTOMER: {
+    httpStatusCode: 500,
+    body: {
+      code: "conflict",
+      message: "User is customer. customer can't add vendor details!!!",
+    },
+  },
 };

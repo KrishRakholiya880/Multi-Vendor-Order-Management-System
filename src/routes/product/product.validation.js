@@ -2,7 +2,7 @@ const Joi = require("joi");
 
 const getProducts = {
   query: Joi.object({
-    search: Joi.string().optional(),
+    search: Joi.string().allow("", null).optional(),
     page: Joi.number().positive().default(1).optional(),
     limit: Joi.number().positive().default(30).optional(),
   }),
