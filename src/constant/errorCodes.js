@@ -264,4 +264,13 @@ module.exports = {
       message: "User is customer. customer can't add vendor details!!!",
     },
   },
+
+  // cart
+  CART_NOT_FOUND: {
+    httpStatusCode: 404,
+    body: {
+      code: "not_found",
+      message: "Cart data not found!!!",
+    },
+  },
 };
