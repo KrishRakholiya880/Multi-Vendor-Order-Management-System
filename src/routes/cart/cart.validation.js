@@ -7,6 +7,16 @@ const addToCart = {
   }),
 };
 
+const updateProductQuantityById = {
+  params: Joi.object({
+    product_id: Joi.number().positive().integer().required(),
+  }).required(),
+  body: Joi.object({
+    quantity: Joi.number().positive().integer().required(),
+  }),
+};
+
 module.exports = {
   addToCart,
+  updateProductQuantityById,
 };

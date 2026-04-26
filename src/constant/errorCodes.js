@@ -124,6 +124,13 @@ module.exports = {
       message: "Only vendors can perform this action!!!",
     },
   },
+  ONLY_CUSTOMERS_ACCESS: {
+    httpStatusCode: 401,
+    body: {
+      code: "unauthorized",
+      message: "Only customers can perform this action!!!",
+    },
+  },
 
   // Products
   PRODUCTS_NOT_FOUND: {
@@ -292,6 +299,13 @@ module.exports = {
     body: {
       code: "update_failed",
       message: "Failed to update the cart!!!",
+    },
+  },
+  CART_PRODUCT_NOT_FOUND: {
+    httpStatusCode: 404,
+    body: {
+      code: "not_found",
+      message: "Cart product not found!!!",
     },
   },
 };

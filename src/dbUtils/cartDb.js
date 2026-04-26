@@ -1,9 +1,10 @@
 const { cart, cart_item } = require("../db/models");
 
-const findAll = async (query = {}) => {
+const findAll = async (query = {}, include) => {
   try {
     const result = await cart.findAll({
       where: query,
+      include,
     });
 
     return result;
@@ -12,13 +13,14 @@ const findAll = async (query = {}) => {
   }
 };
 
-const findOne = async (query = {}) => {
+const findOne = async (query = {}, include) => {
   try {
     const result = await cart.findOne({
       where: query,
+      include,
     });
 
-    return result;
+    return result.toJSON();
   } catch (error) {
     console.log(error?.message || error);
   }
@@ -54,6 +56,7 @@ const update = async (data, query) => {
     const cartResult = await cart.update(data, {
       where: query,
     });
+    return cartResult;
   } catch (error) {
     console.log(error?.message || error);
   }

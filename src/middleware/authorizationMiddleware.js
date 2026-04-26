@@ -52,6 +52,16 @@ const isVendor = (req, res, next) => {
   throw new Error("ONLY_VENDOR_ACCESS");
 };
 
+const isCustomer = (req, res, next) => {
+  const role = req.user?.role;
+
+  if (role === "customer") {
+    return next();
+  }
+
+  throw new Error("ONLY_CUSTOMERS_ACCESS");
+};
+
 const isVendorOrAdmin = async (req, res, next) => {
   const role = req.user?.role;
 
@@ -88,6 +98,7 @@ module.exports = {
   isUserLoggedIn,
   isAdmin,
   isVendor,
+  isCustomer,
   isVendorOrAdmin,
   checkVendorProductOrNot,
 };
