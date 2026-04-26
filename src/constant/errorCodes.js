@@ -273,4 +273,25 @@ module.exports = {
       message: "Cart data not found!!!",
     },
   },
+  PRODUCT_OUT_OF_STOCK: {
+    httpStatusCode: 400,
+    body: {
+      code: "out_of_stock",
+      message: "Product is out of stock!!!",
+    },
+  },
+  INSUFFICIENT_STOCK: {
+    httpStatusCode: 400,
+    body: {
+      code: "insufficient_stock",
+      message: "Insufficient stock for the requested quantity!!!",
+    },
+  },
+  CART_UPDATE_FAILED: {
+    httpStatusCode: 500,
+    body: {
+      code: "update_failed",
+      message: "Failed to update the cart!!!",
+    },
+  },
 };

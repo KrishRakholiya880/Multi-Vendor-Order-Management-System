@@ -54,7 +54,15 @@ const getProducts = async (userData, search, page, limit) => {
       query,
       page,
       limit,
-      ["id", "name", "description", "category_id", "vendor_id", "status"],
+      [
+        "id",
+        "name",
+        "description",
+        "category_id",
+        "vendor_id",
+        "status",
+        "price",
+      ],
       include,
     );
   } else {
