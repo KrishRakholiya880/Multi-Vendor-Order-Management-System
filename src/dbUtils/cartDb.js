@@ -62,9 +62,22 @@ const update = async (data, query) => {
   }
 };
 
+const remove = async (query) => {
+  try {
+    const result = await cart.destroy({
+      where: query,
+    });
+
+    return result;
+  } catch (error) {
+    console.log(error?.message || error);
+  }
+};
+
 module.exports = {
   findAll,
   findOne,
   create,
   update,
+  remove,
 };

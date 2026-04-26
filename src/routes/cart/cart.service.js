@@ -197,8 +197,49 @@ const updateProductQuantityById = async (product_id, body, userData) => {
   return result;
 };
 
+// clearCart
+const clearCart = async (userData) => {
+  let query = {};
+  let result;
+
+  query = {
+    customer_id: {
+      [Op.eq]: `${userData?.id}`,
+    },
+  };
+
+  const existingCustomerCart = await cartDb.findOne(query);
+
+  if (!existingCustomerCart) {
+    throw new Error("CART_NOT_FOUND");
+  }
+
+  query = {
+    cart_id: {
+      [Op.eq]: `${existingCustomerCart?.id}`,
+    },
+  };
+
+  const cartItemsData = await cartItemDb.findAll(query);
+
+  if (cartItemsData) {
+    await cartItemDb.remove(query);
+
+    query = {
+      customer_id: {
+        [Op.eq]: `${userData?.id}`,
+      },
+    };
+
+    result = await cartDb.remove(query);
+
+    return result;
+  }
+};
+
 module.exports = {
   getCart,
   addToCart,
   updateProductQuantityById,
+  clearCart,
 };

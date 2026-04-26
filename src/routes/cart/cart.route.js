@@ -20,6 +20,10 @@ router
   );
 
 router
+  .route("/clear")
+  .post(isUserLoggedIn, isCustomer, cartController.clearCart);
+
+router
   .route("/:product_id")
   .patch(
     isUserLoggedIn,
