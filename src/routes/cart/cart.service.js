@@ -9,10 +9,24 @@ const getCart = async (userData) => {
   let result;
 
   if (userData?.role === "admin") {
-    result = await cartDb.findAll(query, {
-      model: cart_item,
-      as: "cart_items",
-    });
+    result = await cartDb.findAll(
+      query,
+      ["id", "customer_id", "total_amount"],
+      [
+        {
+          model: cart_item,
+          as: "cart_items",
+          attributes: ["id", "cart_id", "quantity", "unit_price"],
+          include: [
+            {
+              model: product,
+              as: "product_info",
+              attributes: ["id", "name", "description", "status", "price"],
+            },
+          ],
+        },
+      ],
+    );
   } else {
     query = {
       customer_id: {
@@ -32,10 +46,24 @@ const getCart = async (userData) => {
       },
     };
 
-    result = await cartDb.findOne(query, {
-      model: cart_item,
-      as: "cart_items",
-    });
+    result = await cartDb.findOne(
+      query,
+      ["id", "customer_id", "total_amount"],
+      [
+        {
+          model: cart_item,
+          as: "cart_items",
+          attributes: ["id", "cart_id", "quantity", "unit_price"],
+          include: [
+            {
+              model: product,
+              as: "product_info",
+              attributes: ["id", "name", "description", "status", "price"],
+            },
+          ],
+        },
+      ],
+    );
   }
 
   if (!result) {

@@ -1,23 +1,25 @@
 const { cart, cart_item } = require("../db/models");
 
-const findAll = async (query = {}, include) => {
+const findAll = async (query = {}, attributes = [], include = []) => {
   try {
     const result = await cart.findAll({
       where: query,
-      include,
+      ...(attributes.length > 0 && { attributes }),
+      ...(include.length > 0 && { include }),
     });
 
-    return result;
+    return result.map((item) => item.toJSON());
   } catch (error) {
     console.log(error?.message || error);
   }
 };
 
-const findOne = async (query = {}, include) => {
+const findOne = async (query = {}, attributes = [], include = []) => {
   try {
     const result = await cart.findOne({
       where: query,
-      include,
+      ...(attributes.length > 0 && { attributes }),
+      ...(include.length > 0 && { include }),
     });
 
     return result.toJSON();
