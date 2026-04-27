@@ -315,4 +315,20 @@ module.exports = {
       message: "Cart product remove failed!!!",
     },
   },
+
+  // order
+  ORDER_NOT_FOUND: {
+    httpStatusCode: 404,
+    body: {
+      code: "not_found",
+      message: "Order not found!!!",
+    },
+  },
+  ORDERS_NOT_FOUND: {
+    httpStatusCode: 404,
+    body: {
+      code: "not_found",
+      message: "Order not found!!!",
+    },
+  },
 };
