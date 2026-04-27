@@ -280,6 +280,13 @@ module.exports = {
       message: "Cart data not found!!!",
     },
   },
+  CART_ITEMS_NOT_FOUND: {
+    httpStatusCode: 404,
+    body: {
+      code: "not_found",
+      message: "Cart items not found!!!",
+    },
+  },
   PRODUCT_OUT_OF_STOCK: {
     httpStatusCode: 400,
     body: {
@@ -329,6 +336,20 @@ module.exports = {
     body: {
       code: "not_found",
       message: "Order not found!!!",
+    },
+  },
+  ORDER_CREATION_FAILED: {
+    httpStatusCode: 500,
+    body: {
+      code: "server_error",
+      message: "Order creation failed!!!",
+    },
+  },
+  ORDER_ITEM_CREATION_FAILED: {
+    httpStatusCode: 500,
+    body: {
+      code: "server_error",
+      message: "Order item creation failed!!!",
     },
   },
 };

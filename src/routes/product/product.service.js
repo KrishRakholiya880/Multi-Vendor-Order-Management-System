@@ -68,7 +68,7 @@ const getProducts = async (userData, search, page, limit) => {
   } else {
     query = {
       vendor_id: {
-        [Op.eq]: `${userId}`,
+        [Op.eq]: `${userData?.id}`,
       },
     };
 

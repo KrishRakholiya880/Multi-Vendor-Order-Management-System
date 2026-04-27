@@ -10,6 +10,9 @@ const {
   isCustomer,
 } = require("../../middleware/authorizationMiddleware");
 
-router.route("/").get(isUserLoggedIn, orderController.getOrder);
+router
+  .route("/")
+  .get(isUserLoggedIn, orderController.getOrder)
+  .post(isUserLoggedIn, isCustomer, orderController.addToOrder);
 
 module.exports = router;

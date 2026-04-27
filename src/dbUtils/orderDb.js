@@ -26,7 +26,18 @@ const findOne = async (query, attributes = [], include = []) => {
   }
 };
 
+const create = async (data) => {
+  try {
+    const result = await order.create(data);
+
+    return result;
+  } catch (error) {
+    console.log(error.message || error);
+  }
+};
+
 module.exports = {
   findAll,
   findOne,
+  create,
 };
