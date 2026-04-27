@@ -16,7 +16,14 @@ const updateProductQuantityById = {
   }),
 };
 
+const removeCartProductById = {
+  params: Joi.object({
+    product_id: Joi.number().integer().positive().required(),
+  }).required(),
+};
+
 module.exports = {
   addToCart,
   updateProductQuantityById,
+  removeCartProductById,
 };

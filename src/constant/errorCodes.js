@@ -308,4 +308,11 @@ module.exports = {
       message: "Cart product not found!!!",
     },
   },
+  CART_ITEM_REMOVE_FAILED: {
+    httpStatusCode: 404,
+    body: {
+      code: "remove_failed",
+      message: "Cart product remove failed!!!",
+    },
+  },
 };

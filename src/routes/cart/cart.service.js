@@ -237,9 +237,65 @@ const clearCart = async (userData) => {
   }
 };
 
+const removeCartProductById = async (product_id, userData) => {
+  let query;
+  let result;
+
+  query = {
+    customer_id: {
+      [Op.eq]: `${userData?.id}`,
+    },
+  };
+
+  const existingCustomerCart = await cartDb.findOne(query);
+
+  if (!existingCustomerCart) {
+    throw new Error("CART_NOT_FOUND");
+  }
+
+  query = {
+    cart_id: { [Op.eq]: `${existingCustomerCart?.id}` },
+    product_id: { [Op.eq]: `${product_id}` },
+  };
+
+  const cartItemData = await cartItemDb.findOne(query);
+
+  if (!cartItemData) {
+    throw new Error("PRODUCT_NOT_FOUND");
+  }
+
+  result = await cartItemDb.remove(query);
+
+  if (result === 0) {
+    throw new Error("CART_ITEM_REMOVE_FAILED");
+  }
+
+  query = {
+    cart_id: {
+      [Op.eq]: `${existingCustomerCart?.id}`,
+    },
+  };
+
+  const allCartItems = await cartItemDb.findAll(query);
+
+  const newTotalAmount = allCartItems.reduce((total, product) => {
+    return total + product?.quantity * parseFloat(product?.unit_price);
+  }, 0);
+
+  query = {
+    customer_id: {
+      [Op.eq]: `${userData?.id}`,
+    },
+  };
+  await cartDb.update({ total_amount: Number(newTotalAmount) }, query);
+
+  return result;
+};
+
 module.exports = {
   getCart,
   addToCart,
   updateProductQuantityById,
   clearCart,
+  removeCartProductById,
 };

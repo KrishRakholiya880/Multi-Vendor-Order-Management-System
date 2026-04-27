@@ -30,6 +30,12 @@ router
     isCustomer,
     validate(cartValidation.updateProductQuantityById),
     cartController.updateProductQuantityById,
+  )
+  .delete(
+    isUserLoggedIn,
+    isCustomer,
+    validate(cartValidation.removeCartProductById),
+    cartController.removeCartProductById,
   );
 
 module.exports = router;

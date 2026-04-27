@@ -67,9 +67,27 @@ const clearCart = async (req, res, next) => {
   }
 };
 
+const removeCartProductById = async (req, res, next) => {
+  const { product_id } = req.params;
+  const userData = req.user;
+  try {
+    const result = await cartService.removeCartProductById(
+      product_id,
+      userData,
+    );
+
+    return res
+      .status(200)
+      .json({ status: true, message: "Product removed from cart!!!", result });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   getCart,
   addToCart,
   updateProductQuantityById,
   clearCart,
+  removeCartProductById,
 };
