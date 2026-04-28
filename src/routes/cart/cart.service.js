@@ -1,6 +1,6 @@
 const cartDb = require("../../dbUtils/cartDb");
 const cartItemDb = require("../../dbUtils/cartItemDb");
-const { product, cart_item } = require("../../db/models");
+const { product, cart_item, user } = require("../../db/models");
 const { Op } = require("sequelize");
 
 // getCart
@@ -16,12 +16,23 @@ const getCart = async (userData) => {
         {
           model: cart_item,
           as: "cart_items",
-          attributes: ["id", "cart_id", "quantity", "unit_price"],
+          attributes: ["id", "cart_id", "product_id", "quantity", "unit_price"],
           include: [
             {
               model: product,
               as: "product_info",
-              attributes: ["id", "name", "description", "status", "price"],
+              attributes: [
+                "id",
+                "name",
+                "description",
+                "status",
+                "price",
+                "vendor_id",
+              ],
+              // include: {
+              //   model: user,
+              //   as: "vendor",
+              // },
             },
           ],
         },
@@ -126,7 +137,7 @@ const addToCart = async (data) => {
 
     if (existingProductInCart) {
       let quantityUpdateQuery = {
-        quantity: existingProductInCart?.quantity + body?.quantity,
+        quantity: parseInt(existingProductInCart?.quantity) + body?.quantity,
       };
       query = {
         id: { [Op.eq]: existingProductInCart?.id },

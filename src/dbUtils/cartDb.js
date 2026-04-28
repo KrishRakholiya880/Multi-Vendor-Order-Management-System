@@ -8,7 +8,7 @@ const findAll = async (query = {}, attributes = [], include = []) => {
       ...(include.length > 0 && { include }),
     });
 
-    return result.map((item) => item.toJSON());
+    return result.map((item) => item.toJSON()) || null;
   } catch (error) {
     console.log(error?.message || error);
   }
@@ -22,7 +22,7 @@ const findOne = async (query = {}, attributes = [], include = []) => {
       ...(include.length > 0 && { include }),
     });
 
-    return result.toJSON();
+    return result.toJSON() || null;
   } catch (error) {
     console.log(error?.message || error);
   }
@@ -47,7 +47,10 @@ const create = async (data) => {
     };
     const cartItemsResult = await cart_item.create(cartData);
 
-    return { cartResult, cartItemsResult };
+    return {
+      cartResult: cartResult.toJSON(),
+      cartItemsResult: cartItemsResult.toJSON(),
+    };
   } catch (error) {
     console.log(error?.message || error);
   }
@@ -55,10 +58,10 @@ const create = async (data) => {
 
 const update = async (data, query) => {
   try {
-    const cartResult = await cart.update(data, {
+    const result = await cart.update(data, {
       where: query,
     });
-    return cartResult;
+    return result;
   } catch (error) {
     console.log(error?.message || error);
   }

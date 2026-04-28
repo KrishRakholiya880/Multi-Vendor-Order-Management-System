@@ -7,7 +7,7 @@ const findAll = async (query, attributes = [], include = []) => {
       ...(attributes.length > 0 && { attributes }),
       ...(include.length > 0 && { include }),
     });
-    return result.length > 1 ? result.map((item) => item.toJSON()) : result;
+    return result.map((item) => item.toJSON()) || null;
   } catch (error) {
     console.log(error.message || error);
   }
@@ -20,7 +20,7 @@ const findOne = async (query, attributes = [], include = []) => {
       ...(attributes.length > 0 && { attributes }),
       ...(include.length > 0 && { include }),
     });
-    return result.toJSON();
+    return result.toJSON() || null;
   } catch (error) {
     console.log(error.message || error);
   }
@@ -30,7 +30,7 @@ const create = async (data) => {
   try {
     const result = await order.create(data);
 
-    return result;
+    return result.toJSON();
   } catch (error) {
     console.log(error.message || error);
   }

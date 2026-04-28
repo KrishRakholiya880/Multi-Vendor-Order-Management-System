@@ -7,7 +7,7 @@ const findAll = async (query, include) => {
       include,
     });
 
-    return result.map((item) => item.toJSON()) || result;
+    return result.map((item) => item.toJSON()) || null;
   } catch (error) {
     console.log(error?.message || error);
   }
@@ -20,7 +20,7 @@ const findOne = async (query, include) => {
       include,
     });
 
-    return result.toJSON() || result;
+    return result.toJSON() || null;
   } catch (error) {
     console.log(error?.message || error);
   }
