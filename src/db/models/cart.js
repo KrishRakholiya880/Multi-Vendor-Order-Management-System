@@ -30,7 +30,7 @@ module.exports = (sequelize, DataTypes) => {
       total_amount: {
         type: DataTypes.DECIMAL(10, 2),
         allowNull: false,
-        unique: true,
+        defaultValue: 0.0,
       },
       created_at: {
         allowNull: false,

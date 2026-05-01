@@ -20,7 +20,7 @@ router
   .route("/:id")
   .get(
     isUserLoggedIn,
-    isVendorOrAdmin,
+    isAdmin,
     validate(vendorDetailsValidation.getVendorDetailsById),
     vendorDetailsController.getVendorDetailsById,
   )

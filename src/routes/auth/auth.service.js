@@ -189,12 +189,18 @@ const profile = async (userData) => {
       },
     };
     result = await userDb.findOne(query);
+
     if (!result) {
       throw new Error("USER_DATA_NOT_FOUND");
     }
+
     return result;
   } else {
     return userData;
+
+    if (!userData) {
+      throw new Error("USER_DATA_NOT_FOUND");
+    }
   }
 };
 

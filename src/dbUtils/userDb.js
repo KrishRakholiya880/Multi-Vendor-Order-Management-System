@@ -1,35 +1,31 @@
 const { user, vendor_detail, product } = require("../db/models");
 
 // findOne
-const findOne = async (query = {}) => {
+const findOne = async (query = {}, include = []) => {
   try {
     const result = await user.findOne({
       where: query,
-      include: {
-        model: vendor_detail,
-        as: "vendor_detail",
-        required: false,
-      },
+      ...(include.length > 0 && { include }),
     });
 
-    return result.toJSON();
+    return result.toJSON() || null;
   } catch (error) {
     console.log(error?.message || error);
   }
 };
 
 // findAll
-const findAll = async (query = {}, page, limit, include = {}) => {
+const findAll = async (query = {}, page, limit, include = []) => {
   const offset = (page - 1) * limit;
   try {
     const result = await user.findAll({
       where: query,
       limit,
       offset,
-      include,
+      ...(include.length > 0 && { include }),
     });
 
-    return result.map((item) => item.toJSON());
+    return result.map((item) => item.toJSON()) || null;
   } catch (error) {
     console.log(error?.message || error);
   }

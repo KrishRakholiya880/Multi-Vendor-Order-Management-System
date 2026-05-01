@@ -2,7 +2,7 @@ const { Op } = require("sequelize");
 const userDb = require("../../dbUtils/userDb");
 const refreshTokenDb = require("../../dbUtils/refreshTokenDb");
 const productDb = require("../../dbUtils/productDb");
-const { product, user } = require("../../db/models");
+const { product, user, vendor_detail } = require("../../db/models");
 const vendorDetailsDb = require("../../dbUtils/vendorDetailsDb");
 const { hashPassword } = require("../../helper/bcrypt");
 
@@ -15,16 +15,13 @@ const getUsers = async (search, page, limit) => {
     };
   }
 
-  const result = await userDb.findAll(query, page, limit, {
-    model: product,
-    as: "products",
-  });
-
-  result.forEach((user) => {
-    if (user.role === "customer" || user.role === "admin") {
-      delete user.products;
-    }
-  });
+  const result = await userDb.findAll(query, page, limit, [
+    { model: vendor_detail, as: "vendor_detail" },
+    {
+      model: product,
+      as: "products",
+    },
+  ]);
 
   if (!result) {
     throw new Error("USER_NOT_FOUND");
@@ -41,7 +38,10 @@ const getUserById = async (id) => {
     },
   };
 
-  const result = await userDb.findOne(query);
+  const result = await userDb.findOne(query, [
+    { model: vendor_detail, as: "vendor_detail" },
+    { model: product, as: "products" },
+  ]);
 
   if (!result) {
     throw new Error("USER_NOT_FOUND");
@@ -112,8 +112,8 @@ const updateUserById = async (data, id) => {
     const hashedPassword = await hashPassword(password);
 
     newBody = {
-      hash_password: hashedPassword,
       ...data,
+      hash_password: hashedPassword,
     };
   } else {
     newBody = {
@@ -122,10 +122,6 @@ const updateUserById = async (data, id) => {
   }
 
   const result = await userDb.update(newBody, query);
-
-  if (result === 0) {
-    throw new Error("USER_NOT_FOUND");
-  }
 
   return result;
 };

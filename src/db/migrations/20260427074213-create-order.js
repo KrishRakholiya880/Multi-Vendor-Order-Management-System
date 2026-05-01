@@ -30,7 +30,7 @@ module.exports = {
         allowNull: false,
         defaultValue: "placed",
       },
-      placed_at: {
+      created_at: {
         allowNull: false,
         type: DataTypes.DATE,
         defaultValue: DataTypes.NOW,
@@ -39,12 +39,6 @@ module.exports = {
         allowNull: false,
         type: DataTypes.DATE,
         defaultValue: DataTypes.NOW,
-      },
-      cancelled_at: {
-        type: DataTypes.DATE,
-      },
-      delivered_at: {
-        type: DataTypes.DATE,
       },
     });
   },

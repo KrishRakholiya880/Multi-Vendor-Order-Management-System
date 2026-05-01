@@ -8,32 +8,34 @@ const cartController = require("./cart.controller");
 const {
   isUserLoggedIn,
   isCustomer,
+  isAdminOrCustomer,
 } = require("../../middleware/authorizationMiddleware");
 
 router
   .route("/")
-  .get(isUserLoggedIn, cartController.getCart)
+  .get(isUserLoggedIn, isAdminOrCustomer, cartController.getCart)
   .post(
     isUserLoggedIn,
+    isAdminOrCustomer,
     validate(cartValidation.addToCart),
     cartController.addToCart,
   );
 
 router
   .route("/clear")
-  .post(isUserLoggedIn, isCustomer, cartController.clearCart);
+  .post(isUserLoggedIn, isAdminOrCustomer, cartController.clearCart);
 
 router
   .route("/:product_id")
   .patch(
     isUserLoggedIn,
-    isCustomer,
+    isAdminOrCustomer,
     validate(cartValidation.updateProductQuantityById),
     cartController.updateProductQuantityById,
   )
   .delete(
     isUserLoggedIn,
-    isCustomer,
+    isAdminOrCustomer,
     validate(cartValidation.removeCartProductById),
     cartController.removeCartProductById,
   );

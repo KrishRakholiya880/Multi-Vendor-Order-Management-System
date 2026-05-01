@@ -4,7 +4,7 @@ const findAll = async (query = {}) => {
   try {
     const result = await vendor_detail.findAll();
 
-    return result;
+    return result.map((item) => item.toJSON()) || null;
   } catch (error) {
     console.log(error?.message || error);
   }
@@ -20,7 +20,7 @@ const findOne = async (query = {}) => {
       },
     });
 
-    return result;
+    return result.toJSON() || null;
   } catch (error) {
     console.log(error?.message || error);
   }
@@ -42,7 +42,7 @@ const update = async (data, query) => {
       where: query,
     });
 
-    return result.toJSON() || result;
+    return result;
   } catch (error) {
     console.log(error?.message || error);
   }

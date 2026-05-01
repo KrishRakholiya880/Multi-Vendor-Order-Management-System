@@ -7,15 +7,14 @@ const orderValidation = require("./order.validation");
 const orderController = require("./order.controller");
 const {
   isUserLoggedIn,
-  isCustomer,
-  isVendor,
   isVendorOrAdmin,
+  isAdminOrCustomer,
 } = require("../../middleware/authorizationMiddleware");
 
 router
   .route("/")
-  .get(isUserLoggedIn, orderController.getOrder)
-  .post(isUserLoggedIn, isCustomer, orderController.addToOrder);
+  .get(isUserLoggedIn, isAdminOrCustomer, orderController.getOrder)
+  .post(isUserLoggedIn, isAdminOrCustomer, orderController.addToOrder);
 
 router
   .route("/vendor-orders")

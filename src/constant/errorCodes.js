@@ -352,4 +352,13 @@ module.exports = {
       message: "Order item creation failed!!!",
     },
   },
+
+  // Others
+  VENDOR_ID_REQUIRED: {
+    httpStatusCode: 400,
+    body: {
+      code: "validation_error",
+      message: "vendor_id is required for admin!!!",
+    },
+  },
 };

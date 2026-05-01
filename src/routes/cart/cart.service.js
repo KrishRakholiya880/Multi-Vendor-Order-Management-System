@@ -184,54 +184,50 @@ const updateProductQuantityById = async (product_id, body, userData) => {
   let query = {};
   let result;
 
-  if (userData?.role === "customer") {
-    query = {
-      customer_id: {
-        [Op.eq]: `${userData?.id}`,
-      },
-    };
+  query = {
+    customer_id: {
+      [Op.eq]: `${userData?.id}`,
+    },
+  };
 
-    const customerCartData = await cartDb.findOne(query);
+  const customerCartData = await cartDb.findOne(query);
 
-    if (!customerCartData) {
-      throw new Error("CART_NOT_FOUND");
-    }
-
-    query = {
-      cart_id: { [Op.eq]: `${customerCartData?.id}` },
-      product_id: { [Op.eq]: `${product_id}` },
-    };
-
-    const cartProduct = await cartItemDb.findOne(query);
-
-    if (!cartProduct) {
-      throw new Error("CART_PRODUCT_NOT_FOUND");
-    }
-
-    result = await cartItemDb.update({ quantity: body?.quantity }, query);
-
-    query = {
-      cart_id: {
-        [Op.eq]: `${customerCartData?.id}`,
-      },
-    };
-
-    const productsWithSameCartId = await cartItemDb.findAll(query);
-
-    const newTotalAmount = productsWithSameCartId.reduce((total, product) => {
-      return total + product?.quantity * parseFloat(product?.unit_price);
-    }, 0);
-
-    query = {
-      id: {
-        [Op.eq]: `${customerCartData?.id}`,
-      },
-    };
-
-    await cartDb.update({ total_amount: Number(newTotalAmount) }, query);
-
-    return result;
+  if (!customerCartData) {
+    throw new Error("CART_NOT_FOUND");
   }
+
+  query = {
+    cart_id: { [Op.eq]: `${customerCartData?.id}` },
+    product_id: { [Op.eq]: `${product_id}` },
+  };
+
+  const cartProduct = await cartItemDb.findOne(query);
+
+  if (!cartProduct) {
+    throw new Error("CART_PRODUCT_NOT_FOUND");
+  }
+
+  result = await cartItemDb.update({ quantity: body?.quantity }, query);
+
+  query = {
+    cart_id: {
+      [Op.eq]: `${customerCartData?.id}`,
+    },
+  };
+
+  const productsWithSameCartId = await cartItemDb.findAll(query);
+
+  const newTotalAmount = productsWithSameCartId.reduce((total, product) => {
+    return total + product?.quantity * parseFloat(product?.unit_price);
+  }, 0);
+
+  query = {
+    id: {
+      [Op.eq]: `${customerCartData?.id}`,
+    },
+  };
+
+  await cartDb.update({ total_amount: Number(newTotalAmount) }, query);
 
   return result;
 };
@@ -304,10 +300,6 @@ const removeCartProductById = async (product_id, userData) => {
   }
 
   result = await cartItemDb.remove(query);
-
-  if (result === 0) {
-    throw new Error("CART_ITEM_REMOVE_FAILED");
-  }
 
   query = {
     cart_id: {

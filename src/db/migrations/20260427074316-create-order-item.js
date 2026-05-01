@@ -20,22 +20,38 @@ module.exports = {
       quantity: {
         type: DataTypes.INTEGER,
         allowNull: false,
-        allowNull: 1,
+        defaultValue: 1,
       },
       price_at_purchase: {
         type: DataTypes.INTEGER,
         allowNull: false,
-        allowNull: 1,
+        defaultValue: 0.0,
       },
-      created_at: {
+      status: {
+        type: DataTypes.ENUM([
+          "placed",
+          "confirmed",
+          "shipped",
+          "delivered",
+          "cancelled",
+        ]),
+        allowNull: false,
+        defaultValue: "placed",
+      },
+      placed_at: {
         allowNull: false,
         type: DataTypes.DATE,
         defaultValue: DataTypes.NOW,
       },
-      updated_at: {
-        allowNull: false,
+      shipped_at: {
+        allowNull: true,
         type: DataTypes.DATE,
-        defaultValue: DataTypes.NOW,
+      },
+      cancelled_at: {
+        type: DataTypes.DATE,
+      },
+      delivered_at: {
+        type: DataTypes.DATE,
       },
     });
   },

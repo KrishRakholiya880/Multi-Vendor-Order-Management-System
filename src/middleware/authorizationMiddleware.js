@@ -72,6 +72,16 @@ const isVendorOrAdmin = async (req, res, next) => {
   throw new Error("ACCESS_DENIED");
 };
 
+const isAdminOrCustomer = async (req, res, next) => {
+  const role = req.user?.role;
+
+  if (role === "customer" || role === "admin") {
+    return next();
+  }
+
+  throw new Error("ACCESS_DENIED");
+};
+
 const checkVendorProductOrNot = async (req, res, next) => {
   const user = req.user;
   const role = req.user?.role;
@@ -100,5 +110,6 @@ module.exports = {
   isVendor,
   isCustomer,
   isVendorOrAdmin,
+  isAdminOrCustomer,
   checkVendorProductOrNot,
 };

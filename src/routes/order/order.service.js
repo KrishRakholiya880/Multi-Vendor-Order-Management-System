@@ -55,7 +55,13 @@ const getOrder = async (userData) => {
         {
           model: order_item,
           as: "order_items",
-          attributes: ["id", "order_id", "quantity", "price_at_purchase"],
+          attributes: [
+            "id",
+            "order_id",
+            "quantity",
+            "price_at_purchase",
+            "placed_at",
+          ],
           include: [
             {
               model: product,

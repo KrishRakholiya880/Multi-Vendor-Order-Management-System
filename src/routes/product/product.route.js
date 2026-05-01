@@ -28,6 +28,7 @@ router
 router
   .route("/:id")
   .get(
+    isUserLoggedIn,
     validate(productValidation.getProductById),
     productController.getProductById,
   )

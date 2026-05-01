@@ -7,7 +7,7 @@ const findAll = async (query = {}) => {
       where: query,
     });
 
-    return result;
+    return result.map((item) => item.toJSON()) || null;
   } catch (error) {
     console.log(error?.message || error);
   }
@@ -21,7 +21,7 @@ const findOne = async (query = {}, attributes = {}) => {
       attributes,
     });
 
-    return result;
+    return result.toJSON() || null;
   } catch (error) {
     console.log(error?.message || error);
   }
@@ -32,7 +32,7 @@ const create = async (data) => {
   try {
     const result = await category.create(data);
 
-    return result;
+    return result.toJSON() || null;
   } catch (error) {
     console.log(error?.message || error);
   }

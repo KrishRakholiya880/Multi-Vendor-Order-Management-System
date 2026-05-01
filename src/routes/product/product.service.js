@@ -1,7 +1,7 @@
 const { Op } = require("sequelize");
 const { sequelize } = require("../../db/models");
 const productDb = require("../../dbUtils/productDb");
-const { category, user } = require("../../db/models");
+const { category, user, vendor_detail } = require("../../db/models");
 
 // generateRandomString
 const generateRandomString = () => {
@@ -29,6 +29,9 @@ const getProducts = async (userData, search, page, limit) => {
         [Op.eq]: "active",
       },
     };
+    if (userData?.role === "admin") {
+      query = {};
+    }
 
     if (search) {
       query = {
@@ -47,7 +50,14 @@ const getProducts = async (userData, search, page, limit) => {
       include.push({
         model: user,
         as: "vendor",
-        attributes: ["id", "full_name"],
+        attributes: ["id", "full_name", "email"],
+        include: [
+          {
+            model: vendor_detail,
+            as: "vendor_detail",
+            attributes: ["company_name", "company_email", "company_city"],
+          },
+        ],
       });
     }
     result = await productDb.findAll(
@@ -61,6 +71,7 @@ const getProducts = async (userData, search, page, limit) => {
         "category_id",
         "vendor_id",
         "status",
+        "stock",
         "price",
       ],
       include,
@@ -99,17 +110,44 @@ const getProducts = async (userData, search, page, limit) => {
 };
 
 // getProductById
-const getProductById = async (id) => {
+const getProductById = async (userData, id) => {
   const query = {
     id: {
       [Op.eq]: `${id}`,
     },
   };
 
+  const include = [
+    { model: category, as: "category", attributes: ["id", "name"] },
+  ];
+
+  if (userData?.role === "admin") {
+    include.push({
+      model: user,
+      as: "vendor",
+      attributes: ["id", "full_name", "email"],
+      include: [
+        {
+          model: vendor_detail,
+          as: "vendor_detail",
+          attributes: ["company_name", "company_email", "company_city"],
+        },
+      ],
+    });
+  }
+
   const result = await productDb.findOne(
     query,
-    ["id", "name", "description", "category_id", "vendor_id", "status"],
-    { model: category, as: "category", attributes: ["id", "name"] },
+    [
+      "id",
+      "name",
+      "description",
+      "category_id",
+      "vendor_id",
+      "status",
+      "price",
+    ],
+    include,
   );
 
   if (!result) {
@@ -120,15 +158,25 @@ const getProductById = async (id) => {
 };
 
 // createProduct
-const createProduct = async (data) => {
+const createProduct = async (userData, data) => {
   let newDataObj;
 
+  // check vendor_id for admin
+  if (userData?.role === "admin" && !data?.vendor_id) {
+    throw new Error("VENDOR_ID_REQUIRED");
+  }
+
+  // set vendor_id from token if vendor
+  const vendor_id =
+    userData?.role === "vendor" ? userData?.id : data?.vendor_id;
+
   if (data?.sku) {
-    newDataObj = { ...data };
+    newDataObj = { ...data, vendor_id };
   } else {
     newDataObj = {
       sku: generateRandomString(),
       ...data,
+      vendor_id,
     };
   }
 
@@ -145,10 +193,6 @@ const createProduct = async (data) => {
   }
 
   const result = await productDb.create(newDataObj);
-
-  if (!result) {
-    throw new Error("PRODUCT_CREATION_FAILED");
-  }
 
   delete result?.created_at;
   delete result?.updated_at;

@@ -30,7 +30,7 @@ const create = async (body) => {
   try {
     const result = await cart_item.create(body);
 
-    return result.toJSON();
+    return result.toJSON() || null;
   } catch (error) {
     console.log(error?.message || error);
   }

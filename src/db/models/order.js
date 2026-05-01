@@ -43,7 +43,7 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false,
         defaultValue: "placed",
       },
-      placed_at: {
+      created_at: {
         allowNull: false,
         type: DataTypes.DATE,
         defaultValue: DataTypes.NOW,
@@ -52,12 +52,6 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false,
         type: DataTypes.DATE,
         defaultValue: DataTypes.NOW,
-      },
-      cancelled_at: {
-        type: DataTypes.DATE,
-      },
-      delivered_at: {
-        type: DataTypes.DATE,
       },
     },
     {

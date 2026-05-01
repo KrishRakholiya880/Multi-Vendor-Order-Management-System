@@ -7,23 +7,12 @@ const getVendorDetailsById = async (paramsId, userData) => {
   let query = {};
   let vendorDetails;
 
-  if (userData?.role === "vendor") {
-    query = {
-      user_id: {
-        [Op.eq]: `${userData.id}`,
-      },
-    };
-    vendorDetails = await vendorDetailsDb.findOne(query);
-  }
-
-  if (userData?.role === "admin") {
-    query = {
-      user_id: {
-        [Op.eq]: `${paramsId}`,
-      },
-    };
-    vendorDetails = await vendorDetailsDb.findOne(query);
-  }
+  query = {
+    user_id: {
+      [Op.eq]: `${paramsId}`,
+    },
+  };
+  vendorDetails = await vendorDetailsDb.findOne(query);
 
   if (!vendorDetails) {
     throw new Error("VENDOR_DETAILS_NOT_FOUND");
@@ -53,7 +42,7 @@ const createVendorDetails = async (data, paramsId) => {
   if (data.userData?.role === "vendor") {
     query = {
       user_id: {
-        [Op.eq]: `${user_id}`,
+        [Op.eq]: `${data.userData?.id}`,
       },
     };
 
@@ -64,7 +53,7 @@ const createVendorDetails = async (data, paramsId) => {
     }
 
     newData = {
-      user_id,
+      user_id: data.userData?.id,
       vendor_status: data.userData?.status,
       ...data,
     };

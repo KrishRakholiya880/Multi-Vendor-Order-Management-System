@@ -30,7 +30,7 @@ const create = async (data) => {
   try {
     const result = await order.create(data);
 
-    return result.toJSON();
+    return result.toJSON() || null;
   } catch (error) {
     console.log(error.message || error);
   }
