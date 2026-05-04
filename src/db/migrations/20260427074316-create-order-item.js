@@ -46,12 +46,17 @@ module.exports = {
       shipped_at: {
         allowNull: true,
         type: DataTypes.DATE,
+        defaultValue: null,
       },
       cancelled_at: {
+        allowNull: true,
         type: DataTypes.DATE,
+        defaultValue: null,
       },
       delivered_at: {
+        allowNull: true,
         type: DataTypes.DATE,
+        defaultValue: null,
       },
     });
   },

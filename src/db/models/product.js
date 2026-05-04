@@ -52,7 +52,7 @@ module.exports = (sequelize, DataTypes) => {
       sku: {
         type: DataTypes.STRING,
         allowNull: false,
-        unqiue: true,
+        unique: true,
       },
       status: {
         type: DataTypes.ENUM(["active", "inactive", "out_of_stock"]),
@@ -76,24 +76,16 @@ module.exports = (sequelize, DataTypes) => {
           isInt: true,
         },
       },
-      created_at: {
-        allowNull: false,
-        type: DataTypes.DATE,
-        defaultValue: DataTypes.NOW,
-      },
-      updated_at: {
-        allowNull: false,
-        type: DataTypes.DATE,
-        defaultValue: DataTypes.NOW,
-      },
     },
     {
       sequelize,
       modelName: "product",
       tableName: "products",
       underscored: true,
-      createdAt: false,
-      updatedAt: false,
+      createdAt: "created_at",
+      updatedAt: "updated_at",
+      deletedAt: "deleted_at",
+      paranoid: true,
     },
   );
   return product;

@@ -38,8 +38,23 @@ const getVendorOrders = async (req, res, next) => {
   }
 };
 
+// updateOrderStatusById
+const updateOrderStatusById = async (req, res, next) => {
+  const { id } = req.params;
+  const data = req.body;
+  const userData = req.user;
+  try {
+    const result = await orderService.updateOrderStatusById(id, data, userData);
+
+    return res.status(200).json({ status: true, message: "Status Changed!!!" });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   getOrder,
   addToOrder,
   getVendorOrders,
+  updateOrderStatusById,
 };

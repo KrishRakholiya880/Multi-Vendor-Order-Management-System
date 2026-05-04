@@ -29,15 +29,19 @@ const getCart = async (userData) => {
                 "price",
                 "vendor_id",
               ],
-              // include: {
-              //   model: user,
-              //   as: "vendor",
-              // },
+              include: {
+                model: user,
+                as: "vendor",
+              },
             },
           ],
         },
       ],
     );
+
+    if (!result || (Array.isArray(result) && result.length === 0)) {
+      throw new Error("CART_NOT_FOUND");
+    }
   } else {
     query = {
       customer_id: {
@@ -75,10 +79,10 @@ const getCart = async (userData) => {
         },
       ],
     );
-  }
 
-  if (!result) {
-    throw new Error("CART_NOT_FOUND");
+    if (!result || (Array.isArray(result) && result.length === 0)) {
+      throw new Error("CART_NOT_FOUND");
+    }
   }
 
   return result;

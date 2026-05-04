@@ -51,24 +51,16 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.STRING,
         allowNull: false,
       },
-      created_at: {
-        allowNull: false,
-        type: DataTypes.DATE,
-        defaultValue: DataTypes.NOW,
-      },
-      updated_at: {
-        allowNull: false,
-        type: DataTypes.DATE,
-        defaultValue: DataTypes.NOW,
-      },
     },
     {
       sequelize,
       modelName: "vendor_detail",
       tableName: "vendor_details",
       underscored: true,
-      createdAt: false,
-      updatedAt: false,
+      createdAt: "created_at",
+      updatedAt: "updated_at",
+      deletedAt: "deleted_at",
+      paranoid: true,
     },
   );
   return vendor_detail;

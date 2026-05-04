@@ -31,18 +31,13 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.DATE,
         allowNull: false,
       },
-      created_at: {
-        allowNull: false,
-        type: DataTypes.DATE,
-        defaultValue: DataTypes.NOW,
-      },
     },
     {
       sequelize,
       modelName: "refresh_token",
       tableName: "refresh_tokens",
       underscored: true,
-      createdAt: false,
+      createdAt: "created_at",
       updatedAt: false,
     },
   );

@@ -44,9 +44,12 @@ module.exports = {
         defaultValue: DataTypes.NOW,
       },
       updated_at: {
-        allowNull: false,
+        allowNull: true,
         type: DataTypes.DATE,
-        defaultValue: DataTypes.NOW,
+      },
+      deleted_at: {
+        allowNull: true,
+        type: DataTypes.DATE,
       },
     });
   },

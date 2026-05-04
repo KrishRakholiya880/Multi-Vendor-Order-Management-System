@@ -43,24 +43,15 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false,
         defaultValue: "placed",
       },
-      created_at: {
-        allowNull: false,
-        type: DataTypes.DATE,
-        defaultValue: DataTypes.NOW,
-      },
-      updated_at: {
-        allowNull: false,
-        type: DataTypes.DATE,
-        defaultValue: DataTypes.NOW,
-      },
     },
     {
       sequelize,
       underscored: true,
       modelName: "order",
       tableName: "orders",
-      createdAt: false,
-      updatedAt: false,
+      createdAt: "created_at",
+      updatedAt: "updated_at",
+      deletedAt: "deleted_at",
     },
   );
   return order;

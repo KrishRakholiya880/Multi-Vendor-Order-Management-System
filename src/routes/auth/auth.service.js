@@ -1,5 +1,6 @@
 const { Op } = require("sequelize");
 const { sequelize } = require("../../db/models");
+const { vendor_detail } = require("../../db/models");
 // dbUtils
 const authDb = require("../../dbUtils/authDb");
 const refreshTokenDb = require("../../dbUtils/refreshTokenDb");
@@ -188,7 +189,25 @@ const profile = async (userData) => {
         [Op.eq]: `${userData?.id}`,
       },
     };
-    result = await userDb.findOne(query);
+    result = await userDb.findOne(
+      query,
+      ["id", "full_name", "email", "phone_number", "status", "role"],
+      [
+        {
+          model: vendor_detail,
+          as: "vendor_detail",
+          attributes: [
+            "id",
+            "user_id",
+            "company_name",
+            "company_email",
+            "company_phone_number",
+            "company_address",
+            "company_city",
+          ],
+        },
+      ],
+    );
 
     if (!result) {
       throw new Error("USER_DATA_NOT_FOUND");

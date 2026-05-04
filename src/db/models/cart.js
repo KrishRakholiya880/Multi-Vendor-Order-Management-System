@@ -32,24 +32,15 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false,
         defaultValue: 0.0,
       },
-      created_at: {
-        allowNull: false,
-        type: DataTypes.DATE,
-        defaultValue: DataTypes.NOW,
-      },
-      updated_at: {
-        allowNull: false,
-        type: DataTypes.DATE,
-        defaultValue: DataTypes.NOW,
-      },
     },
     {
       sequelize,
       modelName: "cart",
       tableName: "carts",
       underscored: true,
-      createdAt: false,
-      updatedAt: false,
+      createdAt: "created_at",
+      updatedAt: "updated_at",
+      paranoid: false,
     },
   );
   return cart;

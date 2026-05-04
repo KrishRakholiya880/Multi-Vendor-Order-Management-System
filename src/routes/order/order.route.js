@@ -20,4 +20,13 @@ router
   .route("/vendor-orders")
   .get(isUserLoggedIn, isVendorOrAdmin, orderController.getVendorOrders);
 
+router
+  .route("/vendor-orders/:id")
+  .patch(
+    isUserLoggedIn,
+    isVendorOrAdmin,
+    validate(orderValidation.updateOrderStatusById),
+    orderController.updateOrderStatusById,
+  );
+
 module.exports = router;

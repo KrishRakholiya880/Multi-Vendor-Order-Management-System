@@ -338,6 +338,13 @@ module.exports = {
       message: "Order not found!!!",
     },
   },
+  ORDER_ITEM_NOT_FOUND: {
+    httpStatusCode: 404,
+    body: {
+      code: "not_found",
+      message: "Order item not found!!!",
+    },
+  },
   ORDER_CREATION_FAILED: {
     httpStatusCode: 500,
     body: {
@@ -350,6 +357,20 @@ module.exports = {
     body: {
       code: "server_error",
       message: "Order item creation failed!!!",
+    },
+  },
+  CHANGE_ORDER_STATUS_WRONG_VENDOR: {
+    httpStatusCode: 401,
+    body: {
+      code: "unauthorized",
+      message: "You can't update order status of other vendors orders!!!",
+    },
+  },
+  INVALID_STATUS_TRANSITION: {
+    httpStatusCode: 400,
+    body: {
+      code: "invalid_status",
+      message: "Invalid order status transition!!!",
     },
   },
 

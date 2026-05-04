@@ -64,12 +64,17 @@ module.exports = (sequelize, DataTypes) => {
       shipped_at: {
         allowNull: true,
         type: DataTypes.DATE,
+        defaultValue: null,
       },
       cancelled_at: {
+        allowNull: true,
         type: DataTypes.DATE,
+        defaultValue: null,
       },
       delivered_at: {
+        allowNull: true,
         type: DataTypes.DATE,
+        defaultValue: null,
       },
     },
     {
@@ -77,8 +82,10 @@ module.exports = (sequelize, DataTypes) => {
       underscored: true,
       modelName: "order_item",
       tableName: "order_items",
-      createdAt: false,
+      createdAt: "placed_at",
       updatedAt: false,
+      deletedAt: "cancelled_at",
+      paranoid: false,
     },
   );
   return order_item;

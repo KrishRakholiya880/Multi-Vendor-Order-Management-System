@@ -1,10 +1,11 @@
 const { user, vendor_detail, product } = require("../db/models");
 
 // findOne
-const findOne = async (query = {}, include = []) => {
+const findOne = async (query = {}, attributes = [], include = []) => {
   try {
     const result = await user.findOne({
       where: query,
+      attributes,
       ...(include.length > 0 && { include }),
     });
 
