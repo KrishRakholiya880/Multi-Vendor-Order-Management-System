@@ -14,13 +14,15 @@ const findOne = async (query = {}) => {
 };
 
 // findAll
-const findAll = async (query = {}, page, limit) => {
+const findAll = async (query = {}, sortBy, page, limit) => {
   const offset = (page - 1) * limit;
+  const order = sortBy === "asc" ? "ASC" : "DESC";
   try {
     const result = await user.findAll({
       where: query,
       limit,
       offset,
+      order: [["created_at", order]],
     });
 
     return result;

@@ -2,10 +2,12 @@ const userService = require("./user.service");
 
 // getUsers
 const getUsers = async (req, res, next) => {
-  const { search, page, limit } = req.query;
+  const { role, status, sortBy, page, limit } = req.query;
   try {
     const result = await userService.getUsers(
-      search,
+      role,
+      status,
+      sortBy,
       Number(page) || 1,
       Number(limit) || 30,
     );
