@@ -104,6 +104,10 @@ const addToCart = async (data) => {
     throw new Error("PRODUCT_NOT_FOUND");
   }
 
+  if (productData?.status === "inactive") {
+    throw new Error("PRODUCT_UNAVAILABLE");
+  }
+
   if (productData?.stock === 0) {
     throw new Error("PRODUCT_OUT_OF_STOCK");
   }

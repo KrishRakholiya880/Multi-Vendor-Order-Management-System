@@ -23,7 +23,7 @@ module.exports = {
         defaultValue: 1,
       },
       price_at_purchase: {
-        type: DataTypes.INTEGER,
+        type: DataTypes.DECIMAL(10, 2),
         allowNull: false,
         defaultValue: 0.0,
       },

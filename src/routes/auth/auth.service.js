@@ -89,6 +89,10 @@ const login = async (body) => {
     throw new Error("USER_NOT_FOUND");
   }
 
+  if (existingUser?.status === "inactive") {
+    throw new Error("ACCOUNT_DEACTIVATED");
+  }
+
   const isSamePassword = await comparePassword(
     password,
     existingUser?.hash_password,

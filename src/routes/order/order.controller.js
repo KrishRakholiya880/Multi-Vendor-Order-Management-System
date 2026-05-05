@@ -52,9 +52,25 @@ const updateOrderStatusById = async (req, res, next) => {
   }
 };
 
+// cancelOrderById
+const cancelOrderById = async (req, res, next) => {
+  const { item_id } = req.params;
+  const userData = req.user;
+  try {
+    const result = await orderService.cancelOrderById(item_id, userData);
+
+    return res
+      .status(200)
+      .json({ status: true, message: "Order cancelled!!!", result });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   getOrder,
   addToOrder,
   getVendorOrders,
   updateOrderStatusById,
+  cancelOrderById,
 };

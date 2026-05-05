@@ -36,8 +36,21 @@ const create = async (data) => {
   }
 };
 
+const update = async (data, query = {}) => {
+  try {
+    const result = await order.update(data, {
+      where: query,
+    });
+    return result;
+  } catch (error) {
+    console.log(error?.message || error);
+    throw error;
+  }
+};
+
 module.exports = {
   findAll,
   findOne,
   create,
+  update,
 };

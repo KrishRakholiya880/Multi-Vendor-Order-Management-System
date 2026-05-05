@@ -29,4 +29,12 @@ router
     orderController.updateOrderStatusById,
   );
 
+router
+  .route("/:item_id")
+  .delete(
+    isUserLoggedIn,
+    validate(orderValidation.cancelOrderById),
+    orderController.cancelOrderById,
+  );
+
 module.exports = router;

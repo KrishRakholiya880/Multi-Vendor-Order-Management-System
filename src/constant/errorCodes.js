@@ -53,6 +53,14 @@ module.exports = {
         "The refresh token is invalid or has expired. Please sign in again!!!",
     },
   },
+  ACCOUNT_DEACTIVATED: {
+    httpStatusCode: 403,
+    body: {
+      code: "account_deactivated",
+      message:
+        "Your account has been deactivated by admin. Please contact support!!!",
+    },
+  },
   USER_NOT_FOUND: {
     httpStatusCode: 404,
     body: {
@@ -152,6 +160,13 @@ module.exports = {
     body: {
       code: "duplicate_product",
       message: "product already exists!!!",
+    },
+  },
+  PRODUCT_UNAVAILABLE: {
+    httpStatusCode: 400,
+    body: {
+      code: "product_unavailable",
+      message: "Product is unavailable or inactive!!!",
     },
   },
   PRODUCT_CREATION_FAILED: {
@@ -345,11 +360,25 @@ module.exports = {
       message: "Order item not found!!!",
     },
   },
+  ORDER_ITEMS_NOT_FOUND: {
+    httpStatusCode: 404,
+    body: {
+      code: "not_found",
+      message: "Order item not found!!!",
+    },
+  },
   ORDER_CREATION_FAILED: {
     httpStatusCode: 500,
     body: {
       code: "server_error",
       message: "Order creation failed!!!",
+    },
+  },
+  ORDER_ITEM_ALREADY_CANCELLED: {
+    httpStatusCode: 400,
+    body: {
+      code: "already_cancelled",
+      message: "Order item is already cancelled!!!",
     },
   },
   ORDER_ITEM_CREATION_FAILED: {
@@ -371,6 +400,13 @@ module.exports = {
     body: {
       code: "invalid_status",
       message: "Invalid order status transition!!!",
+    },
+  },
+  WRONG_VENDOR_ORDER_CANCEL: {
+    httpStatusCode: 403,
+    body: {
+      code: "unauthorized",
+      message: "You are not authorized to cancel another vendor's order!!!",
     },
   },
 

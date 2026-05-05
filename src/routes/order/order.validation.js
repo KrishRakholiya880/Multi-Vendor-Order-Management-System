@@ -11,6 +11,13 @@ const updateOrderStatusById = {
   }),
 };
 
+const cancelOrderById = {
+  params: Joi.object({
+    item_id: Joi.number().integer().positive().required(),
+  }).required(),
+};
+
 module.exports = {
   updateOrderStatusById,
+  cancelOrderById,
 };

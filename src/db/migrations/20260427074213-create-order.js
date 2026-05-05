@@ -20,15 +20,9 @@ module.exports = {
         defaultValue: 0.0,
       },
       status: {
-        type: DataTypes.ENUM([
-          "placed",
-          "confirmed",
-          "shipped",
-          "delivered",
-          "cancelled",
-        ]),
+        type: DataTypes.ENUM(["pending", "partially done", "full done"]),
         allowNull: false,
-        defaultValue: "placed",
+        defaultValue: "pending",
       },
       created_at: {
         allowNull: false,

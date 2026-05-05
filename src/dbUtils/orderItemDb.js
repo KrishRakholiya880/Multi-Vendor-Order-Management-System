@@ -10,6 +10,16 @@ const findOne = async (query) => {
   }
 };
 
+const findAll = async (query) => {
+  try {
+    const result = await order_item.findAll({ where: query });
+
+    return result.map((item) => item.toJSON()) || null;
+  } catch (error) {
+    console.log(error.message || error);
+  }
+};
+
 const create = async (data) => {
   try {
     const result = await order_item.create(data);
@@ -34,6 +44,7 @@ const update = async (data, query) => {
 
 module.exports = {
   findOne,
+  findAll,
   create,
   update,
 };
