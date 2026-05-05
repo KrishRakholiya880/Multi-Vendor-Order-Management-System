@@ -12,7 +12,7 @@ const findOne = async (
       attributes,
       transaction,
     });
-    return result;
+    return result.toJSON() || null;
   } catch (error) {
     console.log(error.message || error);
   }
@@ -22,7 +22,7 @@ const findOne = async (
 const create = async (data, transaction = undefined) => {
   try {
     const result = await user.create(data, { transaction });
-    return result.toJSON();
+    return result.toJSON() || null;
   } catch (error) {
     console.log(error.message || error);
   }

@@ -1,17 +1,20 @@
 "use strict";
 const { Model } = require("sequelize");
 module.exports = (sequelize, DataTypes) => {
-  class refresh_token extends Model {
+  class order extends Model {
     /**
      * Helper method for defining associations.
      * This method is not a part of Sequelize lifecycle.
      * The `models/index` file will call this method automatically.
      */
     static associate(models) {
-      // define association here
+      order.hasMany(models.order_item, {
+        foreignKey: "order_id",
+        as: "order_items",
+      });
     }
   }
-  refresh_token.init(
+  order.init(
     {
       id: {
         allowNull: false,
@@ -19,27 +22,31 @@ module.exports = (sequelize, DataTypes) => {
         primaryKey: true,
         type: DataTypes.INTEGER,
       },
-      token: {
-        type: DataTypes.STRING,
-        allowNull: false,
-      },
-      user_id: {
+      customer_id: {
         type: DataTypes.INTEGER,
         allowNull: false,
+        unique: true,
       },
-      expires_at: {
-        type: DataTypes.DATE,
+      total_amount: {
+        type: DataTypes.DECIMAL(10, 2),
         allowNull: false,
+        defaultValue: 0.0,
+      },
+      status: {
+        type: DataTypes.ENUM(["pending", "partially done", "full done"]),
+        allowNull: false,
+        defaultValue: "pending",
       },
     },
     {
       sequelize,
-      modelName: "refresh_token",
-      tableName: "refresh_tokens",
       underscored: true,
+      modelName: "order",
+      tableName: "orders",
       createdAt: "created_at",
-      updatedAt: false,
+      updatedAt: "updated_at",
+      deletedAt: "deleted_at",
     },
   );
-  return refresh_token;
+  return order;
 };

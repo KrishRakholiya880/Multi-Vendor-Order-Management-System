@@ -2,51 +2,41 @@
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, DataTypes) {
-    await queryInterface.createTable("products", {
+    await queryInterface.createTable("vendor_details", {
       id: {
         allowNull: false,
         autoIncrement: true,
         primaryKey: true,
         type: DataTypes.INTEGER,
       },
-      name: {
-        type: DataTypes.STRING,
-        allowNull: false,
-      },
-      description: {
-        type: DataTypes.STRING,
-        allowNull: false,
-      },
-      category_id: {
+      user_id: {
         type: DataTypes.INTEGER,
         allowNull: false,
       },
-      sku: {
+      company_name: {
         type: DataTypes.STRING,
         allowNull: false,
-        unqiue: true,
       },
-      status: {
-        type: DataTypes.ENUM(["active", "inactive", "out_of_stock"]),
-        defaultValue: "active",
+      company_email: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        unique: true,
+      },
+      company_phone_number: {
+        type: DataTypes.STRING,
+        unique: true,
+      },
+      company_address: {
+        type: DataTypes.STRING,
         allowNull: false,
       },
-      vendor_id: {
-        type: DataTypes.INTEGER,
+      company_city: {
+        type: DataTypes.STRING,
         allowNull: false,
       },
-      price: {
-        type: DataTypes.DECIMAL(10, 2),
+      vendor_status: {
+        type: DataTypes.STRING,
         allowNull: false,
-      },
-      stock: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
-        defaultValue: 0,
-        validate: {
-          min: 0,
-          isInt: true,
-        },
       },
       created_at: {
         allowNull: false,
@@ -64,6 +54,6 @@ module.exports = {
     });
   },
   async down(queryInterface, DataTypes) {
-    await queryInterface.dropTable("products");
+    await queryInterface.dropTable("vendor_details");
   },
 };

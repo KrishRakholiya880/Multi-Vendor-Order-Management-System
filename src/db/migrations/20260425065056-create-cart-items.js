@@ -2,38 +2,30 @@
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, DataTypes) {
-    await queryInterface.createTable("users", {
+    await queryInterface.createTable("cart_items", {
       id: {
         allowNull: false,
         autoIncrement: true,
         primaryKey: true,
         type: DataTypes.INTEGER,
       },
-      full_name: {
-        type: DataTypes.STRING,
-      },
-      email: {
-        allowNull: false,
-        type: DataTypes.STRING,
-        unique: true,
-      },
-      hash_password: {
-        type: DataTypes.STRING,
+      cart_id: {
+        type: DataTypes.INTEGER,
         allowNull: false,
       },
-      phone_number: {
-        type: DataTypes.STRING,
-        unique: true,
-      },
-      status: {
-        type: DataTypes.ENUM(["active", "inactive"]),
-        defaultValue: "active",
+      product_id: {
+        type: DataTypes.INTEGER,
         allowNull: false,
       },
-      role: {
-        type: DataTypes.ENUM(["customer", "vendor", "admin"]),
-        defaultValue: "customer",
+      quantity: {
+        type: DataTypes.INTEGER,
         allowNull: false,
+        defaultValue: 1,
+      },
+      unit_price: {
+        type: DataTypes.DECIMAL(10, 2),
+        allowNull: false,
+        defaultValue: 0.0,
       },
       created_at: {
         allowNull: false,
@@ -44,13 +36,15 @@ module.exports = {
         allowNull: true,
         type: DataTypes.DATE,
       },
-      deleted_at: {
-        allowNull: true,
-        type: DataTypes.DATE,
-      },
+    });
+
+    await queryInterface.addConstraint("cart_items", {
+      fields: ["cart_id", "product_id"],
+      type: "unique",
+      name: "unique_cart_product",
     });
   },
   async down(queryInterface, DataTypes) {
-    await queryInterface.dropTable("users");
+    await queryInterface.dropTable("cart_items");
   },
 };

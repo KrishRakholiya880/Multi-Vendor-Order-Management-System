@@ -1,14 +1,13 @@
 const { Op } = require("sequelize");
 const { sequelize } = require("../../db/models");
+const { vendor_detail } = require("../../db/models");
 // dbUtils
 const authDb = require("../../dbUtils/authDb");
 const refreshTokenDb = require("../../dbUtils/refreshTokenDb");
+const userDb = require("../../dbUtils/userDb");
 // helper
 const { hashPassword, comparePassword } = require("../../helper/bcrypt");
-const {
-  generateAccessAndRefreshTokens,
-  decodeToken,
-} = require("../../helper/authHelper");
+const { generateAccessAndRefreshTokens } = require("../../helper/authHelper");
 // config
 const { tokenKeys } = require("../../config/index");
 
@@ -88,6 +87,10 @@ const login = async (body) => {
 
   if (!existingUser) {
     throw new Error("USER_NOT_FOUND");
+  }
+
+  if (existingUser?.status === "inactive") {
+    throw new Error("ACCOUNT_DEACTIVATED");
   }
 
   const isSamePassword = await comparePassword(
@@ -180,29 +183,90 @@ const refreshToken = async (oldRefreshToken) => {
 };
 
 // profile
-const profile = async (accessToken) => {
-  // const t = sequelize.transaction();
-  const decodedData = decodeToken(accessToken);
-  const query = {
+const profile = async (userData) => {
+  let query = {};
+  let result;
+
+  if (userData?.role === "vendor") {
+    query = {
+      id: {
+        [Op.eq]: `${userData?.id}`,
+      },
+    };
+    result = await userDb.findOne(
+      query,
+      ["id", "full_name", "email", "phone_number", "status", "role"],
+      [
+        {
+          model: vendor_detail,
+          as: "vendor_detail",
+          attributes: [
+            "id",
+            "user_id",
+            "company_name",
+            "company_email",
+            "company_phone_number",
+            "company_address",
+            "company_city",
+          ],
+        },
+      ],
+    );
+
+    if (!result) {
+      throw new Error("USER_DATA_NOT_FOUND");
+    }
+
+    return result;
+  } else {
+    return userData;
+
+    if (!userData) {
+      throw new Error("USER_DATA_NOT_FOUND");
+    }
+  }
+};
+
+// changePassword
+const changePassword = async (user_id, data) => {
+  let query = {};
+
+  query = {
     id: {
-      [Op.eq]: `${decodedData.id}`,
+      [Op.eq]: `${user_id}`,
     },
   };
 
-  const result = await authDb.findOne(query, [
-    "id",
-    "full_name",
-    "email",
-    "phone_number",
-    "status",
-    "role",
-  ]);
+  const existingUser = await authDb.findOne(query, ["hash_password"]);
 
-  if (!result) {
-    throw new Error("USER_DATA_NOT_FOUND");
+  if (!existingUser) {
+    throw new Error("USER_NOT_FOUND");
   }
+
+  const isSamePassword = await comparePassword(
+    data.old_password,
+    existingUser?.hash_password,
+  );
+
+  if (!isSamePassword) {
+    throw new Error("INVALID_PASSWORD");
+  }
+
+  const newHashedPassword = await hashPassword(data.new_password);
+
+  const result = await authDb.update(
+    { hash_password: newHashedPassword },
+    query,
+  );
 
   return result;
 };
 
-module.exports = { register, login, logout, refreshToken, profile };
+module.exports = {
+  register,
+  login,
+  logout,
+  refreshToken,
+  profile,
+  changePassword,
+};

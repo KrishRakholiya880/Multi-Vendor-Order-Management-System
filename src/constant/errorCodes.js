@@ -53,6 +53,14 @@ module.exports = {
         "The refresh token is invalid or has expired. Please sign in again!!!",
     },
   },
+  ACCOUNT_DEACTIVATED: {
+    httpStatusCode: 403,
+    body: {
+      code: "account_deactivated",
+      message:
+        "Your account has been deactivated by admin. Please contact support!!!",
+    },
+  },
   USER_NOT_FOUND: {
     httpStatusCode: 404,
     body: {
@@ -124,6 +132,13 @@ module.exports = {
       message: "Only vendors can perform this action!!!",
     },
   },
+  ONLY_CUSTOMERS_ACCESS: {
+    httpStatusCode: 401,
+    body: {
+      code: "unauthorized",
+      message: "Only customers can perform this action!!!",
+    },
+  },
 
   // Products
   PRODUCTS_NOT_FOUND: {
@@ -145,6 +160,13 @@ module.exports = {
     body: {
       code: "duplicate_product",
       message: "product already exists!!!",
+    },
+  },
+  PRODUCT_UNAVAILABLE: {
+    httpStatusCode: 400,
+    body: {
+      code: "product_unavailable",
+      message: "Product is unavailable or inactive!!!",
     },
   },
   PRODUCT_CREATION_FAILED: {
@@ -218,6 +240,182 @@ module.exports = {
     body: {
       code: "remove_failed",
       message: "Failed to remove the category!!!",
+    },
+  },
+
+  // vendorDetails
+  VENDOR_DETAILS_NOT_FOUND: {
+    httpStatusCode: 404,
+    body: {
+      code: "details_not_found",
+      message: "Vendor's details not found!!!",
+    },
+  },
+  USER_DETAILS_ALREADY_FILLED: {
+    httpStatusCode: 400,
+    body: {
+      code: "details_aleady_exists",
+      message: "Vendor's details already filled!!!",
+    },
+  },
+  VENDOR_DETAIL_CREATE_FAILED: {
+    httpStatusCode: 500,
+    body: {
+      code: "create_failed",
+      message: "Failed to create the vendor details!!!",
+    },
+  },
+  VENDOR_DETAIL_UPDATE_FAILED: {
+    httpStatusCode: 500,
+    body: {
+      code: "update_failed",
+      message: "Failed to update the vendor details!!!",
+    },
+  },
+  VENDOR_DETAIL_DELETE_FAILED: {
+    httpStatusCode: 500,
+    body: {
+      code: "remove_failed",
+      message: "Failed to remove the vendor details!!!",
+    },
+  },
+  USER_IS_CUSTOMER: {
+    httpStatusCode: 500,
+    body: {
+      code: "conflict",
+      message: "User is customer. customer can't add vendor details!!!",
+    },
+  },
+
+  // cart
+  CART_NOT_FOUND: {
+    httpStatusCode: 404,
+    body: {
+      code: "not_found",
+      message: "Cart data not found!!!",
+    },
+  },
+  CART_ITEMS_NOT_FOUND: {
+    httpStatusCode: 404,
+    body: {
+      code: "not_found",
+      message: "Cart items not found!!!",
+    },
+  },
+  PRODUCT_OUT_OF_STOCK: {
+    httpStatusCode: 400,
+    body: {
+      code: "out_of_stock",
+      message: "Product is out of stock!!!",
+    },
+  },
+  INSUFFICIENT_STOCK: {
+    httpStatusCode: 400,
+    body: {
+      code: "insufficient_stock",
+      message: "Insufficient stock for the requested quantity!!!",
+    },
+  },
+  CART_UPDATE_FAILED: {
+    httpStatusCode: 500,
+    body: {
+      code: "update_failed",
+      message: "Failed to update the cart!!!",
+    },
+  },
+  CART_PRODUCT_NOT_FOUND: {
+    httpStatusCode: 404,
+    body: {
+      code: "not_found",
+      message: "Cart product not found!!!",
+    },
+  },
+  CART_ITEM_REMOVE_FAILED: {
+    httpStatusCode: 404,
+    body: {
+      code: "remove_failed",
+      message: "Cart product remove failed!!!",
+    },
+  },
+
+  // order
+  ORDER_NOT_FOUND: {
+    httpStatusCode: 404,
+    body: {
+      code: "not_found",
+      message: "Order not found!!!",
+    },
+  },
+  ORDERS_NOT_FOUND: {
+    httpStatusCode: 404,
+    body: {
+      code: "not_found",
+      message: "Order not found!!!",
+    },
+  },
+  ORDER_ITEM_NOT_FOUND: {
+    httpStatusCode: 404,
+    body: {
+      code: "not_found",
+      message: "Order item not found!!!",
+    },
+  },
+  ORDER_ITEMS_NOT_FOUND: {
+    httpStatusCode: 404,
+    body: {
+      code: "not_found",
+      message: "Order item not found!!!",
+    },
+  },
+  ORDER_CREATION_FAILED: {
+    httpStatusCode: 500,
+    body: {
+      code: "server_error",
+      message: "Order creation failed!!!",
+    },
+  },
+  ORDER_ITEM_ALREADY_CANCELLED: {
+    httpStatusCode: 400,
+    body: {
+      code: "already_cancelled",
+      message: "Order item is already cancelled!!!",
+    },
+  },
+  ORDER_ITEM_CREATION_FAILED: {
+    httpStatusCode: 500,
+    body: {
+      code: "server_error",
+      message: "Order item creation failed!!!",
+    },
+  },
+  CHANGE_ORDER_STATUS_WRONG_VENDOR: {
+    httpStatusCode: 401,
+    body: {
+      code: "unauthorized",
+      message: "You can't update order status of other vendors orders!!!",
+    },
+  },
+  INVALID_STATUS_TRANSITION: {
+    httpStatusCode: 400,
+    body: {
+      code: "invalid_status",
+      message: "Invalid order status transition!!!",
+    },
+  },
+  WRONG_VENDOR_ORDER_CANCEL: {
+    httpStatusCode: 403,
+    body: {
+      code: "unauthorized",
+      message: "You are not authorized to cancel another vendor's order!!!",
+    },
+  },
+
+  // Others
+  VENDOR_ID_REQUIRED: {
+    httpStatusCode: 400,
+    body: {
+      code: "validation_error",
+      message: "vendor_id is required for admin!!!",
     },
   },
 };

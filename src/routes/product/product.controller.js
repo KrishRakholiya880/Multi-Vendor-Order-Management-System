@@ -3,8 +3,11 @@ const productService = require("./product.service");
 // getProducts
 const getProducts = async (req, res, next) => {
   const { search, page, limit } = req.query;
+  const userdata = req.user;
+
   try {
     const result = await productService.getProducts(
+      userdata,
       search,
       Number(page) || 1,
       Number(limit) || 30,
@@ -18,9 +21,10 @@ const getProducts = async (req, res, next) => {
 
 // getProductById
 const getProductById = async (req, res, next) => {
+  const userData = req.user;
   const { id } = req.params;
   try {
-    const result = await productService.getProductById(id);
+    const result = await productService.getProductById(userData, id);
 
     return res.status(200).json({ status: true, result });
   } catch (error) {
@@ -31,10 +35,10 @@ const getProductById = async (req, res, next) => {
 // createProduct
 const createProduct = async (req, res, next) => {
   const body = req.body;
-  body.vendor_id = req.user.id;
+  const userData = req.user;
 
   try {
-    const result = await productService.createProduct(body);
+    const result = await productService.createProduct(userData, body);
 
     return res
       .status(201)

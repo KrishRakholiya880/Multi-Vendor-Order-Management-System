@@ -45,7 +45,7 @@ const updateProductById = async (req, res, next) => {
     const result = await categoryService.updateProductById(body, id);
 
     return res
-      .status(201)
+      .status(200)
       .json({ status: true, message: "Category updated!!!" });
   } catch (error) {
     next(error);
@@ -59,7 +59,7 @@ const removeProductById = async (req, res, next) => {
     const result = await categoryService.removeProductById(id);
 
     return res
-      .status(201)
+      .status(200)
       .json({ status: true, message: "Category removed!!!" });
   } catch (error) {
     next(error);

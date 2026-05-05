@@ -1,11 +1,8 @@
-const { category } = require("../db/models");
+const { vendor_detail, user } = require("../db/models");
 
-// findAll
 const findAll = async (query = {}) => {
   try {
-    const result = await category.findAll({
-      where: query,
-    });
+    const result = await vendor_detail.findAll();
 
     return result.map((item) => item.toJSON()) || null;
   } catch (error) {
@@ -13,12 +10,14 @@ const findAll = async (query = {}) => {
   }
 };
 
-// findOne
-const findOne = async (query = {}, attributes = {}) => {
+const findOne = async (query = {}) => {
   try {
-    const result = await category.findOne({
+    const result = await vendor_detail.findOne({
       where: query,
-      attributes,
+      include: {
+        model: user,
+        as: "user_data",
+      },
     });
 
     return result.toJSON() || null;
@@ -27,21 +26,19 @@ const findOne = async (query = {}, attributes = {}) => {
   }
 };
 
-// create
 const create = async (data) => {
   try {
-    const result = await category.create(data);
+    const result = await vendor_detail.create(data);
 
-    return result.toJSON() || null;
+    return result.toJSON() || result;
   } catch (error) {
     console.log(error?.message || error);
   }
 };
 
-// update
 const update = async (data, query) => {
   try {
-    const result = await category.update(data, {
+    const result = await vendor_detail.update(data, {
       where: query,
     });
 
@@ -51,10 +48,9 @@ const update = async (data, query) => {
   }
 };
 
-// remove
 const remove = async (query) => {
   try {
-    const result = await category.destroy({
+    const result = await vendor_detail.destroy({
       where: query,
     });
 

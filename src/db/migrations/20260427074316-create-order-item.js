@@ -2,68 +2,65 @@
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, DataTypes) {
-    await queryInterface.createTable("products", {
+    await queryInterface.createTable("order_items", {
       id: {
         allowNull: false,
         autoIncrement: true,
         primaryKey: true,
         type: DataTypes.INTEGER,
       },
-      name: {
-        type: DataTypes.STRING,
-        allowNull: false,
-      },
-      description: {
-        type: DataTypes.STRING,
-        allowNull: false,
-      },
-      category_id: {
+      order_id: {
         type: DataTypes.INTEGER,
         allowNull: false,
       },
-      sku: {
-        type: DataTypes.STRING,
-        allowNull: false,
-        unqiue: true,
-      },
-      status: {
-        type: DataTypes.ENUM(["active", "inactive", "out_of_stock"]),
-        defaultValue: "active",
-        allowNull: false,
-      },
-      vendor_id: {
+      product_id: {
         type: DataTypes.INTEGER,
         allowNull: false,
       },
-      price: {
+      quantity: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        defaultValue: 1,
+      },
+      price_at_purchase: {
         type: DataTypes.DECIMAL(10, 2),
         allowNull: false,
+        defaultValue: 0.0,
       },
-      stock: {
-        type: DataTypes.INTEGER,
+      status: {
+        type: DataTypes.ENUM([
+          "placed",
+          "confirmed",
+          "shipped",
+          "delivered",
+          "cancelled",
+        ]),
         allowNull: false,
-        defaultValue: 0,
-        validate: {
-          min: 0,
-          isInt: true,
-        },
+        defaultValue: "placed",
       },
-      created_at: {
+      placed_at: {
         allowNull: false,
         type: DataTypes.DATE,
         defaultValue: DataTypes.NOW,
       },
-      updated_at: {
+      shipped_at: {
         allowNull: true,
         type: DataTypes.DATE,
+        defaultValue: null,
       },
-      deleted_at: {
+      cancelled_at: {
         allowNull: true,
         type: DataTypes.DATE,
+        defaultValue: null,
+      },
+      delivered_at: {
+        allowNull: true,
+        type: DataTypes.DATE,
+        defaultValue: null,
       },
     });
   },
   async down(queryInterface, DataTypes) {
-    await queryInterface.dropTable("products");
+    await queryInterface.dropTable("order_items");
   },
 };

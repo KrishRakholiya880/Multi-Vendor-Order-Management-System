@@ -2,7 +2,7 @@ const Joi = require("joi");
 
 const getProducts = {
   query: Joi.object({
-    search: Joi.string().optional(),
+    search: Joi.string().allow("", null).optional(),
     page: Joi.number().positive().default(1).optional(),
     limit: Joi.number().positive().default(30).optional(),
   }),
@@ -17,6 +17,7 @@ const createProduct = {
     status: Joi.string()
       .valid("active", "inactive", "out_of_stock")
       .default("active"),
+    vendor_id: Joi.number().precision(2).positive().optional(),
     price: Joi.number().precision(2).positive().required(),
     stock: Joi.number().integer().min(0).positive().default(0),
   }),

@@ -16,7 +16,16 @@ const login = {
   }).required(),
 };
 
+const changePassword = {
+  body: Joi.object({
+    old_password: Joi.string().required(),
+    new_password: Joi.string().required(),
+    confirm_password: Joi.string().valid(Joi.ref("new_password")).required(),
+  }),
+};
+
 module.exports = {
   register,
   login,
+  changePassword,
 };

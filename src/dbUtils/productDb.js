@@ -1,14 +1,14 @@
 const { product, category } = require("../db/models");
 
 // findOne
-const findOne = async (query = {}, attributes = {}, include) => {
+const findOne = async (query = {}, attributes = {}, include = []) => {
   try {
     const result = await product.findOne({
       where: query,
       attributes,
-      include,
+      ...(include.length > 0 && { include }),
     });
-    return result;
+    return result.toJSON() || null;
   } catch (error) {
     console.log(error?.message || error);
   }
@@ -24,9 +24,9 @@ const findAll = async (query = {}, page, limit, attributes = {}, include) => {
       limit,
       offset,
       attributes,
-      include,
+      ...(include.length > 0 && { include }),
     });
-    return result;
+    return result.map((item) => item.toJSON()) || null;
   } catch (error) {
     console.log(error?.message || error);
   }
@@ -36,7 +36,7 @@ const findAll = async (query = {}, page, limit, attributes = {}, include) => {
 const create = async (data) => {
   try {
     const result = await product.create(data);
-    return result.toJSON();
+    return result.toJSON() || null;
   } catch (error) {
     console.log(error?.message || error);
   }

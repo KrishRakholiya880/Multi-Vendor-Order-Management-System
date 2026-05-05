@@ -13,7 +13,11 @@ const {
 
 router
   .route("/")
-  .get(validate(productValidation.getProducts), productController.getProducts)
+  .get(
+    isUserLoggedIn,
+    validate(productValidation.getProducts),
+    productController.getProducts,
+  )
   .post(
     isUserLoggedIn,
     isVendorOrAdmin,
@@ -24,6 +28,7 @@ router
 router
   .route("/:id")
   .get(
+    isUserLoggedIn,
     validate(productValidation.getProductById),
     productController.getProductById,
   )

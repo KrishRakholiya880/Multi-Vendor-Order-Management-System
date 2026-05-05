@@ -1,25 +1,20 @@
 "use strict";
 const { Model } = require("sequelize");
 module.exports = (sequelize, DataTypes) => {
-  class user extends Model {
+  class vendor_detail extends Model {
     /**
      * Helper method for defining associations.
      * This method is not a part of Sequelize lifecycle.
      * The `models/index` file will call this method automatically.
      */
     static associate(models) {
-      user.hasOne(models.vendor_detail, {
+      vendor_detail.belongsTo(models.user, {
         foreignKey: "user_id",
-        as: "vendor_detail",
-      });
-
-      user.hasMany(models.product, {
-        foreignKey: "vendor_id",
-        as: "products",
+        as: "user_data",
       });
     }
   }
-  user.init(
+  vendor_detail.init(
     {
       id: {
         allowNull: false,
@@ -27,37 +22,40 @@ module.exports = (sequelize, DataTypes) => {
         primaryKey: true,
         type: DataTypes.INTEGER,
       },
-      full_name: {
-        type: DataTypes.STRING,
-      },
-      email: {
+      user_id: {
+        type: DataTypes.INTEGER,
         allowNull: false,
+      },
+      company_name: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
+      company_email: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        unique: true,
+      },
+      company_phone_number: {
         type: DataTypes.STRING,
         unique: true,
       },
-      hash_password: {
+      company_address: {
         type: DataTypes.STRING,
         allowNull: false,
       },
-      phone_number: {
+      company_city: {
         type: DataTypes.STRING,
-        unique: true,
-      },
-      status: {
-        type: DataTypes.ENUM(["active", "inactive"]),
-        defaultValue: true,
         allowNull: false,
       },
-      role: {
-        type: DataTypes.ENUM(["customer", "vendor", "admin"]),
-        defaultValue: "customer",
+      vendor_status: {
+        type: DataTypes.STRING,
         allowNull: false,
       },
     },
     {
       sequelize,
-      modelName: "user",
-      tableName: "users",
+      modelName: "vendor_detail",
+      tableName: "vendor_details",
       underscored: true,
       createdAt: "created_at",
       updatedAt: "updated_at",
@@ -65,5 +63,5 @@ module.exports = (sequelize, DataTypes) => {
       paranoid: true,
     },
   );
-  return user;
+  return vendor_detail;
 };

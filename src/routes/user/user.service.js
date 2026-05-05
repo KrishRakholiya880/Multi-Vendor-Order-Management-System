@@ -2,6 +2,8 @@ const { Op } = require("sequelize");
 const userDb = require("../../dbUtils/userDb");
 const refreshTokenDb = require("../../dbUtils/refreshTokenDb");
 const productDb = require("../../dbUtils/productDb");
+const { product, user, vendor_detail } = require("../../db/models");
+const vendorDetailsDb = require("../../dbUtils/vendorDetailsDb");
 const { hashPassword } = require("../../helper/bcrypt");
 
 // getUsers
@@ -26,17 +28,24 @@ const getUsers = async (role, status, sortBy = "desc", page, limit) => {
 };
 
 // getUserById
-const getUserById = async (search, page, limit) => {
+const getUserById = async (id) => {
   const query = {
     id: {
       [Op.eq]: `${id}`,
     },
   };
 
-  const result = await userDb.findOne(query);
+  const result = await userDb.findOne(query, [
+    { model: vendor_detail, as: "vendor_detail" },
+    { model: product, as: "products" },
+  ]);
 
   if (!result) {
     throw new Error("USER_NOT_FOUND");
+  }
+
+  if (result?.role !== "vendor") {
+    delete result?.vendor_detail;
   }
 
   return result;
@@ -81,7 +90,7 @@ const createUser = async (body) => {
 const updateUserById = async (data, id) => {
   const { password } = data;
 
-  let query;
+  let query = {};
   let newBody;
 
   query = {
@@ -100,8 +109,8 @@ const updateUserById = async (data, id) => {
     const hashedPassword = await hashPassword(password);
 
     newBody = {
-      hash_password: hashedPassword,
       ...data,
+      hash_password: hashedPassword,
     };
   } else {
     newBody = {
@@ -110,10 +119,6 @@ const updateUserById = async (data, id) => {
   }
 
   const result = await userDb.update(newBody, query);
-
-  if (result === 0) {
-    throw new Error("USER_NOT_FOUND");
-  }
 
   return result;
 };
@@ -147,7 +152,7 @@ const changeUserStatusById = async (id, status) => {
 
 // removeUserById
 const removeUserById = async (id) => {
-  let query;
+  let query = {};
 
   query = {
     id: {
@@ -177,6 +182,13 @@ const removeUserById = async (id) => {
       },
     };
     await productDb.remove(query);
+
+    query = {
+      user_id: {
+        [Op.eq]: `${id}`,
+      },
+    };
+    await vendorDetailsDb.remove(query);
   }
 
   if (result === 0) {

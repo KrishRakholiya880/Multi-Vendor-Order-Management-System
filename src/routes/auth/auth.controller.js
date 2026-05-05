@@ -102,14 +102,24 @@ const refreshToken = async (req, res, next) => {
 
 // profile
 const profile = async (req, res, next) => {
-  const accessToken = req.cookies?.accessToken;
+  const userData = req.user;
   try {
-    const result = await authService.profile(accessToken);
+    const result = await authService.profile(userData);
 
     return res.status(200).json({ status: true, result });
   } catch (error) {
     next(error);
   }
+};
+
+// changePassword
+const changePassword = async (req, res, next) => {
+  const user_id = req?.user?.id;
+  const body = req.body;
+
+  const result = await authService.changePassword(user_id, body);
+
+  return res.status(200).json({ status: true, message: "Password changed!!!" });
 };
 
 module.exports = {
@@ -118,4 +128,5 @@ module.exports = {
   logout,
   refreshToken,
   profile,
+  changePassword,
 };

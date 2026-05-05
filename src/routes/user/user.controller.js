@@ -57,8 +57,6 @@ const updateUserById = async (req, res, next) => {
     }
   }
 
-  console.log(updateData);
-
   try {
     const result = await userService.updateUserById(updateData, id);
 
