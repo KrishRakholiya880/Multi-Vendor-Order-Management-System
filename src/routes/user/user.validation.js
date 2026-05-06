@@ -2,7 +2,9 @@ const Joi = require("joi");
 
 const getUsers = {
   query: Joi.object({
-    search: Joi.string().allow("", null).trim().optional(),
+    role: Joi.string().trim().optional(),
+    status: Joi.string().trim().optional(),
+    sortBy: Joi.string().trim().optional(),
     page: Joi.number().integer().optional(),
     limit: Joi.number().integer().optional(),
   }).optional(),

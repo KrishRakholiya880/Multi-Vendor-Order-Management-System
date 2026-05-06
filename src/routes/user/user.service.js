@@ -7,21 +7,18 @@ const vendorDetailsDb = require("../../dbUtils/vendorDetailsDb");
 const { hashPassword } = require("../../helper/bcrypt");
 
 // getUsers
-const getUsers = async (search, page, limit) => {
+const getUsers = async (role, status, sortBy = "desc", page, limit) => {
   let query = {};
-  if (search) {
-    query = {
-      [Op.or]: [{ role: { [Op.like]: `%${search}%` } }],
-    };
+  if (role || status) {
+    if (role) {
+      query.role = { [Op.like]: `${role}` };
+    }
+    if (status) {
+      query.status = { [Op.like]: `${status}` };
+    }
   }
 
-  const result = await userDb.findAll(query, page, limit, [
-    { model: vendor_detail, as: "vendor_detail" },
-    {
-      model: product,
-      as: "products",
-    },
-  ]);
+  const result = await userDb.findAll(query, sortBy, page, limit);
 
   if (!result) {
     throw new Error("USER_NOT_FOUND");

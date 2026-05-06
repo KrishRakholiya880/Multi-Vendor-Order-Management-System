@@ -1,32 +1,31 @@
-const { user, vendor_detail, product } = require("../db/models");
+const { user } = require("../db/models");
 
 // findOne
-const findOne = async (query = {}, attributes = {}, include = []) => {
+const findOne = async (query = {}) => {
   try {
     const result = await user.findOne({
       where: query,
-      attributes,
-      ...(include.length > 0 && { include }),
     });
 
-    return result.toJSON() || null;
+    return result;
   } catch (error) {
     console.log(error?.message || error);
   }
 };
 
 // findAll
-const findAll = async (query = {}, page, limit, include = []) => {
+const findAll = async (query = {}, sortBy, page, limit) => {
   const offset = (page - 1) * limit;
+  const order = sortBy === "asc" ? "ASC" : "DESC";
   try {
     const result = await user.findAll({
       where: query,
       limit,
       offset,
-      ...(include.length > 0 && { include }),
+      order: [["created_at", order]],
     });
 
-    return result.map((item) => item.toJSON()) || null;
+    return result;
   } catch (error) {
     console.log(error?.message || error);
   }
