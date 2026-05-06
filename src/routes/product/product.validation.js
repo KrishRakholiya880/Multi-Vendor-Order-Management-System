@@ -3,6 +3,9 @@ const Joi = require("joi");
 const getProducts = {
   query: Joi.object({
     search: Joi.string().allow("", null).optional(),
+    sortBy: Joi.string().optional(),
+    priceSort: Joi.string().optional(),
+    categoryId: Joi.number().positive().optional(),
     page: Joi.number().positive().default(1).optional(),
     limit: Joi.number().positive().default(30).optional(),
   }),

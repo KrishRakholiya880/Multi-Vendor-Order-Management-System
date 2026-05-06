@@ -15,8 +15,25 @@ const findOne = async (query = {}, attributes = {}, include = []) => {
 };
 
 // findAll
-const findAll = async (query = {}, page, limit, attributes = {}, include) => {
+const findAll = async (
+  query = {},
+  page,
+  limit,
+  attributes = {},
+  include,
+  sortBy,
+  priceSort,
+) => {
   const offset = (page - 1) * limit;
+  const order = [];
+
+  if (sortBy) {
+    order.push(["created_at", sortBy === "asc" ? "ASC" : "DESC"]);
+  }
+
+  if (priceSort) {
+    order.push(["price", priceSort === "asc" ? "ASC" : "DESC"]);
+  }
 
   try {
     const result = await product.findAll({
@@ -25,6 +42,7 @@ const findAll = async (query = {}, page, limit, attributes = {}, include) => {
       offset,
       attributes,
       ...(include.length > 0 && { include }),
+      order,
     });
     return result.map((item) => item.toJSON()) || null;
   } catch (error) {

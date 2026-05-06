@@ -169,33 +169,12 @@ module.exports = {
       message: "Product is unavailable or inactive!!!",
     },
   },
-  PRODUCT_CREATION_FAILED: {
-    httpStatusCode: 500,
-    body: {
-      code: "creation_failed",
-      message: "Failed to add the product!!!",
-    },
-  },
-  PRODUCT_UPDATE_FAILED: {
-    httpStatusCode: 500,
-    body: {
-      code: "update_failed",
-      message: "Failed to update the product!!!",
-    },
-  },
   PRODUCT_UPDATE_STATUS_FAILED: {
     httpStatusCode: 400,
     body: {
       code: "update_failed",
       message:
         "Status of Product already same. You can't update status with same status!!!",
-    },
-  },
-  PRODUCT_REMOVE_FAILED: {
-    httpStatusCode: 500,
-    body: {
-      code: "remove_failed",
-      message: "Failed to remove the product!!!",
     },
   },
 

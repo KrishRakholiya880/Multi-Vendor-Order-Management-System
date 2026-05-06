@@ -18,19 +18,66 @@ const generateRandomString = () => {
 };
 
 // getProducts
-const getProducts = async (userData, search, page, limit) => {
-  // const t = await sequelize.transaction()
+const getProducts = async (
+  userData,
+  search,
+  sortBy,
+  priceSort,
+  categoryId,
+  page,
+  limit,
+) => {
   let query = {};
   let result;
 
-  if (userData?.role === "customer" || userData?.role === "admin") {
+  if (categoryId) {
     query = {
-      status: {
-        [Op.eq]: "active",
-      },
+      ...query,
+      category_id: { [Op.eq]: `${categoryId}` },
     };
-    if (userData?.role === "admin") {
-      query = {};
+  }
+  const include = [
+    { model: category, as: "category", attributes: ["id", "name"] },
+  ];
+  const attributes = [
+    "id",
+    "name",
+    "description",
+    "category_id",
+    "vendor_id",
+    "status",
+    "stock",
+    "price",
+  ];
+
+  if (userData?.role === "vendor") {
+    query = {
+      vendor_id: { [Op.eq]: `${userData?.id}` },
+    };
+
+    if (search) {
+      query = {
+        ...query,
+        [Op.or]: [
+          { name: { [Op.like]: `%${search}%` } },
+          { description: { [Op.like]: `%${search}%` } },
+        ],
+      };
+    }
+
+    result = await productDb.findAll(
+      query,
+      page,
+      limit,
+      attributes,
+      include,
+      sortBy,
+      priceSort,
+      category,
+    );
+  } else {
+    if (userData?.role === "customer") {
+      query = { status: { [Op.eq]: "active" } };
     }
 
     if (search) {
@@ -42,9 +89,6 @@ const getProducts = async (userData, search, page, limit) => {
         ],
       };
     }
-    const include = [
-      { model: category, as: "category", attributes: ["id", "name"] },
-    ];
 
     if (userData?.role === "admin") {
       include.push({
@@ -60,45 +104,16 @@ const getProducts = async (userData, search, page, limit) => {
         ],
       });
     }
+
     result = await productDb.findAll(
       query,
       page,
       limit,
-      [
-        "id",
-        "name",
-        "description",
-        "category_id",
-        "vendor_id",
-        "status",
-        "stock",
-        "price",
-      ],
+      attributes,
       include,
-    );
-  } else {
-    query = {
-      vendor_id: {
-        [Op.eq]: `${userData?.id}`,
-      },
-    };
-
-    if (search) {
-      query = {
-        ...query,
-        [Op.or]: [
-          { name: { [Op.like]: `%${search}%` } },
-          { description: { [Op.like]: `%${search}%` } },
-        ],
-      };
-    }
-
-    result = await productDb.findAll(
-      query,
-      page,
-      limit,
-      {},
-      { model: category, as: "category", attributes: ["id", "name"] },
+      sortBy,
+      priceSort,
+      category,
     );
   }
 
@@ -111,12 +126,17 @@ const getProducts = async (userData, search, page, limit) => {
 
 // getProductById
 const getProductById = async (userData, id) => {
-  const query = {
-    id: {
-      [Op.eq]: `${id}`,
-    },
-  };
-
+  const query = { id: { [Op.eq]: `${id}` } };
+  const attributes = [
+    "id",
+    "name",
+    "description",
+    "category_id",
+    "vendor_id",
+    "status",
+    "price",
+    "stock",
+  ];
   const include = [
     { model: category, as: "category", attributes: ["id", "name"] },
   ];
@@ -136,62 +156,30 @@ const getProductById = async (userData, id) => {
     });
   }
 
-  const result = await productDb.findOne(
-    query,
-    [
-      "id",
-      "name",
-      "description",
-      "category_id",
-      "vendor_id",
-      "status",
-      "price",
-    ],
-    include,
-  );
+  const result = await productDb.findOne(query, attributes, include);
 
-  if (!result) {
-    throw new Error("PRODUCT_NOT_FOUND");
-  }
+  if (!result) throw new Error("PRODUCT_NOT_FOUND");
 
   return result;
 };
 
 // createProduct
 const createProduct = async (userData, data) => {
-  let newDataObj;
-
-  // check vendor_id for admin
   if (userData?.role === "admin" && !data?.vendor_id) {
     throw new Error("VENDOR_ID_REQUIRED");
   }
 
-  // set vendor_id from token if vendor
   const vendor_id =
     userData?.role === "vendor" ? userData?.id : data?.vendor_id;
+  const sku = data?.sku || generateRandomString();
 
-  if (data?.sku) {
-    newDataObj = { ...data, vendor_id };
-  } else {
-    newDataObj = {
-      sku: generateRandomString(),
-      ...data,
-      vendor_id,
-    };
-  }
+  const isProductExists = await productDb.findOne({
+    sku: { [Op.eq]: `${sku}` },
+  });
 
-  const query = {
-    sku: {
-      [Op.eq]: `${newDataObj?.sku}`,
-    },
-  };
+  if (isProductExists) throw new Error("PRODUCT_EXISTS");
 
-  const isProductExists = await productDb.findOne(query);
-
-  if (isProductExists) {
-    throw new Error("PRODUCT_EXISTS");
-  }
-
+  const newDataObj = { ...data, sku, vendor_id };
   const result = await productDb.create(newDataObj);
 
   delete result?.created_at;
@@ -202,73 +190,40 @@ const createProduct = async (userData, data) => {
 
 // updateProductById
 const updateProductById = async (data, id) => {
-  const query = {
-    id: {
-      [Op.eq]: `${id}`,
-    },
-  };
+  const query = { id: { [Op.eq]: `${id}` } };
 
   const isProductExists = await productDb.findOne(query);
-
-  if (!isProductExists) {
-    throw new Error("PRODUCT_NOT_FOUND");
-  }
+  if (!isProductExists) throw new Error("PRODUCT_NOT_FOUND");
 
   const result = await productDb.update(data, query);
-
-  if (!result) {
-    throw new Error("PRODUCT_UPDATE_FAILED");
-  }
 
   return result;
 };
 
 // changeProductStatusById
 const changeProductStatusById = async (id, status) => {
-  const query = {
-    id: {
-      [Op.eq]: `${id}`,
-    },
-  };
+  const query = { id: { [Op.eq]: `${id}` } };
 
   const isProductExists = await productDb.findOne(query);
-
-  if (!isProductExists) {
-    throw new Error("PRODUCT_NOT_FOUND");
-  }
+  if (!isProductExists) throw new Error("PRODUCT_NOT_FOUND");
 
   if (isProductExists?.status === status) {
     throw new Error("PRODUCT_UPDATE_STATUS_FAILED");
   }
 
-  const result = await productDb.update({ status: status }, query);
-
-  if (result === 0) {
-    throw new Error("PRODUCT_UPDATE_FAILED");
-  }
+  const result = await productDb.update({ status }, query);
 
   return result;
 };
 
 // removeProductById
 const removeProductById = async (id) => {
-  const query = {
-    id: {
-      [Op.eq]: `${id}`,
-    },
-  };
+  const query = { id: { [Op.eq]: `${id}` } };
 
   const isProductExists = await productDb.findOne(query);
-
-  if (!isProductExists) {
-    throw new Error("PRODUCT_NOT_FOUND");
-  }
+  if (!isProductExists) throw new Error("PRODUCT_NOT_FOUND");
 
   const result = await productDb.remove(query);
-
-  if (result === 0) {
-    throw new Error("PRODUCT_REMOVE_FAILED");
-  }
 
   return result;
 };
