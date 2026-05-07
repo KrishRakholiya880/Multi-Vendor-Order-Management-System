@@ -1,11 +1,12 @@
 const { order } = require("../db/models");
 
-const findAll = async (query, attributes = [], include = []) => {
+const findAll = async (query, attributes = [], include = [], transaction) => {
   try {
     const result = await order.findAll({
       where: query,
       ...(attributes.length > 0 && { attributes }),
       ...(include.length > 0 && { include }),
+      transaction,
     });
     return result.map((item) => item.toJSON()) || null;
   } catch (error) {
@@ -13,12 +14,13 @@ const findAll = async (query, attributes = [], include = []) => {
   }
 };
 
-const findOne = async (query, attributes = [], include = []) => {
+const findOne = async (query, attributes = [], include = [], transaction) => {
   try {
     const result = await order.findOne({
       where: query,
       ...(attributes.length > 0 && { attributes }),
       ...(include.length > 0 && { include }),
+      transaction,
     });
     return result.toJSON() || null;
   } catch (error) {
@@ -26,9 +28,9 @@ const findOne = async (query, attributes = [], include = []) => {
   }
 };
 
-const create = async (data) => {
+const create = async (data, transaction) => {
   try {
-    const result = await order.create(data);
+    const result = await order.create(data, { transaction });
 
     return result.toJSON() || null;
   } catch (error) {
@@ -36,10 +38,24 @@ const create = async (data) => {
   }
 };
 
-const update = async (data, query = {}) => {
+const update = async (data, query = {}, transaction) => {
   try {
     const result = await order.update(data, {
       where: query,
+      transaction,
+    });
+    return result;
+  } catch (error) {
+    console.log(error?.message || error);
+    throw error;
+  }
+};
+
+const remove = async (query = {}, transaction) => {
+  try {
+    const result = await order.destroy({
+      where: query,
+      transaction,
     });
     return result;
   } catch (error) {
@@ -53,4 +69,5 @@ module.exports = {
   findOne,
   create,
   update,
+  remove,
 };

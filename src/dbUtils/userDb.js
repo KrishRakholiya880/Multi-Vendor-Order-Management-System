@@ -1,10 +1,12 @@
 const { user } = require("../db/models");
 
 // findOne
-const findOne = async (query = {}) => {
+const findOne = async (query = {}, include = [], transaction) => {
   try {
     const result = await user.findOne({
       where: query,
+      ...(include.length > 0 && { include }),
+      transaction,
     });
 
     return result;
@@ -14,7 +16,7 @@ const findOne = async (query = {}) => {
 };
 
 // findAll
-const findAll = async (query = {}, sortBy, page, limit) => {
+const findAll = async (query = {}, sortBy, page, limit, transaction) => {
   const offset = (page - 1) * limit;
   const order = sortBy === "asc" ? "ASC" : "DESC";
   try {
@@ -23,6 +25,7 @@ const findAll = async (query = {}, sortBy, page, limit) => {
       limit,
       offset,
       order: [["created_at", order]],
+      transaction,
     });
 
     return result;
@@ -32,9 +35,9 @@ const findAll = async (query = {}, sortBy, page, limit) => {
 };
 
 // create
-const create = async (data) => {
+const create = async (data, transaction) => {
   try {
-    const result = await user.create(data);
+    const result = await user.create(data, { transaction });
 
     return result.toJSON();
   } catch (error) {
@@ -43,10 +46,11 @@ const create = async (data) => {
 };
 
 // update
-const update = async (data, query) => {
+const update = async (data, query, transaction) => {
   try {
     const result = await user.update(data, {
       where: query,
+      transaction,
     });
 
     return result;
@@ -56,7 +60,7 @@ const update = async (data, query) => {
 };
 
 // remove
-const remove = async (query) => {
+const remove = async (query, transaction) => {
   try {
     const result = await user.destroy({
       where: query,

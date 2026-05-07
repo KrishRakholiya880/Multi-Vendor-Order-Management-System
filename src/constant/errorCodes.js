@@ -29,6 +29,13 @@ module.exports = {
       message: "Access token is missing from the request!!!",
     },
   },
+  SESSION_EXPIRED: {
+    httpStatusCode: 401,
+    body: {
+      code: "session_expired",
+      message: "Your session has expired. Please login again!!!",
+    },
+  },
   INVALID_ACCESS_TOKEN: {
     httpStatusCode: 401,
     body: {
@@ -103,10 +110,10 @@ module.exports = {
       message: "Failed to update the user!!!",
     },
   },
-  USER_UPDATE_STATUS_FAILED: {
+  USER_STATUS_ALREADY_SAME: {
     httpStatusCode: 400,
     body: {
-      code: "update_failed",
+      code: "bad_request",
       message:
         "Status of user already same. You can't update status with same status!!!",
     },
@@ -200,27 +207,6 @@ module.exports = {
       message: "category already exists!!!",
     },
   },
-  CATEGORY_CREATION_FAILED: {
-    httpStatusCode: 500,
-    body: {
-      code: "creation_failed",
-      message: "Failed to add the category!!!",
-    },
-  },
-  CATEGORY_UPDATE_FAILED: {
-    httpStatusCode: 500,
-    body: {
-      code: "update_failed",
-      message: "Failed to update the category!!!",
-    },
-  },
-  CATEGORY_REMOVE_FAILED: {
-    httpStatusCode: 500,
-    body: {
-      code: "remove_failed",
-      message: "Failed to remove the category!!!",
-    },
-  },
 
   // vendorDetails
   VENDOR_DETAILS_NOT_FOUND: {
@@ -237,25 +223,12 @@ module.exports = {
       message: "Vendor's details already filled!!!",
     },
   },
-  VENDOR_DETAIL_CREATE_FAILED: {
-    httpStatusCode: 500,
+  UNAUTHORIZED_VENDOR_ACTION: {
+    httpStatusCode: 403,
     body: {
-      code: "create_failed",
-      message: "Failed to create the vendor details!!!",
-    },
-  },
-  VENDOR_DETAIL_UPDATE_FAILED: {
-    httpStatusCode: 500,
-    body: {
-      code: "update_failed",
-      message: "Failed to update the vendor details!!!",
-    },
-  },
-  VENDOR_DETAIL_DELETE_FAILED: {
-    httpStatusCode: 500,
-    body: {
-      code: "remove_failed",
-      message: "Failed to remove the vendor details!!!",
+      code: "unauthorized",
+      message:
+        "You are not authorized to update or remove other vendor's details!!!",
     },
   },
   USER_IS_CUSTOMER: {
@@ -367,7 +340,7 @@ module.exports = {
       message: "Order item creation failed!!!",
     },
   },
-  CHANGE_ORDER_STATUS_WRONG_VENDOR: {
+  CHANGE_ORDER_STATUS_BY_WRONG_VENDOR: {
     httpStatusCode: 401,
     body: {
       code: "unauthorized",

@@ -1,150 +1,165 @@
 const { Op } = require("sequelize");
+const { sequelize } = require("../../db/models");
 const vendorDetailsDb = require("../../dbUtils/vendorDetailsDb");
 const userDb = require("../../dbUtils/userDb");
 
 // getVendorDetailsById
-const getVendorDetailsById = async (paramsId, userData) => {
-  let query = {};
-  let vendorDetails;
+const getVendorDetailsById = async (paramsId) => {
+  const t = await sequelize.transaction();
+  try {
+    const vendorDetails = await vendorDetailsDb.findOne(
+      {
+        user_id: { [Op.eq]: `${paramsId}` },
+      },
+      t,
+    );
 
-  query = {
-    user_id: {
-      [Op.eq]: `${paramsId}`,
-    },
-  };
-  vendorDetails = await vendorDetailsDb.findOne(query);
+    if (!vendorDetails) throw new Error("VENDOR_DETAILS_NOT_FOUND");
 
-  if (!vendorDetails) {
-    throw new Error("VENDOR_DETAILS_NOT_FOUND");
+    await t.commit();
+    return vendorDetails;
+  } catch (error) {
+    await t.rollback();
+    throw error;
   }
-
-  return vendorDetails;
 };
 
 // getAllVendorDetails
 const getAllVendorDetails = async () => {
-  const vendorDetails = await vendorDetailsDb.findAll();
+  const t = await sequelize.transaction();
+  try {
+    const vendorDetails = await vendorDetailsDb.findAll({}, t);
+    if (!vendorDetails) throw new Error("VENDOR_DETAILS_NOT_FOUND");
 
-  if (!vendorDetails) {
-    throw new Error("VENDOR_DETAILS_NOT_FOUND");
+    await t.commit();
+    return vendorDetails;
+  } catch (error) {
+    await t.rollback();
+    throw error;
   }
-
-  return vendorDetails;
 };
 
 // createVendorDetails
 const createVendorDetails = async (data, paramsId) => {
-  let query = {};
-  let userDetails;
-  let newData;
-  let result;
+  const t = await sequelize.transaction();
+  try {
+    let newData;
 
-  if (data.userData?.role === "vendor") {
-    query = {
-      user_id: {
-        [Op.eq]: `${data.userData?.id}`,
-      },
-    };
+    if (data.userData?.role === "vendor") {
+      const isDetailsExists = await vendorDetailsDb.findOne(
+        {
+          user_id: { [Op.eq]: `${data.userData?.id}` },
+        },
+        t,
+      );
+      if (isDetailsExists?.id) throw new Error("USER_DETAILS_ALREADY_FILLED");
 
-    const isDetailsExists = await vendorDetailsDb.findOne(query);
+      newData = {
+        user_id: data.userData?.id,
+        vendor_status: data.userData?.status,
+        ...data,
+      };
+    } else {
+      const userDetails = await userDb.findOne(
+        {
+          id: { [Op.eq]: `${paramsId}` },
+        },
+        [],
+        t,
+      );
 
-    if (isDetailsExists?.id) {
-      throw new Error("USER_DETAILS_ALREADY_FILLED");
+      const isDetailsExists = await vendorDetailsDb.findOne(
+        {
+          user_id: { [Op.eq]: `${userDetails?.id}` },
+        },
+        t,
+      );
+      if (isDetailsExists?.id) throw new Error("USER_DETAILS_ALREADY_FILLED");
+
+      newData = {
+        ...data,
+        user_id: paramsId,
+        vendor_status: userDetails?.status,
+      };
     }
 
-    newData = {
-      user_id: data.userData?.id,
-      vendor_status: data.userData?.status,
-      ...data,
-    };
+    const result = await vendorDetailsDb.create(newData, t);
+    if (!result) throw new Error("VENDOR_DETAILS_NOT_FOUND");
 
-    result = await vendorDetailsDb.create(newData);
-  } else {
-    query = {
-      id: {
-        [Op.eq]: `${paramsId}`,
-      },
-    };
-
-    userDetails = await userDb.findOne(query);
-
-    if (userDetails?.role === "customer") {
-      throw new Error("USER_IS_CUSTOMER");
-    }
-
-    query = {
-      user_id: {
-        [Op.eq]: `${userDetails?.id}`,
-      },
-    };
-
-    const isDetailsExists = await vendorDetailsDb.findOne(query);
-
-    if (isDetailsExists?.id) {
-      throw new Error("USER_DETAILS_ALREADY_FILLED");
-    }
-
-    newData = {
-      ...data,
-      user_id: paramsId,
-      vendor_status: userDetails?.status,
-    };
-
-    result = await vendorDetailsDb.create(newData);
+    await t.commit();
+    return result;
+  } catch (error) {
+    await t.rollback();
+    throw error;
   }
-
-  if (!result) {
-    throw new Error("VENDOR_DETAIL_CREATE_FAILED");
-  }
-
-  return result;
 };
 
 // updateVendorDetailsById
-const updateVendorDetailsById = async (data, id) => {
-  let query = {};
-  query = {
-    id: {
-      [Op.eq]: `${id}`,
-    },
-  };
+const updateVendorDetailsById = async (data, id, userData) => {
+  const t = await sequelize.transaction();
 
-  const isVendorDetailsExists = await vendorDetailsDb.findOne(query);
+  try {
+    const isVendorDetailsExists = await vendorDetailsDb.findOne(
+      {
+        id: { [Op.eq]: `${id}` },
+      },
+      t,
+    );
+    if (!isVendorDetailsExists) throw new Error("VENDOR_DETAILS_NOT_FOUND");
 
-  if (!isVendorDetailsExists) {
-    throw new Error("VENDOR_DETAILS_NOT_FOUND");
+    if (
+      userData?.role === "vendor" &&
+      isVendorDetailsExists?.user_id !== userData?.id
+    ) {
+      throw new Error("UNAUTHORIZED_VENDOR_ACTION");
+    }
+
+    const result = await vendorDetailsDb.update(
+      data,
+      {
+        id: { [Op.eq]: `${id}` },
+      },
+      t,
+    );
+
+    await t.commit();
+    return result;
+  } catch (error) {
+    await t.rollback();
+    throw error;
   }
-
-  const result = await vendorDetailsDb.update(data, query);
-
-  if (result === 0) {
-    throw new Error("VENDOR_DETAIL_UPDATE_FAILED");
-  }
-
-  return result;
 };
 
 // removeVendorDetailsById
-const removeVendorDetailsById = async (id) => {
-  const query = {
-    id: {
-      [Op.eq]: `${id}`,
-    },
-  };
+const removeVendorDetailsById = async (id, userData) => {
+  const t = await sequelize.transaction();
+  try {
+    const isVendorDetailsExists = await vendorDetailsDb.findOne(
+      {
+        id: { [Op.eq]: `${id}` },
+      },
+      t,
+    );
+    if (!isVendorDetailsExists) throw new Error("VENDOR_DETAILS_NOT_FOUND");
 
-  const isVendorDetailsExists = await vendorDetailsDb.findOne(query);
+    if (
+      userData?.role === "vendor" &&
+      isVendorDetailsExists?.user_id !== userData?.id
+    ) {
+      throw new Error("UNAUTHORIZED_VENDOR_ACTION");
+    }
 
-  if (!isVendorDetailsExists) {
-    throw new Error("VENDOR_DETAILS_NOT_FOUND");
+    const result = await vendorDetailsDb.remove(
+      { id: { [Op.eq]: `${id}` } },
+      t,
+    );
+
+    await t.commit();
+    return result;
+  } catch (error) {
+    await t.rollback();
+    throw error;
   }
-
-  const result = await vendorDetailsDb.remove(query);
-
-  if (result === 0) {
-    throw new Error("VENDOR_DETAIL_DELETE_FAILED");
-  }
-
-  return result;
 };
 
 module.exports = {

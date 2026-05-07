@@ -2,12 +2,14 @@ const productService = require("./product.service");
 
 // getProducts
 const getProducts = async (req, res, next) => {
-  const { search, sortBy, priceSort, categoryId, page, limit } = req.query;
+  const { status, search, sortBy, priceSort, categoryId, page, limit } =
+    req.query;
   const userdata = req.user;
 
   try {
     const result = await productService.getProducts(
       userdata,
+      status,
       search,
       sortBy,
       priceSort,

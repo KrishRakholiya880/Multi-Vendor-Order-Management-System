@@ -1,8 +1,8 @@
 const { order_item } = require("../db/models");
 
-const findOne = async (query) => {
+const findOne = async (query, transaction) => {
   try {
-    const result = await order_item.findOne({ where: query });
+    const result = await order_item.findOne({ where: query, transaction });
 
     return result.toJSON() || null;
   } catch (error) {
@@ -10,9 +10,9 @@ const findOne = async (query) => {
   }
 };
 
-const findAll = async (query) => {
+const findAll = async (query, transaction) => {
   try {
-    const result = await order_item.findAll({ where: query });
+    const result = await order_item.findAll({ where: query, transaction });
 
     return result.map((item) => item.toJSON()) || null;
   } catch (error) {
@@ -20,9 +20,9 @@ const findAll = async (query) => {
   }
 };
 
-const create = async (data) => {
+const create = async (data, transaction) => {
   try {
-    const result = await order_item.create(data);
+    const result = await order_item.create(data, { transaction });
 
     return result.map((item) => item.toJSON()) || result.toJSON();
   } catch (error) {
@@ -30,10 +30,24 @@ const create = async (data) => {
   }
 };
 
-const update = async (data, query) => {
+const update = async (data, query, transaction) => {
   try {
     const result = await order_item.update(data, {
       where: query,
+      transaction,
+    });
+
+    return result;
+  } catch (error) {
+    console.log(error.message || error);
+  }
+};
+
+const remove = async (query, transaction) => {
+  try {
+    const result = await order_item.destroy({
+      where: query,
+      transaction,
     });
 
     return result;
@@ -47,4 +61,5 @@ module.exports = {
   findAll,
   create,
   update,
+  remove,
 };

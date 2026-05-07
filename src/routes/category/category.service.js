@@ -1,100 +1,129 @@
 const { Op } = require("sequelize");
+const { sequelize } = require("../../db/models");
 const categoryDb = require("../../dbUtils/categoryDb");
 
 // getCategories
 const getCategories = async () => {
-  const result = await categoryDb.findAll();
+  const t = await sequelize.transaction();
 
-  if (!result) {
-    throw new Error("CATEGORIES_NOT_FOUND");
+  try {
+    const result = await categoryDb.findAll({}, t);
+
+    if (!result) {
+      throw new Error("CATEGORIES_NOT_FOUND");
+    }
+
+    await t.commit();
+    return result;
+  } catch (error) {
+    await t.rollback();
+    throw error;
   }
-
-  return result;
 };
 
 // getCategoryById
 const getCategoryById = async (id) => {
-  const query = {
-    id: {
-      [Op.eq]: `${id}`,
-    },
-  };
-  const result = await categoryDb.findOne(query, ["id", "name"]);
+  const t = await sequelize.transaction();
+  try {
+    const query = {
+      id: {
+        [Op.eq]: `${id}`,
+      },
+    };
+    const result = await categoryDb.findOne(query, ["id", "name"], t);
 
-  if (!result) {
-    throw new Error("CATEGORY_NOT_FOUND");
+    if (!result) {
+      throw new Error("CATEGORY_NOT_FOUND");
+    }
+
+    await t.commit();
+    return result;
+  } catch (error) {
+    await t.rollback();
+    throw error;
   }
-
-  return result;
 };
 
 // createCategory
 const createCategory = async (data) => {
-  const query = {
-    name: {
-      [Op.eq]: `${data?.name}`,
-    },
-  };
+  const t = await sequelize.transaction();
+  try {
+    const query = {
+      name: {
+        [Op.eq]: `${data?.name}`,
+      },
+    };
 
-  const isCategoryExists = await categoryDb.findOne(query);
+    const isCategoryExists = await categoryDb.findOne(query, {}, t);
 
-  if (isCategoryExists) {
-    throw new Error("CATEGORY_EXISTS");
+    if (isCategoryExists) {
+      throw new Error("CATEGORY_EXISTS");
+    }
+
+    const result = await categoryDb.create(data, t);
+
+    if (!result) {
+      throw new Error("CATEGORY_NOT_FOUND");
+    }
+
+    await t.commit();
+    return result;
+  } catch (error) {
+    await t.rollback();
+    throw error;
   }
-
-  const result = await categoryDb.create(data);
-
-  if (!result) {
-    throw new Error("CATEGORY_CREATION_FAILED");
-  }
-
-  return result;
 };
 
 // updateProductById
 const updateProductById = async (data, id) => {
-  const query = {
-    id: {
-      [Op.eq]: `${id}`,
-    },
-  };
+  const t = await sequelize.transaction();
+  try {
+    const query = {
+      id: {
+        [Op.eq]: `${id}`,
+      },
+    };
 
-  const category = await categoryDb.findOne(query);
+    const category = await categoryDb.findOne(query, {}, t);
 
-  if (!category) {
-    throw new Error("CATEGORY_NOT_FOUND");
+    if (!category) {
+      throw new Error("CATEGORY_NOT_FOUND");
+    }
+
+    const result = await categoryDb.update(data, query, t);
+
+    await t.commit();
+    return result;
+  } catch (error) {
+    await t.rollback();
+    throw error;
   }
-
-  const result = await categoryDb.update(data, query);
-
-  if (!result) {
-    throw new Error("CATEGORY_UPDATE_FAILED");
-  }
-
-  return result;
 };
 
 // removeProductById
 const removeProductById = async (id) => {
-  const query = {
-    id: {
-      [Op.eq]: `${id}`,
-    },
-  };
+  const t = await sequelize.transaction();
+  try {
+    const query = {
+      id: {
+        [Op.eq]: `${id}`,
+      },
+    };
 
-  const category = await categoryDb.findOne(query);
+    const category = await categoryDb.findOne(query, {}, t);
 
-  if (!category) {
-    throw new Error("CATEGORY_NOT_FOUND");
+    if (!category) {
+      throw new Error("CATEGORY_NOT_FOUND");
+    }
+
+    const result = await categoryDb.remove(query, t);
+
+    await t.commit();
+    return result;
+  } catch (error) {
+    await t.rollback();
+    throw error;
   }
-
-  const result = await categoryDb.remove(query);
-
-  if (!result) {
-    throw new Error("CATEGORY_REMOVE_FAILED");
-  }
-
-  return result;
 };
 
 module.exports = {

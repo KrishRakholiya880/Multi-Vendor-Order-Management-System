@@ -9,12 +9,13 @@ const {
   isVendorOrAdmin,
   isUserLoggedIn,
   checkVendorProductOrNot,
+  optionalAuth,
 } = require("../../middleware/authorizationMiddleware");
 
 router
   .route("/")
   .get(
-    isUserLoggedIn,
+    optionalAuth,
     validate(productValidation.getProducts),
     productController.getProducts,
   )

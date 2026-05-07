@@ -51,6 +51,7 @@ const createVendorDetails = async (req, res, next) => {
 const updateVendorDetailsById = async (req, res, next) => {
   const { id } = req.params;
   const body = req.body;
+  const userData = req.user;
 
   let updateData = {};
 
@@ -64,6 +65,7 @@ const updateVendorDetailsById = async (req, res, next) => {
     const result = await vendorDetailsService.updateVendorDetailsById(
       updateData,
       id,
+      userData,
     );
 
     return res
@@ -77,9 +79,13 @@ const updateVendorDetailsById = async (req, res, next) => {
 // removeVendorDetailsById
 const removeVendorDetailsById = async (req, res, next) => {
   const { id } = req.params;
+  const userData = req.user;
 
   try {
-    const result = await vendorDetailsService.removeVendorDetailsById(id);
+    const result = await vendorDetailsService.removeVendorDetailsById(
+      id,
+      userData,
+    );
 
     return res
       .status(200)

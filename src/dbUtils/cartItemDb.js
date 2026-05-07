@@ -1,10 +1,11 @@
 const { cart_item } = require("../db/models");
 
-const findAll = async (query, include) => {
+const findAll = async (query, include = [], transaction) => {
   try {
     const result = await cart_item.findAll({
       where: query,
       include,
+      transaction,
     });
 
     return result.map((item) => item.toJSON()) || null;
@@ -13,11 +14,12 @@ const findAll = async (query, include) => {
   }
 };
 
-const findOne = async (query, include) => {
+const findOne = async (query, include = [], transaction) => {
   try {
     const result = await cart_item.findOne({
       where: query,
       include,
+      transaction,
     });
 
     return result.toJSON() || null;
@@ -26,9 +28,9 @@ const findOne = async (query, include) => {
   }
 };
 
-const create = async (body) => {
+const create = async (body, transaction) => {
   try {
-    const result = await cart_item.create(body);
+    const result = await cart_item.create(body, { transaction });
 
     return result.toJSON() || null;
   } catch (error) {
@@ -36,10 +38,11 @@ const create = async (body) => {
   }
 };
 
-const update = async (body, query) => {
+const update = async (body, query, transaction) => {
   try {
     const result = await cart_item.update(body, {
       where: query,
+      transaction,
     });
 
     return result;
@@ -48,10 +51,11 @@ const update = async (body, query) => {
   }
 };
 
-const remove = async (query) => {
+const remove = async (query, transaction) => {
   try {
     const result = await cart_item.destroy({
       where: query,
+      transaction,
     });
 
     return result;

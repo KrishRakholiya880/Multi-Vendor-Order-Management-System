@@ -1,10 +1,11 @@
 const { category } = require("../db/models");
 
 // findAll
-const findAll = async (query = {}) => {
+const findAll = async (query = {}, transaction) => {
   try {
     const result = await category.findAll({
       where: query,
+      transaction,
     });
 
     return result.map((item) => item.toJSON()) || null;
@@ -14,11 +15,12 @@ const findAll = async (query = {}) => {
 };
 
 // findOne
-const findOne = async (query = {}, attributes = {}) => {
+const findOne = async (query = {}, attributes = {}, transaction) => {
   try {
     const result = await category.findOne({
       where: query,
       attributes,
+      transaction,
     });
 
     return result.toJSON() || null;
@@ -28,9 +30,9 @@ const findOne = async (query = {}, attributes = {}) => {
 };
 
 // create
-const create = async (data) => {
+const create = async (data, transaction) => {
   try {
-    const result = await category.create(data);
+    const result = await category.create(data, { transaction });
 
     return result.toJSON() || null;
   } catch (error) {
@@ -39,10 +41,11 @@ const create = async (data) => {
 };
 
 // update
-const update = async (data, query) => {
+const update = async (data, query, transaction) => {
   try {
     const result = await category.update(data, {
       where: query,
+      transaction,
     });
 
     return result;
@@ -52,10 +55,11 @@ const update = async (data, query) => {
 };
 
 // remove
-const remove = async (query) => {
+const remove = async (query, transaction) => {
   try {
     const result = await category.destroy({
       where: query,
+      transaction,
     });
 
     return result;

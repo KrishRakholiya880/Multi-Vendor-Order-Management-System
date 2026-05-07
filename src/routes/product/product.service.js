@@ -20,6 +20,7 @@ const generateRandomString = () => {
 // getProducts
 const getProducts = async (
   userData,
+  status,
   search,
   sortBy,
   priceSort,
@@ -27,70 +28,44 @@ const getProducts = async (
   page,
   limit,
 ) => {
+  const t = await sequelize.transaction();
   let query = {};
   let result;
 
-  if (categoryId) {
-    query = {
-      ...query,
-      category_id: { [Op.eq]: `${categoryId}` },
-    };
-  }
-  const include = [
-    { model: category, as: "category", attributes: ["id", "name"] },
-  ];
-  const attributes = [
-    "id",
-    "name",
-    "description",
-    "category_id",
-    "vendor_id",
-    "status",
-    "stock",
-    "price",
-  ];
-
-  if (userData?.role === "vendor") {
-    query = {
-      vendor_id: { [Op.eq]: `${userData?.id}` },
-    };
-
+  try {
+    if (categoryId) query.category_id = { [Op.eq]: `${categoryId}` };
     if (search) {
+      query[Op.or] = [
+        { name: { [Op.like]: `%${search}%` } },
+        { description: { [Op.like]: `%${search}%` } },
+      ];
+    }
+
+    const include = [
+      { model: category, as: "category", attributes: ["id", "name"] },
+    ];
+    const attributes = [
+      "id",
+      "name",
+      "description",
+      "category_id",
+      "vendor_id",
+      "status",
+      "stock",
+      "price",
+    ];
+
+    if (!userData || userData?.role === "customer") {
+      query = { ...query, status: { [Op.eq]: "active" } };
+    } else if (userData?.role === "vendor") {
       query = {
         ...query,
-        [Op.or]: [
-          { name: { [Op.like]: `%${search}%` } },
-          { description: { [Op.like]: `%${search}%` } },
-        ],
+        vendor_id: { [Op.eq]: `${userData?.id}` },
+        ...(status && { status: { [Op.eq]: status } }),
       };
-    }
+    } else if (userData?.role === "admin") {
+      if (status) query.status = { [Op.eq]: status };
 
-    result = await productDb.findAll(
-      query,
-      page,
-      limit,
-      attributes,
-      include,
-      sortBy,
-      priceSort,
-      category,
-    );
-  } else {
-    if (userData?.role === "customer") {
-      query = { status: { [Op.eq]: "active" } };
-    }
-
-    if (search) {
-      query = {
-        ...query,
-        [Op.or]: [
-          { name: { [Op.like]: `%${search}%` } },
-          { description: { [Op.like]: `%${search}%` } },
-        ],
-      };
-    }
-
-    if (userData?.role === "admin") {
       include.push({
         model: user,
         as: "vendor",
@@ -113,119 +88,163 @@ const getProducts = async (
       include,
       sortBy,
       priceSort,
-      category,
+      t,
     );
-  }
 
-  if (!result || (Array.isArray(result) && result.length === 0)) {
-    throw new Error("PRODUCTS_NOT_FOUND");
-  }
+    if (!result || (Array.isArray(result) && result.length === 0)) {
+      throw new Error("PRODUCTS_NOT_FOUND");
+    }
 
-  return result;
+    await t.commit();
+    return result;
+  } catch (error) {
+    await t.rollback();
+    throw error;
+  }
 };
 
 // getProductById
 const getProductById = async (userData, id) => {
-  const query = { id: { [Op.eq]: `${id}` } };
-  const attributes = [
-    "id",
-    "name",
-    "description",
-    "category_id",
-    "vendor_id",
-    "status",
-    "price",
-    "stock",
-  ];
-  const include = [
-    { model: category, as: "category", attributes: ["id", "name"] },
-  ];
+  try {
+    const t = await sequelize.transaction();
+    const query = { id: { [Op.eq]: `${id}` } };
+    const attributes = [
+      "id",
+      "name",
+      "description",
+      "category_id",
+      "vendor_id",
+      "status",
+      "price",
+      "stock",
+    ];
+    const include = [
+      { model: category, as: "category", attributes: ["id", "name"] },
+    ];
 
-  if (userData?.role === "admin") {
-    include.push({
-      model: user,
-      as: "vendor",
-      attributes: ["id", "full_name", "email"],
-      include: [
-        {
-          model: vendor_detail,
-          as: "vendor_detail",
-          attributes: ["company_name", "company_email", "company_city"],
-        },
-      ],
-    });
+    if (userData?.role === "admin") {
+      include.push({
+        model: user,
+        as: "vendor",
+        attributes: ["id", "full_name", "email"],
+        include: [
+          {
+            model: vendor_detail,
+            as: "vendor_detail",
+            attributes: ["company_name", "company_email", "company_city"],
+          },
+        ],
+      });
+    }
+
+    const result = await productDb.findOne(query, attributes, include, t);
+
+    if (!result) throw new Error("PRODUCT_NOT_FOUND");
+
+    await t.commit();
+    return result;
+  } catch (error) {
+    await t.rollback();
+    throw error;
   }
-
-  const result = await productDb.findOne(query, attributes, include);
-
-  if (!result) throw new Error("PRODUCT_NOT_FOUND");
-
-  return result;
 };
 
 // createProduct
 const createProduct = async (userData, data) => {
-  if (userData?.role === "admin" && !data?.vendor_id) {
-    throw new Error("VENDOR_ID_REQUIRED");
+  const t = await sequelize.transaction();
+  try {
+    if (userData?.role === "admin" && !data?.vendor_id) {
+      throw new Error("VENDOR_ID_REQUIRED");
+    }
+
+    const vendor_id =
+      userData?.role === "vendor" ? userData?.id : data?.vendor_id;
+    const sku = data?.sku || generateRandomString();
+
+    const isProductExists = await productDb.findOne(
+      {
+        sku: { [Op.eq]: `${sku}` },
+      },
+      [],
+      [],
+      t,
+    );
+
+    if (isProductExists) throw new Error("PRODUCT_EXISTS");
+
+    const newDataObj = { ...data, sku, vendor_id };
+    const result = await productDb.create(newDataObj, t);
+
+    delete result?.created_at;
+    delete result?.updated_at;
+
+    await t.commit();
+    return result;
+  } catch (error) {
+    await t.rollback();
+    throw error;
   }
-
-  const vendor_id =
-    userData?.role === "vendor" ? userData?.id : data?.vendor_id;
-  const sku = data?.sku || generateRandomString();
-
-  const isProductExists = await productDb.findOne({
-    sku: { [Op.eq]: `${sku}` },
-  });
-
-  if (isProductExists) throw new Error("PRODUCT_EXISTS");
-
-  const newDataObj = { ...data, sku, vendor_id };
-  const result = await productDb.create(newDataObj);
-
-  delete result?.created_at;
-  delete result?.updated_at;
-
-  return result;
 };
 
 // updateProductById
 const updateProductById = async (data, id) => {
-  const query = { id: { [Op.eq]: `${id}` } };
+  const t = await sequelize.transaction();
+  try {
+    const query = { id: { [Op.eq]: `${id}` } };
 
-  const isProductExists = await productDb.findOne(query);
-  if (!isProductExists) throw new Error("PRODUCT_NOT_FOUND");
+    const isProductExists = await productDb.findOne(query, {}, [], t);
+    if (!isProductExists) throw new Error("PRODUCT_NOT_FOUND");
 
-  const result = await productDb.update(data, query);
+    const result = await productDb.update(data, query, t);
 
-  return result;
+    await t.commit();
+    return result;
+  } catch (error) {
+    await t.rollback();
+    throw error;
+  }
 };
 
 // changeProductStatusById
 const changeProductStatusById = async (id, status) => {
-  const query = { id: { [Op.eq]: `${id}` } };
+  const t = await sequelize.transaction();
+  try {
+    const query = { id: { [Op.eq]: `${id}` } };
 
-  const isProductExists = await productDb.findOne(query);
-  if (!isProductExists) throw new Error("PRODUCT_NOT_FOUND");
+    const isProductExists = await productDb.findOne(query, {}, [], t);
+    if (!isProductExists) throw new Error("PRODUCT_NOT_FOUND");
 
-  if (isProductExists?.status === status) {
-    throw new Error("PRODUCT_UPDATE_STATUS_FAILED");
+    if (isProductExists?.status === status) {
+      throw new Error("PRODUCT_UPDATE_STATUS_FAILED");
+    }
+
+    const result = await productDb.update({ status }, query, t);
+
+    await t.commit();
+    return result;
+  } catch (error) {
+    await t.rollback();
+    throw error;
   }
-
-  const result = await productDb.update({ status }, query);
-
-  return result;
 };
 
 // removeProductById
 const removeProductById = async (id) => {
-  const query = { id: { [Op.eq]: `${id}` } };
+  const t = await sequelize.transaction();
+  try {
+    const query = { id: { [Op.eq]: `${id}` } };
 
-  const isProductExists = await productDb.findOne(query);
-  if (!isProductExists) throw new Error("PRODUCT_NOT_FOUND");
+    const isProductExists = await productDb.findOne(query, {}, [], t);
+    if (!isProductExists) throw new Error("PRODUCT_NOT_FOUND");
 
-  const result = await productDb.remove(query);
+    const result = await productDb.remove(query, t);
 
-  return result;
+    await t.commit();
+    return result;
+  } catch (error) {
+    await t.rollback();
+    throw error;
+  }
 };
 
 module.exports = {

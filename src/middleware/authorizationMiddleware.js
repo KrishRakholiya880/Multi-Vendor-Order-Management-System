@@ -1,12 +1,38 @@
 const { decodeToken } = require("../helper/authHelper");
 const authDb = require("../dbUtils/authDb");
 const productDb = require("../dbUtils/productDb");
+const refreshTokenDb = require("../dbUtils/refreshTokenDb");
 
-const isUserLoggedIn = async (req, res, next) => {
+const optionalAuth = async (req, res, next) => {
   const accessToken = req.cookies.accessToken;
 
   if (!accessToken) {
+    req.user = null;
+    return next();
+  }
+
+  const decodedData = decodeToken(accessToken);
+  if (!decodedData) {
+    req.user = null;
+    return next();
+  }
+
+  const userData = await authDb.findOne({ id: decodedData?.id });
+  req.user = userData;
+  next();
+};
+
+const isUserLoggedIn = async (req, res, next) => {
+  const accessToken = req.cookies.accessToken;
+  const refreshToken = req.cookies.refreshToken;
+
+  if (!accessToken && !refreshToken) {
     throw new Error("TOKEN_REQUIRED");
+  }
+
+  const tokenData = await refreshTokenDb.findOne({ token: refreshToken });
+  if (!tokenData || new Date() > new Date(tokenData?.expires_at)) {
+    throw new Error("SESSION_EXPIRED");
   }
 
   const decodedData = decodeToken(accessToken);
@@ -105,6 +131,7 @@ const checkVendorProductOrNot = async (req, res, next) => {
 };
 
 module.exports = {
+  optionalAuth,
   isUserLoggedIn,
   isAdmin,
   isVendor,

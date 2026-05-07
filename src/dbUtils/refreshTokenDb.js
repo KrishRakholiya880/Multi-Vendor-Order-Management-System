@@ -1,6 +1,6 @@
 const { refresh_token } = require("../db/models");
 
-const findOne = async (query = {}, transaction = undefined) => {
+const findOne = async (query = {}, transaction) => {
   try {
     const result = await refresh_token.findOne({
       where: query,
@@ -12,7 +12,7 @@ const findOne = async (query = {}, transaction = undefined) => {
   }
 };
 
-const create = async (data, transaction = undefined) => {
+const create = async (data, transaction) => {
   try {
     await refresh_token.create(data, { transaction });
   } catch (error) {
@@ -20,14 +20,14 @@ const create = async (data, transaction = undefined) => {
   }
 };
 
-const update = async (data, query = {}, transaction = undefined) => {
+const update = async (data, query = {}, transaction) => {
   await refresh_token.update(data, {
     where: query,
     transaction,
   });
 };
 
-const remove = async (query = {}, transaction = undefined) => {
+const remove = async (query = {}, transaction) => {
   await refresh_token.destroy({
     where: query,
     transaction,

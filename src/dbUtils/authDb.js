@@ -1,11 +1,7 @@
 const { user } = require("../db/models");
 
 // findOne
-const findOne = async (
-  query = {},
-  attributes = {},
-  transaction = undefined,
-) => {
+const findOne = async (query = {}, attributes = {}, transaction) => {
   try {
     const result = await user.findOne({
       where: query,
@@ -19,7 +15,7 @@ const findOne = async (
 };
 
 // create
-const create = async (data, transaction = undefined) => {
+const create = async (data, transaction) => {
   try {
     const result = await user.create(data, { transaction });
     return result.toJSON() || null;
@@ -29,7 +25,7 @@ const create = async (data, transaction = undefined) => {
 };
 
 // update
-const update = async (data, query, transaction = undefined) => {
+const update = async (data, query, transaction) => {
   try {
     const result = await user.update(data, {
       where: query,
