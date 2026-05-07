@@ -11,16 +11,19 @@ const {
   checkVendorProductOrNot,
   isAdmin,
 } = require("../../middleware/authorizationMiddleware");
+const { adminLimiter } = require("../../middleware/rateLimiter");
 
 router
   .route("/")
   .get(
+    adminLimiter,
     isUserLoggedIn,
     isAdmin,
     validate(userValidation.getUsers),
     userController.getUsers,
   )
   .post(
+    adminLimiter,
     isUserLoggedIn,
     isAdmin,
     validate(userValidation.createUser),
@@ -30,18 +33,21 @@ router
 router
   .route("/:id")
   .get(
+    adminLimiter,
     isUserLoggedIn,
     isAdmin,
     validate(userValidation.getUserById),
     userController.getUserById,
   )
   .patch(
+    adminLimiter,
     isUserLoggedIn,
     isAdmin,
     validate(userValidation.updateUserById),
     userController.updateUserById,
   )
   .delete(
+    adminLimiter,
     isUserLoggedIn,
     isAdmin,
     validate(userValidation.removeUserById),
@@ -51,6 +57,7 @@ router
 router
   .route("/changeStatus/:id")
   .patch(
+    adminLimiter,
     isUserLoggedIn,
     isAdmin,
     validate(userValidation.changeUserStatusById),

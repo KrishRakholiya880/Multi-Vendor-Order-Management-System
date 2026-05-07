@@ -11,15 +11,18 @@ const {
   checkVendorProductOrNot,
   optionalAuth,
 } = require("../../middleware/authorizationMiddleware");
+const { productLimiter } = require("../../middleware/rateLimiter");
 
 router
   .route("/")
   .get(
+    productLimiter,
     optionalAuth,
     validate(productValidation.getProducts),
     productController.getProducts,
   )
   .post(
+    productLimiter,
     isUserLoggedIn,
     isVendorOrAdmin,
     validate(productValidation.createProduct),
@@ -29,11 +32,13 @@ router
 router
   .route("/:id")
   .get(
+    productLimiter,
     isUserLoggedIn,
     validate(productValidation.getProductById),
     productController.getProductById,
   )
   .patch(
+    productLimiter,
     isUserLoggedIn,
     isVendorOrAdmin,
     checkVendorProductOrNot,
@@ -41,6 +46,7 @@ router
     productController.updateProductById,
   )
   .delete(
+    productLimiter,
     isUserLoggedIn,
     isVendorOrAdmin,
     checkVendorProductOrNot,
@@ -51,6 +57,7 @@ router
 router
   .route("/changeStatus/:id")
   .patch(
+    productLimiter,
     isUserLoggedIn,
     isVendorOrAdmin,
     checkVendorProductOrNot,

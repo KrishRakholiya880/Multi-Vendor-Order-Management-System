@@ -10,11 +10,13 @@ const {
   isCustomer,
   isAdminOrCustomer,
 } = require("../../middleware/authorizationMiddleware");
+const { cartLimiter } = require("../../middleware/rateLimiter");
 
 router
   .route("/")
-  .get(isUserLoggedIn, isAdminOrCustomer, cartController.getCart)
+  .get(cartLimiter, isUserLoggedIn, isAdminOrCustomer, cartController.getCart)
   .post(
+    cartLimiter,
     isUserLoggedIn,
     isAdminOrCustomer,
     validate(cartValidation.addToCart),
@@ -28,12 +30,14 @@ router
 router
   .route("/:product_id")
   .patch(
+    cartLimiter,
     isUserLoggedIn,
     isAdminOrCustomer,
     validate(cartValidation.updateProductQuantityById),
     cartController.updateProductQuantityById,
   )
   .delete(
+    cartLimiter,
     isUserLoggedIn,
     isAdminOrCustomer,
     validate(cartValidation.removeCartProductById),

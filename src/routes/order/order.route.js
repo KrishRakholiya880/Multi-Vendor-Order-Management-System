@@ -10,11 +10,22 @@ const {
   isVendorOrAdmin,
   isAdminOrCustomer,
 } = require("../../middleware/authorizationMiddleware");
+const { orderLimiter } = require("../../middleware/rateLimiter");
 
 router
   .route("/")
-  .get(isUserLoggedIn, isAdminOrCustomer, orderController.getOrder)
-  .post(isUserLoggedIn, isAdminOrCustomer, orderController.addToOrder);
+  .get(
+    orderLimiter,
+    isUserLoggedIn,
+    isAdminOrCustomer,
+    orderController.getOrder,
+  )
+  .post(
+    orderLimiter,
+    isUserLoggedIn,
+    isAdminOrCustomer,
+    orderController.addToOrder,
+  );
 
 router
   .route("/vendor-orders")
@@ -23,6 +34,7 @@ router
 router
   .route("/vendor-orders/:id")
   .patch(
+    orderLimiter,
     isUserLoggedIn,
     isVendorOrAdmin,
     validate(orderValidation.updateOrderStatusById),
