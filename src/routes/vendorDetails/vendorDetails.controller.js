@@ -31,12 +31,16 @@ const getAllVendorDetails = async (req, res, next) => {
 // createVendorDetails
 const createVendorDetails = async (req, res, next) => {
   const { id } = req.params;
+  const body = req.body;
   const userData = req?.user;
-  const body = { ...req.body, userData };
+  const { url, method } = req;
+
   try {
     const result = await vendorDetailsService.createVendorDetails(
       body,
+      userData,
       Number(id),
+      { url, method },
     );
 
     return res
@@ -52,6 +56,7 @@ const updateVendorDetailsById = async (req, res, next) => {
   const { id } = req.params;
   const body = req.body;
   const userData = req.user;
+  const { url, method } = req;
 
   let updateData = {};
 
@@ -66,6 +71,7 @@ const updateVendorDetailsById = async (req, res, next) => {
       updateData,
       id,
       userData,
+      { url, method },
     );
 
     return res
@@ -80,11 +86,13 @@ const updateVendorDetailsById = async (req, res, next) => {
 const removeVendorDetailsById = async (req, res, next) => {
   const { id } = req.params;
   const userData = req.user;
+  const { url, method } = req;
 
   try {
     const result = await vendorDetailsService.removeVendorDetailsById(
       id,
       userData,
+      { url, method },
     );
 
     return res

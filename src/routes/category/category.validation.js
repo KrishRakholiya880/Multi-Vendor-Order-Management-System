@@ -12,7 +12,7 @@ const getCategoryById = {
   }),
 };
 
-const updateProductById = {
+const updateCategoryById = {
   params: Joi.object({
     id: Joi.number().integer().required(),
   }),
@@ -21,7 +21,7 @@ const updateProductById = {
   }),
 };
 
-const removeProductById = {
+const removeCategoryById = {
   params: Joi.object({
     id: Joi.number().integer().required(),
   }),
@@ -30,6 +30,6 @@ const removeProductById = {
 module.exports = {
   createCategory,
   getCategoryById,
-  updateProductById,
-  removeProductById,
+  updateCategoryById,
+  removeCategoryById,
 };

@@ -40,24 +40,24 @@ const getAllVendorDetails = async () => {
 };
 
 // createVendorDetails
-const createVendorDetails = async (data, paramsId) => {
+const createVendorDetails = async (data, userData, paramsId, reqUrlMet) => {
   const t = await sequelize.transaction();
   try {
     let newData;
 
-    if (data.userData?.role === "vendor") {
+    if (userData?.role === "vendor") {
       const isDetailsExists = await vendorDetailsDb.findOne(
         {
-          user_id: { [Op.eq]: `${data.userData?.id}` },
+          user_id: { [Op.eq]: `${userData?.id}` },
         },
         t,
       );
       if (isDetailsExists?.id) throw new Error("USER_DETAILS_ALREADY_FILLED");
 
       newData = {
-        user_id: data.userData?.id,
-        vendor_status: data.userData?.status,
         ...data,
+        user_id: userData?.id,
+        vendor_status: userData?.status,
       };
     } else {
       const userDetails = await userDb.findOne(
@@ -84,18 +84,32 @@ const createVendorDetails = async (data, paramsId) => {
     }
 
     const result = await vendorDetailsDb.create(newData, t);
+
+    logger.info("Vendor details created successfully", {
+      url: reqUrlMet.url,
+      method: reqUrlMet.method,
+      user_id: newData?.user_id,
+      created_by: userData?.id,
+    });
+
     if (!result) throw new Error("VENDOR_DETAILS_NOT_FOUND");
 
     await t.commit();
     return result;
   } catch (error) {
     await t.rollback();
+    logger.error("Create vendor details error", {
+      url: reqUrlMet.url,
+      method: reqUrlMet.method,
+      user_id: userData?.id,
+      error: error.message,
+    });
     throw error;
   }
 };
 
 // updateVendorDetailsById
-const updateVendorDetailsById = async (data, id, userData) => {
+const updateVendorDetailsById = async (data, id, userData, reqUrlMet) => {
   const t = await sequelize.transaction();
 
   try {
@@ -121,17 +135,29 @@ const updateVendorDetailsById = async (data, id, userData) => {
       },
       t,
     );
+    logger.info("Vendor details updated successfully", {
+      url: reqUrlMet.url,
+      method: reqUrlMet.method,
+      user_id: isVendorDetailsExists?.user_id,
+      created_by: userData?.id,
+    });
 
     await t.commit();
     return result;
   } catch (error) {
     await t.rollback();
+    logger.error("Update vendor details error", {
+      url: reqUrlMet.url,
+      method: reqUrlMet.method,
+      user_id: userData?.id,
+      error: error.message,
+    });
     throw error;
   }
 };
 
 // removeVendorDetailsById
-const removeVendorDetailsById = async (id, userData) => {
+const removeVendorDetailsById = async (id, userData, reqUrlMet) => {
   const t = await sequelize.transaction();
   try {
     const isVendorDetailsExists = await vendorDetailsDb.findOne(
@@ -154,10 +180,23 @@ const removeVendorDetailsById = async (id, userData) => {
       t,
     );
 
+    logger.info("Vendor details removed successfully", {
+      url: reqUrlMet.url,
+      method: reqUrlMet.method,
+      user_id: newData?.user_id,
+      created_by: userData?.id,
+    });
+
     await t.commit();
     return result;
   } catch (error) {
     await t.rollback();
+    logger.error("Remove vendor details error", {
+      url: reqUrlMet.url,
+      method: reqUrlMet.method,
+      user_id: userData?.id,
+      error: error.message,
+    });
     throw error;
   }
 };

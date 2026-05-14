@@ -29,7 +29,7 @@ const findOne = async (
   try {
     const result = await cart.findOne({
       where: query,
-      ...(attributes.length > 0 && { attributes }),
+      attributes,
       ...(include.length > 0 && { include }),
       transaction,
     });
@@ -41,28 +41,9 @@ const findOne = async (
 };
 
 const create = async (data, transaction) => {
-  const { body, userData } = data;
-  let cartData = {};
-
   try {
-    cartData = {
-      customer_id: userData?.id,
-      total_amount: body?.quantity * body?.price,
-    };
-    const cartResult = await cart.create(cartData, { transaction });
-
-    cartData = {
-      cart_id: cartResult.toJSON()?.id,
-      product_id: body?.product_id,
-      quantity: body?.quantity,
-      unit_price: body?.price,
-    };
-    const cartItemsResult = await cart_item.create(cartData, { transaction });
-
-    return {
-      cartResult: cartResult.toJSON(),
-      cartItemsResult: cartItemsResult.toJSON(),
-    };
+    const cartResult = await cart.create(data, { transaction });
+    return cartResult;
   } catch (error) {
     console.log(error?.message || error);
   }

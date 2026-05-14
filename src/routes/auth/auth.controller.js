@@ -3,8 +3,9 @@ const authService = require("./auth.service");
 // register
 const register = async (req, res, next) => {
   const body = req.body;
+  const { url, method } = req;
   try {
-    const result = await authService.register(body);
+    const result = await authService.register(body, { url, method });
 
     // cookie
     res.cookie("userdata", result.data, {
@@ -34,8 +35,10 @@ const register = async (req, res, next) => {
 // login
 const login = async (req, res, next) => {
   const body = req.body;
+  const { url, method } = req;
+
   try {
-    const result = await authService.login(body);
+    const result = await authService.login(body, { url, method });
 
     // cookie
     res.cookie("userdata", result.data, {
@@ -65,8 +68,10 @@ const login = async (req, res, next) => {
 // logout
 const logout = async (req, res, next) => {
   const refreshToken = req.cookies?.refreshToken;
+  const { url, method } = req;
+
   try {
-    await authService.logout(refreshToken);
+    await authService.logout(refreshToken, { url, method });
 
     res.clearCookie("userdata");
     res.clearCookie("accessToken");
@@ -103,8 +108,10 @@ const refreshToken = async (req, res, next) => {
 // profile
 const profile = async (req, res, next) => {
   const userData = req.user;
+  const { url, method } = req;
+
   try {
-    const result = await authService.profile(userData);
+    const result = await authService.profile(userData, { url, method });
 
     return res.status(200).json({ status: true, result });
   } catch (error) {
@@ -114,10 +121,14 @@ const profile = async (req, res, next) => {
 
 // changePassword
 const changePassword = async (req, res, next) => {
-  const user_id = req?.user?.id;
+  const userData = req?.user;
   const body = req.body;
+  const { url, method } = req;
 
-  const result = await authService.changePassword(user_id, body);
+  const result = await authService.changePassword(userData, body, {
+    url,
+    method,
+  });
 
   return res.status(200).json({ status: true, message: "Password changed!!!" });
 };

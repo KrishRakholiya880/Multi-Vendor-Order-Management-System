@@ -18,6 +18,7 @@ router
     orderLimiter,
     isUserLoggedIn,
     isAdminOrCustomer,
+    validate(orderValidation.getOrder),
     orderController.getOrder,
   )
   .post(
@@ -29,7 +30,12 @@ router
 
 router
   .route("/vendor-orders")
-  .get(isUserLoggedIn, isVendorOrAdmin, orderController.getVendorOrders);
+  .get(
+    isUserLoggedIn,
+    isVendorOrAdmin,
+    validate(orderValidation.getVendorOrder),
+    orderController.getVendorOrders,
+  );
 
 router
   .route("/vendor-orders/:id")
@@ -45,8 +51,8 @@ router
   .route("/:item_id")
   .delete(
     isUserLoggedIn,
-    validate(orderValidation.cancelOrderById),
-    orderController.cancelOrderById,
+    validate(orderValidation.cancelOrderItemById),
+    orderController.cancelOrderItemById,
   );
 
 module.exports = router;

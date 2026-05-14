@@ -33,8 +33,10 @@ const getUserById = async (req, res, next) => {
 // createUser
 const createUser = async (req, res, next) => {
   const body = req.body;
+  const { url, method } = req;
+
   try {
-    const result = await userService.createUser(body);
+    const result = await userService.createUser(body, { url, method });
 
     return res
       .status(201)
@@ -48,6 +50,7 @@ const createUser = async (req, res, next) => {
 const updateUserById = async (req, res, next) => {
   const { id } = req.params;
   const body = req.body;
+  const { url, method } = req;
 
   let updateData = {};
 
@@ -58,7 +61,10 @@ const updateUserById = async (req, res, next) => {
   }
 
   try {
-    const result = await userService.updateUserById(updateData, id);
+    const result = await userService.updateUserById(updateData, id, {
+      url,
+      method,
+    });
 
     return res.status(200).json({ status: true, message: "User updated!!!" });
   } catch (error) {
@@ -70,9 +76,13 @@ const updateUserById = async (req, res, next) => {
 const changeUserStatusById = async (req, res, next) => {
   const { id } = req.params;
   const { status } = req.body;
+  const { url, method } = req;
 
   try {
-    const result = await userService.changeUserStatusById(id, status);
+    const result = await userService.changeUserStatusById(id, status, {
+      url,
+      method,
+    });
 
     return res
       .status(200)
@@ -85,9 +95,10 @@ const changeUserStatusById = async (req, res, next) => {
 // removeUserById
 const removeUserById = async (req, res, next) => {
   const { id } = req.params;
+  const { url, method } = req;
 
   try {
-    const result = await userService.removeUserById(id);
+    const result = await userService.removeUserById(id, { url, method });
 
     return res.status(200).json({ status: true, message: "User removed!!!" });
   } catch (error) {

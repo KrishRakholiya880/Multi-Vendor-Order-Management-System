@@ -2,6 +2,7 @@ const { decodeToken } = require("../helper/authHelper");
 const authDb = require("../dbUtils/authDb");
 const productDb = require("../dbUtils/productDb");
 const refreshTokenDb = require("../dbUtils/refreshTokenDb");
+const { logger } = require("../helper/logger");
 
 const optionalAuth = async (req, res, next) => {
   const accessToken = req.cookies.accessToken;
@@ -27,6 +28,11 @@ const isUserLoggedIn = async (req, res, next) => {
   const refreshToken = req.cookies.refreshToken;
 
   if (!accessToken && !refreshToken) {
+    logger.warn("Unauthorized access attempt", {
+      url: req.originalUrl,
+      method: req.method,
+      ip: req.ip,
+    });
     throw new Error("TOKEN_REQUIRED");
   }
 
@@ -59,59 +65,89 @@ const isUserLoggedIn = async (req, res, next) => {
 };
 
 const isAdmin = (req, res, next) => {
-  const role = req.user?.role;
+  const userData = req.user;
 
-  if (role === "admin") {
+  if (userData?.role === "admin") {
     return next();
   }
 
+  logger.error("Unauthorized access - admin only", {
+    user_id: userData?.id,
+    url: req.originalUrl,
+    method: req.method,
+    ip: req.ip,
+  });
   throw new Error("ONLY_ADMIN_ACCESS");
 };
 
 const isVendor = (req, res, next) => {
-  const role = req.user?.role;
+  const userData = req.user;
 
-  if (role === "vendor") {
+  if (userData?.role === "vendor") {
     return next();
   }
 
+  logger.error("Unauthorized access - vendors only", {
+    user_id: userData?.id,
+    url: req.originalUrl,
+    method: req.method,
+    ip: req.ip,
+  });
   throw new Error("ONLY_VENDOR_ACCESS");
 };
 
 const isCustomer = (req, res, next) => {
-  const role = req.user?.role;
+  const userData = req.user;
 
-  if (role === "customer") {
+  if (userData?.role === "customer") {
     return next();
   }
 
+  logger.error("Unauthorized access - customer only", {
+    user_id: userData?.id,
+    url: req.originalUrl,
+    method: req.method,
+    ip: req.ip,
+  });
   throw new Error("ONLY_CUSTOMERS_ACCESS");
 };
 
 const isVendorOrAdmin = async (req, res, next) => {
-  const role = req.user?.role;
+  const userData = req.user;
 
-  if (role === "admin" || role === "vendor") {
+  if (userData?.role === "admin" || userData?.role === "vendor") {
     return next();
   }
 
+  logger.error("Unauthorized access - vendor or admin only", {
+    user_id: userData?.id,
+    url: req.originalUrl,
+    method: req.method,
+    ip: req.ip,
+  });
   throw new Error("ACCESS_DENIED");
 };
 
 const isAdminOrCustomer = async (req, res, next) => {
-  const role = req.user?.role;
+  const userData = req.user;
 
-  if (role === "customer" || role === "admin") {
+  if (userData?.role === "customer" || userData?.role === "admin") {
     return next();
   }
 
+  logger.error("Unauthorized access - customer or admin only", {
+    user_id: userData?.id,
+    url: req.originalUrl,
+    method: req.method,
+    ip: req.ip,
+  });
   throw new Error("ACCESS_DENIED");
 };
 
 const checkVendorProductOrNot = async (req, res, next) => {
-  const user = req.user;
-  const role = req.user?.role;
-  if (role === "vendor") {
+  const userData = req.user;
+
+  if (userData?.role === "vendor") {
     const { id } = req.params;
 
     const product = await productDb.findOne({ id: id });
@@ -120,7 +156,16 @@ const checkVendorProductOrNot = async (req, res, next) => {
       throw new Error("PRODUCT_NOT_FOUND");
     }
 
-    if (product?.vendor_id !== user?.id) {
+    if (product?.vendor_id !== userData?.id) {
+      logger.error(
+        "Unauthorized access - vendor trying to access another vendor's product",
+        {
+          user_id: userData?.id,
+          url: req.originalUrl,
+          method: req.method,
+          ip: req.ip,
+        },
+      );
       throw new Error("ACCESS_DENIED_FOR_PRODUCT");
     }
 

@@ -6,6 +6,7 @@ const cartDb = require("../../dbUtils/cartDb");
 const cartItemDb = require("../../dbUtils/cartItemDb");
 const { sequelize } = require("../../db/models");
 const { order_item, product } = require("../../db/models");
+const { logger } = require("../../helper/logger");
 
 const isValidStatusTransition = (oldStatus, newStatus) => {
   const statusRank = {
@@ -19,24 +20,29 @@ const isValidStatusTransition = (oldStatus, newStatus) => {
   const newRank = statusRank[newStatus];
 
   if (!oldRank || !newRank) return false;
+  if (newStatus === "delivered") return oldStatus !== "cancelled";
   if (newStatus === "cancelled") return oldStatus !== "delivered";
   return newRank > oldRank;
 };
 
-const orderItemsInclude = (withCancelFilter = false) => [
+const orderItemsInclude = (itemStatus = null) => [
   {
     model: order_item,
     as: "order_items",
-    ...(withCancelFilter && {
-      where: { status: { [Op.ne]: "cancelled" } },
-      required: false,
-    }),
+    ...(itemStatus
+      ? { where: { status: { [Op.eq]: itemStatus } }, required: false }
+      : {}),
     attributes: [
       "id",
       "order_id",
+      "product_id",
       "quantity",
       "price_at_purchase",
-      ...(withCancelFilter ? ["placed_at"] : []),
+      "status",
+      "placed_at",
+      "shipped_at",
+      "delivered_at",
+      "cancelled_at",
     ],
     include: [
       {
@@ -48,36 +54,58 @@ const orderItemsInclude = (withCancelFilter = false) => [
   },
 ];
 
-const orderAttributes = ["id", "customer_id", "total_amount"];
+const orderAttributes = [
+  "id",
+  "customer_id",
+  "total_amount",
+  "status",
+  "created_at",
+];
+
+const recalculateOrderTotal = async (order_id, t) => {
+  const allOrderItems = await orderItemDb.findAll(
+    {
+      order_id: { [Op.eq]: order_id },
+      status: { [Op.ne]: "cancelled" },
+    },
+    {},
+    [],
+    t,
+  );
+
+  const rawTotal = allOrderItems.reduce((acc, item) => {
+    const qty = parseInt(item.quantity);
+    const price = parseFloat(item.price_at_purchase);
+    return acc + qty * price;
+  }, 0);
+
+  return parseFloat(rawTotal.toFixed(2));
+};
 
 // getOrder
-const getOrder = async (userData) => {
+const getOrder = async (userData, status, itemStatus) => {
   const t = await sequelize.transaction();
   try {
     let result;
+    let query = {};
 
     if (userData?.role === "admin") {
+      if (status) query.status = { [Op.eq]: status };
+
       result = await orderDb.findAll(
-        {},
+        query,
         orderAttributes,
-        orderItemsInclude(),
+        orderItemsInclude(itemStatus),
         t,
       );
     } else {
-      const customerOrderData = await orderDb.findOne(
-        {
-          customer_id: { [Op.eq]: `${userData?.id}` },
-        },
-        {},
-        [],
-        t,
-      );
-      if (!customerOrderData) throw new Error("ORDER_NOT_FOUND");
+      query.customer_id = { [Op.eq]: `${userData?.id}` };
+      if (status) query.status = { [Op.eq]: status };
 
-      result = await orderDb.findOne(
-        { id: { [Op.eq]: `${customerOrderData?.id}` } },
+      result = await orderDb.findAll(
+        query,
         orderAttributes,
-        orderItemsInclude(true),
+        orderItemsInclude(itemStatus),
         t,
       );
     }
@@ -95,104 +123,48 @@ const getOrder = async (userData) => {
 };
 
 // addToOrder
-const addToOrder = async (userData) => {
+const addToOrder = async (userData, reqUrlMet) => {
   const t = await sequelize.transaction();
+  let result;
+
   try {
-    const existingCartData = await cartDb.findOne(
-      {
-        customer_id: `${userData?.id}`,
-      },
+    const cartData = await cartDb.findOne(
+      { customer_id: { [Op.eq]: `${userData?.id}` } },
       {},
       [],
       t,
     );
-    if (!existingCartData) throw new Error("CART_NOT_FOUND");
+    if (!cartData) throw new Error("CART_NOT_FOUND");
 
-    const cartItemData = await cartItemDb.findAll(
-      {
-        cart_id: `${existingCartData?.id}`,
-      },
-      {},
+    const cartItems = await cartItemDb.findAll(
+      { cart_id: { [Op.eq]: `${cartData?.id}` } },
+      [],
       t,
     );
-    if (!cartItemData || cartItemData.length === 0)
+    if (!cartItems || cartItems.length === 0)
       throw new Error("CART_ITEMS_NOT_FOUND");
 
-    const existingOrder = await orderDb.findOne(
+    result = await orderDb.create(
       {
-        customer_id: `${userData?.id}`,
+        customer_id: userData?.id,
+        total_amount: cartData?.total_amount || 0,
       },
-      {},
-      [],
       t,
     );
-    let result;
 
-    if (!existingOrder) {
-      result = await orderDb.create(
+    for (const item of cartItems) {
+      await orderItemDb.create(
         {
-          customer_id: existingCartData?.customer_id,
-          total_amount: parseFloat(existingCartData?.total_amount).toFixed(2),
+          order_id: result?.id,
+          product_id: item?.product_id,
+          quantity: item?.quantity,
+          price_at_purchase: parseFloat(item?.unit_price).toFixed(2),
         },
         t,
       );
-    } else {
-      result = existingOrder;
-      await orderDb.update(
-        {
-          total_amount: (
-            parseFloat(existingOrder?.total_amount) +
-            parseFloat(existingCartData?.total_amount)
-          ).toFixed(2),
-        },
-        { id: { [Op.eq]: existingOrder?.id } },
-        t,
-      );
-    }
-
-    for (const item of cartItemData) {
-      if (existingOrder) {
-        const existingOrderItem = await orderItemDb.findOne(
-          {
-            order_id: { [Op.eq]: result?.id },
-            product_id: { [Op.eq]: `${item?.product_id}` },
-          },
-          t,
-        );
-
-        if (existingOrderItem) {
-          await orderItemDb.update(
-            { quantity: existingOrderItem?.quantity + item?.quantity },
-            { id: { [Op.eq]: existingOrderItem?.id } },
-            t,
-          );
-        } else {
-          await orderItemDb.create(
-            {
-              order_id: result?.id,
-              product_id: item?.product_id,
-              quantity: item?.quantity,
-              price_at_purchase: parseFloat(item?.unit_price).toFixed(2),
-            },
-            t,
-          );
-        }
-      } else {
-        await orderItemDb.create(
-          {
-            order_id: result?.id,
-            product_id: item?.product_id,
-            quantity: item?.quantity,
-            price_at_purchase: parseFloat(item?.unit_price).toFixed(2),
-          },
-          t,
-        );
-      }
 
       const productData = await productDb.findOne(
-        {
-          id: `${item?.product_id}`,
-        },
+        { id: { [Op.eq]: `${item?.product_id}` } },
         {},
         [],
         t,
@@ -201,29 +173,45 @@ const addToOrder = async (userData) => {
 
       await productDb.update(
         { stock: productData?.stock - item?.quantity },
-        { id: item?.product_id },
+        { id: { [Op.eq]: `${item?.product_id}` } },
         t,
       );
     }
 
-    await cartItemDb.remove(
-      {
-        cart_id: { [Op.eq]: `${existingCartData?.id}` },
-      },
+    const newOrderTotal = await recalculateOrderTotal(result?.id, t);
+    await orderDb.update(
+      { total_amount: newOrderTotal },
+      { id: { [Op.eq]: result?.id } },
       t,
     );
-    await cartDb.remove({ customer_id: { [Op.eq]: `${userData?.id}` } }, t);
+
+    await cartItemDb.remove({ cart_id: { [Op.eq]: `${cartData?.id}` } }, t);
+    await cartDb.remove({ id: { [Op.eq]: `${cartData?.id}` } }, t);
+
+    logger.info("Order placed successfully", {
+      method: reqUrlMet.method,
+      url: reqUrlMet.url,
+      user_id: userData?.id,
+      order_id: result?.id,
+      total_amount: newOrderTotal,
+    });
 
     await t.commit();
     return result;
   } catch (error) {
     await t.rollback();
+    logger.error("Place order error", {
+      method: reqUrlMet.method,
+      url: reqUrlMet.url,
+      user_id: userData?.id,
+      error: error.message,
+    });
     throw error;
   }
 };
 
 // getVendorOrders
-const getVendorOrders = async (userData) => {
+const getVendorOrders = async (userData, itemStatus) => {
   const t = await sequelize.transaction();
   try {
     const result = await orderDb.findAll(
@@ -233,6 +221,8 @@ const getVendorOrders = async (userData) => {
         {
           model: order_item,
           as: "order_items",
+          required: true,
+          ...(itemStatus ? { where: { status: { [Op.eq]: itemStatus } } } : {}),
           attributes: [
             "id",
             "product_id",
@@ -248,7 +238,8 @@ const getVendorOrders = async (userData) => {
             {
               model: product,
               as: "product_info",
-              where: { vendor_id: userData?.id },
+              required: true,
+              where: { vendor_id: { [Op.eq]: `${userData?.id}` } },
               attributes: ["id", "name", "description", "price", "status"],
             },
           ],
@@ -257,7 +248,8 @@ const getVendorOrders = async (userData) => {
       t,
     );
 
-    if (!result || result.length === 0) throw new Error("ORDER_NOT_FOUND");
+    if (!result || result.length === 0)
+      throw new Error("VENDOR_ORDERS_NOT_FOUND");
 
     await t.commit();
     return result;
@@ -268,155 +260,229 @@ const getVendorOrders = async (userData) => {
 };
 
 // updateOrderStatusById
-const updateOrderStatusById = async (id, data, userData) => {
+const updateOrderStatusById = async (id, data, userData, reqUrlMet) => {
   const t = await sequelize.transaction();
   try {
-    const orderData = await orderItemDb.findOne(
-      { id: { [Op.eq]: `${id}` } },
-      t,
-    );
-    if (!orderData) throw new Error("ORDER_ITEM_NOT_FOUND");
+    const orderItemData = await orderItemDb.findOne({ id: `${id}` }, t);
+    if (!orderItemData) throw new Error("ORDER_ITEM_NOT_FOUND");
 
-    if (!isValidStatusTransition(orderData?.status, data.status)) {
+    if (userData?.role === "vendor") {
+      const productData = await productDb.findOne(
+        {
+          id: `${orderItemData?.product_id}`,
+        },
+        {},
+        [],
+        t,
+      );
+      if (!productData) throw new Error("PRODUCT_NOT_FOUND");
+      if (productData?.vendor_id !== userData?.id)
+        throw new Error("CHANGE_ORDER_STATUS_BY_WRONG_VENDOR");
+    }
+
+    if (!isValidStatusTransition(orderItemData?.status, data?.status)) {
       throw new Error("INVALID_STATUS_TRANSITION");
     }
 
-    const updateData = { status: data?.status };
-    if (data?.status === "shipped") updateData.shipped_at = new Date();
-    if (data?.status === "delivered") updateData.delivered_at = new Date();
-    if (data?.status === "cancelled") updateData.cancelled_at = new Date();
+    const updateData = { status: data.status };
+    if (data.status === "shipped") updateData.shipped_at = new Date();
+    if (data.status === "delivered") updateData.delivered_at = new Date();
+    if (data.status === "cancelled") updateData.cancelled_at = new Date();
 
-    if (userData?.role === "vendor") {
-      const productDetails = await productDb.findOne(
-        {
-          id: { [Op.eq]: `${orderData?.product_id}` },
-        },
-        {},
+    const result = await orderItemDb.update(updateData, { id: `${id}` }, t);
+
+    if (data?.status === "delivered" || data?.status === "cancelled") {
+      const allOrderedItems = await orderItemDb.findAll(
+        { order_id: `${orderItemData?.order_id}` },
+        [],
         [],
         t,
       );
-      if (productDetails?.vendor_id !== userData?.id) {
-        throw new Error("CHANGE_ORDER_STATUS_BY_WRONG_VENDOR");
+
+      const deliveredCount = allOrderedItems.filter(
+        (item) => item.status === "delivered",
+      ).length;
+
+      const cancelledCount = allOrderedItems.filter(
+        (item) => item.status === "cancelled",
+      ).length;
+
+      let orderUpdateData = {};
+      if (cancelledCount === allOrderedItems.length) {
+        orderUpdateData = { status: "cancelled", cancelled_at: new Date() };
+      } else if (deliveredCount === allOrderedItems.length) {
+        orderUpdateData.status = "full_done";
+      } else if (
+        allOrderedItems.length > deliveredCount &&
+        deliveredCount > 0
+      ) {
+        orderUpdateData.status = "partially_done";
+      } else {
+        orderUpdateData.status = "pending";
       }
-    }
-
-    const result = await orderItemDb.update(
-      updateData,
-      {
-        id: { [Op.eq]: `${id}` },
-      },
-      t,
-    );
-
-    await t.commit();
-    return result;
-  } catch (error) {
-    await t.rollback();
-    throw error;
-  }
-};
-
-// cancelOrderById
-const cancelOrderById = async (item_id, userData) => {
-  const t = await sequelize.transaction();
-  try {
-    const orderItemData = await orderItemDb.findOne(
-      {
-        id: { [Op.eq]: `${item_id}` },
-      },
-      t,
-    );
-
-    if (!orderItemData) throw new Error("ORDER_ITEMS_NOT_FOUND");
-
-    if (orderItemData?.status === "cancelled")
-      throw new Error("ORDER_ITEM_ALREADY_CANCELLED");
-
-    if (userData?.role === "customer") {
-      const orderData = await orderDb.findOne(
-        {
-          customer_id: { [Op.eq]: `${userData?.id}` },
-        },
-        {},
-        [],
-        t,
-      );
-
-      if (!orderData) throw new Error("ORDER_NOT_FOUND");
-
-      const orderItemsData = await orderItemDb.findAll(
-        {
-          order_id: { [Op.eq]: `${orderData?.id}` },
-        },
-        t,
-      );
-
-      if (!orderItemsData || orderItemsData.length === 0)
-        throw new Error("ORDER_ITEMS_NOT_FOUND");
-    } else if (userData?.role === "vendor") {
-      const productData = await productDb.findOne(
-        {
-          id: { [Op.eq]: `${orderItemData?.product_id}` },
-        },
-        {},
-        [],
-        t,
-      );
-
-      if (productData?.vendor_id !== userData?.id)
-        throw new Error("WRONG_VENDOR_ORDER_CANCEL");
-    }
-
-    const result = await orderItemDb.update(
-      { status: "cancelled", cancelled_at: new Date() },
-      { id: `${item_id}` },
-      t,
-    );
-
-    if (result[0] === 1) {
-      const productData = await productDb.findOne(
-        {
-          id: { [Op.eq]: `${orderItemData?.product_id}` },
-        },
-        {},
-        [],
-        t,
-      );
-      if (productData) {
-        await productDb.update(
-          { stock: productData?.stock + orderItemData?.quantity },
-          { id: `${orderItemData?.product_id}` },
-          t,
-        );
-      }
-
-      const orderData = await orderDb.findOne(
-        {
-          id: { [Op.eq]: `${orderItemData?.order_id}` },
-        },
-        {},
-        [],
-        t,
-      );
-      if (!orderData) throw new Error("ORDER_NOT_FOUND");
 
       await orderDb.update(
-        {
-          total_amount: (
-            parseFloat(orderData?.total_amount) -
-            parseFloat(orderItemData?.price_at_purchase) *
-              parseFloat(orderItemData?.quantity)
-          ).toFixed(2),
-        },
+        orderUpdateData,
         { id: `${orderItemData?.order_id}` },
         t,
       );
     }
 
+    logger.info("Order item status updated successfully", {
+      method: reqUrlMet.method,
+      url: reqUrlMet.url,
+      user_id: userData?.id,
+      order_item_id: id,
+      new_status: data?.status,
+    });
+
     await t.commit();
     return result;
   } catch (error) {
     await t.rollback();
+    logger.error("Update order status error", {
+      method: reqUrlMet.method,
+      url: reqUrlMet.url,
+      user_id: userData?.id,
+      order_item_id: id,
+      error: error.message,
+    });
+    throw error;
+  }
+};
+
+// cancelOrderItemById
+const cancelOrderItemById = async (item_id, userData, reqUrlMet) => {
+  const t = await sequelize.transaction();
+  try {
+    const orderItemData = await orderItemDb.findOne(
+      { id: { [Op.eq]: `${item_id}` } },
+      t,
+    );
+    if (!orderItemData) throw new Error("ORDER_ITEMS_NOT_FOUND");
+    if (orderItemData?.status === "cancelled")
+      throw new Error("ORDER_ITEM_ALREADY_CANCELLED");
+
+    const productData = await productDb.findOne(
+      { id: { [Op.eq]: `${orderItemData?.product_id}` } },
+      {},
+      [],
+      t,
+    );
+    if (!productData) throw new Error("PRODUCT_NOT_FOUND");
+
+    if (userData?.role === "customer") {
+      const customerOrderData = await orderDb.findOne(
+        {
+          id: `${orderItemData?.order_id}`,
+          customer_id: `${userData?.id}`,
+        },
+        {},
+        [],
+        t,
+      );
+      if (!customerOrderData) throw new Error("ORDER_NOT_FOUND");
+    }
+    if (userData?.role === "vendor") {
+      if (productData?.vendor_id !== userData?.id)
+        throw new Error("WRONG_VENDOR_ORDER_CANCEL");
+    }
+
+    const result = await orderItemDb.update(
+      {
+        status: "cancelled",
+        cancelled_at: new Date(),
+      },
+      { id: `${item_id}` },
+      t,
+    );
+
+    if (result[0] === 1) {
+      if (productData) {
+        await productDb.update(
+          {
+            stock: productData?.stock + orderItemData?.quantity,
+          },
+          {
+            id: `${orderItemData?.product_id}`,
+          },
+          t,
+        );
+      }
+
+      const totalAmountAfterCancelItem = await recalculateOrderTotal(
+        orderItemData?.order_id,
+        t,
+      );
+      await orderDb.update(
+        { total_amount: totalAmountAfterCancelItem },
+        { id: orderItemData?.order_id },
+        t,
+      );
+
+      const allOrderedItems = await orderItemDb.findAll(
+        { order_id: orderItemData?.order_id },
+        {},
+        [],
+        t,
+      );
+
+      const cancelledCount = allOrderedItems.filter(
+        (item) => item?.status === "cancelled",
+      ).length;
+      const deliveredCount = allOrderedItems.filter(
+        (item) => item?.status === "delivered",
+      ).length;
+
+      let orderUpdateData = {};
+      if (cancelledCount === allOrderedItems.length) {
+        const totalAmountOfCancelledItems = allOrderedItems.reduce(
+          (acc, item) => {
+            return (
+              acc +
+              parseInt(item?.quantity) * parseFloat(item?.price_at_purchase)
+            );
+          },
+          0,
+        );
+        orderUpdateData = {
+          status: "cancelled",
+          cancelled_at: new Date(),
+          total_amount: parseFloat(totalAmountOfCancelledItems.toFixed(2)),
+        };
+      } else if (deliveredCount === allOrderedItems.length) {
+        orderUpdateData = { status: "full_done" };
+      } else if (
+        allOrderedItems.length > deliveredCount &&
+        deliveredCount > 0
+      ) {
+        orderUpdateData = { status: "partially_done" };
+      } else {
+        orderUpdateData = { status: "pending" };
+      }
+
+      await orderDb.update(orderUpdateData, { id: orderItemData?.order_id }, t);
+    }
+
+    logger.info("Order item cancelled successfully", {
+      method: reqUrlMet.method,
+      url: reqUrlMet.url,
+      user_id: userData?.id,
+      order_item_id: item_id,
+      cancelled_by: userData?.role,
+    });
+
+    await t.commit();
+    return result;
+  } catch (error) {
+    await t.rollback();
+    logger.error("Cancel order error", {
+      method: reqUrlMet.method,
+      url: reqUrlMet.url,
+      user_id: userData?.id,
+      order_item_id: item_id,
+      error: error.message,
+    });
     throw error;
   }
 };
@@ -426,5 +492,5 @@ module.exports = {
   addToOrder,
   getVendorOrders,
   updateOrderStatusById,
-  cancelOrderById,
+  cancelOrderItemById,
 };

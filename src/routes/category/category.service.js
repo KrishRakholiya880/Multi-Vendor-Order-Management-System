@@ -1,9 +1,10 @@
 const { Op } = require("sequelize");
 const { sequelize } = require("../../db/models");
 const categoryDb = require("../../dbUtils/categoryDb");
+const { logger } = require("../../helper/logger");
 
 // getCategories
-const getCategories = async () => {
+const getCategories = async (reqUrlMet) => {
   const t = await sequelize.transaction();
 
   try {
@@ -12,6 +13,12 @@ const getCategories = async () => {
     if (!result) {
       throw new Error("CATEGORIES_NOT_FOUND");
     }
+
+    logger.info("Categories found", {
+      category_ids: result?.map((item) => item?.id),
+      url: reqUrlMet.url,
+      method: reqUrlMet.method,
+    });
 
     await t.commit();
     return result;
@@ -45,7 +52,7 @@ const getCategoryById = async (id) => {
 };
 
 // createCategory
-const createCategory = async (data) => {
+const createCategory = async (data, reqUrlMet) => {
   const t = await sequelize.transaction();
   try {
     const query = {
@@ -66,16 +73,26 @@ const createCategory = async (data) => {
       throw new Error("CATEGORY_NOT_FOUND");
     }
 
+    logger.info("Category created", {
+      category_id: result?.id,
+      url: reqUrlMet.url,
+      method: reqUrlMet.method,
+    });
+
     await t.commit();
     return result;
   } catch (error) {
     await t.rollback();
+    logger.error("Category create error", {
+      url: reqUrlMet.url,
+      method: reqUrlMet.method,
+    });
     throw error;
   }
 };
 
-// updateProductById
-const updateProductById = async (data, id) => {
+// updateCategoryById
+const updateCategoryById = async (data, id, reqUrlMet) => {
   const t = await sequelize.transaction();
   try {
     const query = {
@@ -92,16 +109,26 @@ const updateProductById = async (data, id) => {
 
     const result = await categoryDb.update(data, query, t);
 
+    logger.error("Category updated", {
+      category_id: result?.id,
+      url: reqUrlMet.url,
+      method: reqUrlMet.method,
+    });
+
     await t.commit();
     return result;
   } catch (error) {
     await t.rollback();
+    logger.error("Category update", {
+      url: reqUrlMet.url,
+      method: reqUrlMet.method,
+    });
     throw error;
   }
 };
 
-// removeProductById
-const removeProductById = async (id) => {
+// removeCategoryById
+const removeCategoryById = async (id, reqUrlMet) => {
   const t = await sequelize.transaction();
   try {
     const query = {
@@ -118,10 +145,20 @@ const removeProductById = async (id) => {
 
     const result = await categoryDb.remove(query, t);
 
+    logger.error("Category removed", {
+      category_id: result?.id,
+      url: reqUrlMet.url,
+      method: reqUrlMet.method,
+    });
+
     await t.commit();
     return result;
   } catch (error) {
     await t.rollback();
+    logger.error("Category remove error", {
+      url: reqUrlMet.url,
+      method: reqUrlMet.method,
+    });
     throw error;
   }
 };
@@ -130,6 +167,6 @@ module.exports = {
   getCategories,
   getCategoryById,
   createCategory,
-  updateProductById,
-  removeProductById,
+  updateCategoryById,
+  removeCategoryById,
 };

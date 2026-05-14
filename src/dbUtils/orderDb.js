@@ -1,10 +1,10 @@
 const { order } = require("../db/models");
 
-const findAll = async (query, attributes = [], include = [], transaction) => {
+const findAll = async (query, attributes = {}, include = [], transaction) => {
   try {
     const result = await order.findAll({
       where: query,
-      ...(attributes.length > 0 && { attributes }),
+      attributes,
       ...(include.length > 0 && { include }),
       transaction,
     });
@@ -14,11 +14,11 @@ const findAll = async (query, attributes = [], include = [], transaction) => {
   }
 };
 
-const findOne = async (query, attributes = [], include = [], transaction) => {
+const findOne = async (query, attributes = {}, include = [], transaction) => {
   try {
     const result = await order.findOne({
       where: query,
-      ...(attributes.length > 0 && { attributes }),
+      attributes,
       ...(include.length > 0 && { include }),
       transaction,
     });
@@ -47,7 +47,6 @@ const update = async (data, query = {}, transaction) => {
     return result;
   } catch (error) {
     console.log(error?.message || error);
-    throw error;
   }
 };
 
@@ -60,7 +59,6 @@ const remove = async (query = {}, transaction) => {
     return result;
   } catch (error) {
     console.log(error?.message || error);
-    throw error;
   }
 };
 

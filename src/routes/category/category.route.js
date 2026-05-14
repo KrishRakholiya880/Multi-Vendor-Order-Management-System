@@ -31,14 +31,14 @@ router
   .patch(
     isUserLoggedIn,
     isAdmin,
-    validate(categoryValidation.updateProductById),
-    categoryController.updateProductById,
+    validate(categoryValidation.updateCategoryById),
+    categoryController.updateCategoryById,
   )
   .delete(
     isUserLoggedIn,
     isAdmin,
-    validate(categoryValidation.removeProductById),
-    categoryController.removeProductById,
+    validate(categoryValidation.removeCategoryById),
+    categoryController.removeCategoryById,
   );
 
 module.exports = router;

@@ -20,7 +20,9 @@ router
   .post(authLimiter, validate(authValidation.login), authController.login);
 router.route("/logout").post(authLimiter, authController.logout);
 router.route("/refresh").post(authLimiter, authController.refreshToken);
-router.route("/profile").get(isUserLoggedIn, authController.profile);
+router
+  .route("/profile")
+  .get(authLimiter, isUserLoggedIn, authController.profile);
 router
   .route("/changePassword")
   .patch(

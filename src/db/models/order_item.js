@@ -84,7 +84,6 @@ module.exports = (sequelize, DataTypes) => {
       tableName: "order_items",
       createdAt: "placed_at",
       updatedAt: false,
-      deletedAt: "cancelled_at",
       paranoid: false,
     },
   );

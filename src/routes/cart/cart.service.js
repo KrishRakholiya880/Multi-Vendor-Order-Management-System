@@ -4,6 +4,7 @@ const cartItemDb = require("../../dbUtils/cartItemDb");
 const { sequelize } = require("../../db/models");
 const { product, cart_item, user } = require("../../db/models");
 const { Op } = require("sequelize");
+const { logger } = require("../../helper/logger");
 
 const cartItemsInclude = (withVendor = false) => [
   {
@@ -36,13 +37,20 @@ const cartItemsInclude = (withVendor = false) => [
 
 const cartAttributes = ["id", "customer_id", "total_amount"];
 
-const recalculateTotalAmount = async (cart_id) => {
-  const allCartItems = await cartItemDb.findAll({
-    cart_id: { [Op.eq]: cart_id },
-  });
-  return allCartItems.reduce((total, item) => {
-    return total + item?.quantity * parseFloat(item?.unit_price);
+const recalculateTotalAmount = async (cart_id, t) => {
+  const allCartItems = await cartItemDb.findAll(
+    { cart_id: { [Op.eq]: cart_id } },
+    [],
+    t,
+  );
+
+  const rawTotal = allCartItems.reduce((acc, item) => {
+    const qty = parseInt(item.quantity);
+    const price = parseFloat(item.unit_price);
+    return acc + qty * price;
   }, 0);
+
+  return parseFloat(rawTotal.toFixed(2));
 };
 
 // getCart
@@ -91,106 +99,138 @@ const getCart = async (userData) => {
 };
 
 // addToCart
-const addToCart = async (data) => {
+const addToCart = async (data, userData, reqUrlMet) => {
   const t = await sequelize.transaction();
   try {
-    const { body, userData } = data;
-    let result;
-
     const productData = await productDb.findOne(
-      {
-        id: { [Op.eq]: `${body?.product_id}` },
-      },
+      { id: { [Op.eq]: `${data?.product_id}` } },
       {},
       [],
       t,
     );
 
     if (!productData) throw new Error("PRODUCT_NOT_FOUND");
-
     if (productData?.status === "inactive")
       throw new Error("PRODUCT_UNAVAILABLE");
-
     if (productData?.stock === 0) throw new Error("PRODUCT_OUT_OF_STOCK");
-
-    if (productData?.stock < body?.quantity)
+    if (productData?.stock < data?.quantity)
       throw new Error("INSUFFICIENT_STOCK");
 
-    const existingCartData = await cartDb.findOne(
-      {
-        customer_id: { [Op.eq]: `${userData?.id}` },
-      },
+    const existingCart = await cartDb.findOne(
+      { customer_id: { [Op.eq]: `${userData?.id}` } },
       {},
       [],
       t,
     );
 
-    if (!existingCartData) {
-      result = await cartDb.create(
+    if (!existingCart) {
+      const totalAmount = data?.quantity * productData?.price;
+
+      const newCart = await cartDb.create(
         {
-          body: { ...body, price: productData?.price },
-          userData,
+          customer_id: userData?.id,
+          total_amount: totalAmount,
         },
         t,
       );
 
-      if (!result) throw new Error("CART_NOT_FOUND");
+      await cartItemDb.create(
+        {
+          cart_id: newCart?.id,
+          product_id: data?.product_id,
+          quantity: data?.quantity,
+          unit_price: productData?.price,
+        },
+        t,
+      );
+
+      await t.commit();
+      logger.info("Product added to cart successfully", {
+        method: reqUrlMet.method,
+        url: reqUrlMet.url,
+        user_id: userData?.id,
+        product_id: data?.product_id,
+        quantity: data?.quantity,
+      });
+      return newCart;
+    }
+
+    const existingCartItem = await cartItemDb.findOne(
+      {
+        cart_id: `${existingCart?.id}`,
+        product_id: `${data?.product_id}`,
+      },
+      [],
+      t,
+    );
+
+    if (existingCartItem) {
+      const newQuantity = parseInt(existingCartItem?.quantity) + data?.quantity;
+
+      await cartItemDb.update(
+        { quantity: `${newQuantity}` },
+        { id: `${existingCartItem?.id}` },
+        t,
+      );
     } else {
-      const existingProductInCart = await cartItemDb.findOne(
+      await cartItemDb.create(
         {
-          cart_id: { [Op.eq]: existingCartData?.id },
-          product_id: { [Op.eq]: `${body?.product_id}` },
+          cart_id: `${existingCart?.id}`,
+          product_id: `${data?.product_id}`,
+          quantity: `${data?.quantity}`,
+          unit_price: `${productData?.price}`,
         },
-        [],
-        t,
-      );
-
-      if (existingProductInCart) {
-        result = await cartItemDb.update(
-          {
-            quantity:
-              parseInt(existingProductInCart?.quantity) + body?.quantity,
-          },
-          { id: { [Op.eq]: existingProductInCart?.id } },
-          t,
-        );
-      } else {
-        result = await cartItemDb.create(
-          {
-            cart_id: existingCartData?.id,
-            product_id: body?.product_id,
-            quantity: body?.quantity,
-            unit_price: productData?.price,
-          },
-          t,
-        );
-
-        if (!result) throw new Error("CART_NOT_FOUND");
-      }
-
-      const newTotalAmount = await recalculateTotalAmount(existingCartData?.id);
-      await cartDb.update(
-        { total_amount: newTotalAmount },
-        { customer_id: existingCartData?.customer_id },
         t,
       );
     }
 
+    const newTotalAmount = await recalculateTotalAmount(existingCart?.id, t);
+    await cartDb.update(
+      { total_amount: newTotalAmount },
+      { id: { [Op.eq]: `${existingCart?.id}` } },
+      t,
+    );
+
+    logger.info("Product added to cart successfully", {
+      method: reqUrlMet.method,
+      url: reqUrlMet.url,
+      user_id: userData?.id,
+      product_id: data?.product_id,
+      quantity: data?.quantity,
+    });
+
+    const latestCartData = await cartDb.findOne(
+      { id: `${existingCart?.id}` },
+      ["id", "customer_id", "total_amount"],
+      [],
+      t,
+    );
+
     await t.commit();
-    return result;
+    return latestCartData;
   } catch (error) {
-    awaitt.rollback();
+    await t.rollback();
+    logger.error("Add to cart error", {
+      method: reqUrlMet.method,
+      url: reqUrlMet.url,
+      user_id: userData?.id,
+      error: error.message,
+    });
+    throw error;
   }
 };
 
 // updateProductQuantityById
-const updateProductQuantityById = async (product_id, body, userData) => {
+const updateProductQuantityById = async (
+  product_id,
+  body,
+  userData,
+  reqUrlMet,
+) => {
   const t = await sequelize.transaction();
   try {
     const customerCartData = await cartDb.findOne(
-      {
-        customer_id: { [Op.eq]: `${userData?.id}` },
-      },
+      { customer_id: { [Op.eq]: `${userData?.id}` } },
       {},
       [],
       t,
@@ -205,7 +245,6 @@ const updateProductQuantityById = async (product_id, body, userData) => {
       [],
       t,
     );
-
     if (!cartProduct) throw new Error("CART_PRODUCT_NOT_FOUND");
 
     const result = await cartItemDb.update(
@@ -217,7 +256,10 @@ const updateProductQuantityById = async (product_id, body, userData) => {
       t,
     );
 
-    const newTotalAmount = await recalculateTotalAmount(customerCartData?.id);
+    const newTotalAmount = await recalculateTotalAmount(
+      customerCartData?.id,
+      t,
+    );
     await cartDb.update(
       { total_amount: Number(newTotalAmount) },
       { id: { [Op.eq]: `${customerCartData?.id}` } },
@@ -225,21 +267,34 @@ const updateProductQuantityById = async (product_id, body, userData) => {
     );
 
     await t.commit();
+
+    logger.info("Cart item quantity updated successfully", {
+      method: reqUrlMet.method,
+      url: reqUrlMet.url,
+      user_id: userData?.id,
+      product_id,
+      new_quantity: body?.quantity,
+    });
+
     return result;
   } catch (error) {
     await t.rollback();
+    logger.error("Update cart quantity error", {
+      method: reqUrlMet.method,
+      url: reqUrlMet.url,
+      user_id: userData?.id,
+      error: error.message,
+    });
     throw error;
   }
 };
 
 // clearCart
-const clearCart = async (userData) => {
+const clearCart = async (userData, reqUrlMet) => {
   const t = await sequelize.transaction();
   try {
     const existingCustomerCart = await cartDb.findOne(
-      {
-        customer_id: { [Op.eq]: `${userData?.id}` },
-      },
+      { customer_id: { [Op.eq]: `${userData?.id}` } },
       {},
       [],
       t,
@@ -247,35 +302,41 @@ const clearCart = async (userData) => {
     if (!existingCustomerCart) throw new Error("CART_NOT_FOUND");
 
     await cartItemDb.remove(
-      {
-        cart_id: { [Op.eq]: `${existingCustomerCart?.id}` },
-      },
+      { cart_id: { [Op.eq]: `${existingCustomerCart?.id}` } },
       t,
     );
 
     const result = await cartDb.remove(
-      {
-        customer_id: { [Op.eq]: `${userData?.id}` },
-      },
+      { customer_id: { [Op.eq]: `${userData?.id}` } },
       t,
     );
+
+    logger.info("Cart cleared successfully", {
+      method: reqUrlMet.method,
+      url: reqUrlMet.url,
+      user_id: userData?.id,
+    });
 
     await t.commit();
     return result;
   } catch (error) {
     await t.rollback();
+    logger.error("Clear cart error", {
+      method: reqUrlMet.method,
+      url: reqUrlMet.url,
+      user_id: userData?.id,
+      error: error.message,
+    });
     throw error;
   }
 };
 
 // removeCartProductById
-const removeCartProductById = async (product_id, userData) => {
+const removeCartProductById = async (product_id, userData, reqUrlMet) => {
   const t = await sequelize.transaction();
   try {
     const existingCustomerCart = await cartDb.findOne(
-      {
-        customer_id: { [Op.eq]: `${userData?.id}` },
-      },
+      { customer_id: { [Op.eq]: `${userData?.id}` } },
       {},
       [],
       t,
@@ -302,6 +363,7 @@ const removeCartProductById = async (product_id, userData) => {
 
     const newTotalAmount = await recalculateTotalAmount(
       existingCustomerCart?.id,
+      t,
     );
     await cartDb.update(
       { total_amount: Number(newTotalAmount) },
@@ -309,10 +371,23 @@ const removeCartProductById = async (product_id, userData) => {
       t,
     );
 
+    logger.info("Product removed from cart successfully", {
+      method: reqUrlMet.method,
+      url: reqUrlMet.url,
+      user_id: userData?.id,
+      product_id,
+    });
+
     await t.commit();
     return result;
   } catch (error) {
     await t.rollback();
+    logger.error("Remove cart product error", {
+      method: reqUrlMet.method,
+      url: reqUrlMet.url,
+      user_id: userData?.id,
+      error: error.message,
+    });
     throw error;
   }
 };

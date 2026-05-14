@@ -10,10 +10,14 @@ const findOne = async (query, transaction) => {
   }
 };
 
-const findAll = async (query, transaction) => {
+const findAll = async (query, attributes = [], include = [], transaction) => {
   try {
-    const result = await order_item.findAll({ where: query, transaction });
-
+    const result = await order_item.findAll({
+      where: query,
+      ...(attributes.length > 0 && { attributes }),
+      ...(include.length > 0 && { include }),
+      transaction,
+    });
     return result.map((item) => item.toJSON()) || null;
   } catch (error) {
     console.log(error.message || error);

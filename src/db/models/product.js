@@ -76,6 +76,19 @@ module.exports = (sequelize, DataTypes) => {
           isInt: true,
         },
       },
+      created_at: {
+        allowNull: false,
+        type: DataTypes.DATE,
+        defaultValue: DataTypes.NOW,
+      },
+      updated_at: {
+        allowNull: true,
+        type: DataTypes.DATE,
+      },
+      deleted_at: {
+        allowNull: true,
+        type: DataTypes.DATE,
+      },
     },
     {
       sequelize,

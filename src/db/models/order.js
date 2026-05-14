@@ -25,7 +25,6 @@ module.exports = (sequelize, DataTypes) => {
       customer_id: {
         type: DataTypes.INTEGER,
         allowNull: false,
-        unique: true,
       },
       total_amount: {
         type: DataTypes.DECIMAL(10, 2),
@@ -33,9 +32,28 @@ module.exports = (sequelize, DataTypes) => {
         defaultValue: 0.0,
       },
       status: {
-        type: DataTypes.ENUM(["pending", "partially done", "full done"]),
+        type: DataTypes.ENUM([
+          "pending",
+          "partially_done",
+          "full_done",
+          "cancelled",
+        ]),
         allowNull: false,
         defaultValue: "pending",
+      },
+      created_at: {
+        allowNull: false,
+        type: DataTypes.DATE,
+        defaultValue: DataTypes.NOW,
+      },
+      updated_at: {
+        allowNull: true,
+        type: DataTypes.DATE,
+      },
+      cancelled_at: {
+        type: DataTypes.DATE,
+        allowNull: true,
+        defaultValue: null,
       },
     },
     {
@@ -45,7 +63,7 @@ module.exports = (sequelize, DataTypes) => {
       tableName: "orders",
       createdAt: "created_at",
       updatedAt: "updated_at",
-      deletedAt: "deleted_at",
+      paranoid: false,
     },
   );
   return order;

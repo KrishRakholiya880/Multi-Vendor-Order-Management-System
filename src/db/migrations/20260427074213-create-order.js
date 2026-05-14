@@ -12,7 +12,6 @@ module.exports = {
       customer_id: {
         type: DataTypes.INTEGER,
         allowNull: false,
-        unique: true,
       },
       total_amount: {
         type: DataTypes.DECIMAL(10, 2),
@@ -20,7 +19,12 @@ module.exports = {
         defaultValue: 0.0,
       },
       status: {
-        type: DataTypes.ENUM(["pending", "partially done", "full done"]),
+        type: DataTypes.ENUM([
+          "pending",
+          "partially_done",
+          "full_done",
+          "cancelled",
+        ]),
         allowNull: false,
         defaultValue: "pending",
       },
@@ -33,9 +37,10 @@ module.exports = {
         allowNull: true,
         type: DataTypes.DATE,
       },
-      deleted_at: {
-        allowNull: true,
+      cancelled_at: {
         type: DataTypes.DATE,
+        allowNull: true,
+        defaultValue: null,
       },
     });
   },

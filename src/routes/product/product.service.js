@@ -2,6 +2,7 @@ const { Op } = require("sequelize");
 const { sequelize } = require("../../db/models");
 const productDb = require("../../dbUtils/productDb");
 const { category, user, vendor_detail } = require("../../db/models");
+const { logger } = require("../../helper/logger");
 
 // generateRandomString
 const generateRandomString = () => {
@@ -27,12 +28,15 @@ const getProducts = async (
   categoryId,
   page,
   limit,
+  reqUrlMet,
 ) => {
   const t = await sequelize.transaction();
   let query = {};
   let result;
 
   try {
+    const startTime = Date.now();
+
     if (categoryId) query.category_id = { [Op.eq]: `${categoryId}` };
     if (search) {
       query[Op.or] = [
@@ -91,14 +95,39 @@ const getProducts = async (
       t,
     );
 
+    const duration = Date.now() - startTime;
+
     if (!result || (Array.isArray(result) && result.length === 0)) {
       throw new Error("PRODUCTS_NOT_FOUND");
     }
+
+    if (duration > 1000) {
+      logger.warn("Slow operation detected", {
+        url: reqUrlMet.url,
+        method: reqUrlMet.method,
+        operation: "getProducts",
+        duration: `${duration}ms`,
+        user_id: userData?.id,
+      });
+    }
+
+    logger.info("Products fetched successfully", {
+      url: reqUrlMet.url,
+      method: reqUrlMet.method,
+      total: result?.length,
+      user_id: userData?.id,
+    });
 
     await t.commit();
     return result;
   } catch (error) {
     await t.rollback();
+    logger.error("Get products error", {
+      url: reqUrlMet.url,
+      method: reqUrlMet.method,
+      user_id: userData?.id,
+      error: error.message,
+    });
     throw error;
   }
 };
@@ -150,7 +179,7 @@ const getProductById = async (userData, id) => {
 };
 
 // createProduct
-const createProduct = async (userData, data) => {
+const createProduct = async (userData, data, reqUrlMet) => {
   const t = await sequelize.transaction();
   try {
     if (userData?.role === "admin" && !data?.vendor_id) {
@@ -165,7 +194,7 @@ const createProduct = async (userData, data) => {
       {
         sku: { [Op.eq]: `${sku}` },
       },
-      [],
+      {},
       [],
       t,
     );
@@ -178,16 +207,30 @@ const createProduct = async (userData, data) => {
     delete result?.created_at;
     delete result?.updated_at;
 
+    logger.info("Product created successfully", {
+      url: reqUrlMet.url,
+      method: reqUrlMet.method,
+      product_id: result?.id,
+      vendor_id: vendor_id,
+      created_by: userData?.id,
+    });
+
     await t.commit();
     return result;
   } catch (error) {
     await t.rollback();
+    logger.error("Create product error", {
+      url: reqUrlMet.url,
+      method: reqUrlMet.method,
+      vendor_id: userData?.id,
+      error: error.message,
+    });
     throw error;
   }
 };
 
 // updateProductById
-const updateProductById = async (data, id) => {
+const updateProductById = async (data, id, reqUrlMet) => {
   const t = await sequelize.transaction();
   try {
     const query = { id: { [Op.eq]: `${id}` } };
@@ -197,16 +240,28 @@ const updateProductById = async (data, id) => {
 
     const result = await productDb.update(data, query, t);
 
+    logger.info("Product updated successfully", {
+      url: reqUrlMet.url,
+      method: reqUrlMet.method,
+      product_id: id,
+    });
+
     await t.commit();
     return result;
   } catch (error) {
     await t.rollback();
+    logger.error("Update product error", {
+      url: reqUrlMet.url,
+      method: reqUrlMet.method,
+      product_id: id,
+      error: error.message,
+    });
     throw error;
   }
 };
 
 // changeProductStatusById
-const changeProductStatusById = async (id, status) => {
+const changeProductStatusById = async (id, status, reqUrlMet) => {
   const t = await sequelize.transaction();
   try {
     const query = { id: { [Op.eq]: `${id}` } };
@@ -220,16 +275,29 @@ const changeProductStatusById = async (id, status) => {
 
     const result = await productDb.update({ status }, query, t);
 
+    logger.info("Product status changed successfully", {
+      url: reqUrlMet.url,
+      method: reqUrlMet.method,
+      product_id: id,
+      new_status: status,
+    });
+
     await t.commit();
     return result;
   } catch (error) {
     await t.rollback();
+    logger.error("Change product status error", {
+      url: reqUrlMet.url,
+      method: reqUrlMet.method,
+      product_id: id,
+      error: error.message,
+    });
     throw error;
   }
 };
 
 // removeProductById
-const removeProductById = async (id) => {
+const removeProductById = async (id, reqUrlMet) => {
   const t = await sequelize.transaction();
   try {
     const query = { id: { [Op.eq]: `${id}` } };
@@ -239,10 +307,22 @@ const removeProductById = async (id) => {
 
     const result = await productDb.remove(query, t);
 
+    logger.info("Product removed successfully", {
+      url: reqUrlMet.url,
+      method: reqUrlMet.method,
+      product_id: id,
+    });
+
     await t.commit();
     return result;
   } catch (error) {
     await t.rollback();
+    logger.error("Remove product error", {
+      url: reqUrlMet.url,
+      method: reqUrlMet.method,
+      product_id: id,
+      error: error.message,
+    });
     throw error;
   }
 };
