@@ -1,7 +1,9 @@
 const Joi = require("joi");
 
 const getOrder = {
-  params: Joi.object({
+  query: Joi.object({
+    page: Joi.number().integer().positive().optional(),
+    limit: Joi.number().integer().positive().optional(),
     status: Joi.string()
       .valid("pending", "full_done", "partially_done", "cancelled")
       .optional(),
@@ -12,7 +14,9 @@ const getOrder = {
 };
 
 const getVendorOrder = {
-  params: Joi.object({
+  query: Joi.object({
+    page: Joi.number().integer().positive().optional(),
+    limit: Joi.number().integer().positive().optional(),
     itemStatus: Joi.string()
       .valid("placed", "confirmed", "delivered", "shipped", "cancelled")
       .optional(),

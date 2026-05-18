@@ -19,8 +19,12 @@ const getVendorDetailsById = async (req, res, next) => {
 
 // getAllVendorDetails
 const getAllVendorDetails = async (req, res, next) => {
+  const { page, limit } = req.query;
   try {
-    const result = await vendorDetailsService.getAllVendorDetails();
+    const result = await vendorDetailsService.getAllVendorDetails(
+      Number(page),
+      Number(limit),
+    );
 
     return res.status(200).json({ status: true, result });
   } catch (error) {

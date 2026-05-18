@@ -3,10 +3,16 @@ const orderService = require("./order.service");
 // getOrder
 const getOrder = async (req, res, next) => {
   const userData = req.user;
-  const { status, itemStatus } = req.query;
+  const { page, limit, status, itemStatus } = req.query;
 
   try {
-    const result = await orderService.getOrder(userData, status, itemStatus);
+    const result = await orderService.getOrder(
+      userData,
+      Number(page) || 1,
+      Number(limit) || 30,
+      status,
+      itemStatus,
+    );
 
     return res.status(200).json({ status: true, result });
   } catch (error) {
@@ -33,10 +39,15 @@ const addToOrder = async (req, res, next) => {
 // getVendorOrders
 const getVendorOrders = async (req, res, next) => {
   const userData = req.user;
-  const { itemStatus } = req.query;
+  const { page, limit, itemStatus } = req.query;
 
   try {
-    const result = await orderService.getVendorOrders(userData, itemStatus);
+    const result = await orderService.getVendorOrders(
+      userData,
+      Number(page) || 1,
+      Number(limit) || 30,
+      itemStatus,
+    );
 
     return res.status(200).json({ status: true, result });
   } catch (error) {

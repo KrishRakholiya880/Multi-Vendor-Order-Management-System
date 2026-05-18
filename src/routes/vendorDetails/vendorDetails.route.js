@@ -14,7 +14,12 @@ const {
 
 router
   .route("/")
-  .get(isUserLoggedIn, isAdmin, vendorDetailsController.getAllVendorDetails);
+  .get(
+    isUserLoggedIn,
+    isAdmin,
+    validate(vendorDetailsValidation.getAllVendorDetails),
+    vendorDetailsController.getAllVendorDetails,
+  );
 
 router
   .route("/:id")

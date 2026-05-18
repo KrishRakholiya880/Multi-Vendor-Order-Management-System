@@ -5,6 +5,7 @@ const { sequelize } = require("../../db/models");
 const { product, cart_item, user } = require("../../db/models");
 const { Op } = require("sequelize");
 const { logger } = require("../../helper/logger");
+const redisClient = require("../../helper/redis");
 
 const cartItemsInclude = (withVendor = false) => [
   {
@@ -54,14 +55,29 @@ const recalculateTotalAmount = async (cart_id, t) => {
 };
 
 // getCart
-const getCart = async (userData) => {
+const getCart = async (userData, page, limit) => {
   const t = await sequelize.transaction();
+  let result;
+
   try {
-    let result;
+    const versionKey = `cart:version`;
+    const version = await redisClient.GET_VERSION(versionKey);
+    let cacheKey = `cart:${userData?.role || "guest"}:${version}`;
+
+    if (page) cacheKey += `:page:${page}`;
+    if (limit) cacheKey += `:limit:${limit}`;
+
+    const cachedData = await redisClient.GET(cacheKey);
+    if (cachedData) {
+      await t.commit();
+      return cachedData;
+    }
 
     if (userData?.role === "admin") {
       result = await cartDb.findAll(
         {},
+        page,
+        limit,
         cartAttributes,
         cartItemsInclude(true),
         t,
@@ -89,6 +105,8 @@ const getCart = async (userData) => {
 
       if (!result) throw new Error("CART_NOT_FOUND");
     }
+
+    await redisClient.SET(cacheKey, result, 2 * 60);
 
     await t.commit();
     return result;
@@ -206,6 +224,8 @@ const addToCart = async (data, userData, reqUrlMet) => {
       t,
     );
 
+    await redisClient.INCREMENT_VERSION(`cart:version`);
+
     await t.commit();
     return latestCartData;
   } catch (error) {
@@ -276,6 +296,8 @@ const updateProductQuantityById = async (
       new_quantity: body?.quantity,
     });
 
+    await redisClient.INCREMENT_VERSION(`cart:version`);
+
     return result;
   } catch (error) {
     await t.rollback();
@@ -316,6 +338,8 @@ const clearCart = async (userData, reqUrlMet) => {
       url: reqUrlMet.url,
       user_id: userData?.id,
     });
+
+    await redisClient.INCREMENT_VERSION(`cart:version`);
 
     await t.commit();
     return result;
@@ -377,6 +401,8 @@ const removeCartProductById = async (product_id, userData, reqUrlMet) => {
       user_id: userData?.id,
       product_id,
     });
+
+    await redisClient.INCREMENT_VERSION(`cart:version`);
 
     await t.commit();
     return result;

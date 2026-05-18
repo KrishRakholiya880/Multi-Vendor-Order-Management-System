@@ -14,7 +14,12 @@ const { cartLimiter } = require("../../middleware/rateLimiter");
 
 router
   .route("/")
-  .get(cartLimiter, isUserLoggedIn, isAdminOrCustomer, cartController.getCart)
+  .get(
+    cartLimiter,
+    isUserLoggedIn,
+    validate(cartValidation.getCart),
+    cartController.getCart,
+  )
   .post(
     cartLimiter,
     isUserLoggedIn,

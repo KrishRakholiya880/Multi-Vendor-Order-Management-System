@@ -7,6 +7,7 @@ const cartItemDb = require("../../dbUtils/cartItemDb");
 const { sequelize } = require("../../db/models");
 const { order_item, product } = require("../../db/models");
 const { logger } = require("../../helper/logger");
+const redisClient = require("../../helper/redis");
 
 const isValidStatusTransition = (oldStatus, newStatus) => {
   const statusRank = {
@@ -83,17 +84,34 @@ const recalculateOrderTotal = async (order_id, t) => {
 };
 
 // getOrder
-const getOrder = async (userData, status, itemStatus) => {
+const getOrder = async (userData, page, limit, status, itemStatus) => {
   const t = await sequelize.transaction();
   try {
+    const versionKey = `orders:version`;
+    const version = await redisClient.GET_VERSION(versionKey);
+    let cacheKey = `orders:${userData?.role}:${version}`;
+
+    if (page) cacheKey += `:page:${page}`;
+    if (limit) cacheKey += `:limit:${limit}`;
+    if (status) cacheKey += `:status:${status}`;
+    if (itemStatus) cacheKey += `:itemStatus:${itemStatus}`;
+
     let result;
     let query = {};
+
+    const cachedData = await redisClient.GET(cacheKey);
+    if (cachedData) {
+      await t.commit();
+      return cachedData;
+    }
 
     if (userData?.role === "admin") {
       if (status) query.status = { [Op.eq]: status };
 
       result = await orderDb.findAll(
         query,
+        page,
+        limit,
         orderAttributes,
         orderItemsInclude(itemStatus),
         t,
@@ -104,6 +122,8 @@ const getOrder = async (userData, status, itemStatus) => {
 
       result = await orderDb.findAll(
         query,
+        page,
+        limit,
         orderAttributes,
         orderItemsInclude(itemStatus),
         t,
@@ -113,6 +133,8 @@ const getOrder = async (userData, status, itemStatus) => {
     if (!result || (Array.isArray(result) && result.length === 0)) {
       throw new Error("ORDERS_NOT_FOUND");
     }
+
+    await redisClient.SET(cacheKey, result, 180);
 
     await t.commit();
     return result;
@@ -196,6 +218,9 @@ const addToOrder = async (userData, reqUrlMet) => {
       total_amount: newOrderTotal,
     });
 
+    await redisClient.INCREMENT_VERSION(`orders:version`);
+    await redisClient.INCREMENT_VERSION(`products:version`);
+
     await t.commit();
     return result;
   } catch (error) {
@@ -211,11 +236,27 @@ const addToOrder = async (userData, reqUrlMet) => {
 };
 
 // getVendorOrders
-const getVendorOrders = async (userData, itemStatus) => {
+const getVendorOrders = async (userData, page, limit, itemStatus) => {
   const t = await sequelize.transaction();
   try {
+    const versionKey = `orders:version`;
+    const version = await redisClient.GET_VERSION(versionKey);
+    let cacheKey = `orders:${userData?.role}:${version}`;
+
+    if (page) cacheKey += `:page:${page}`;
+    if (limit) cacheKey += `:limit:${limit}`;
+    if (itemStatus) cacheKey += `:itemStatus:${itemStatus}`;
+
+    const cachedData = await redisClient.GET(cacheKey);
+    if (cachedData) {
+      await t.commit();
+      return cachedData;
+    }
+
     const result = await orderDb.findAll(
       {},
+      page,
+      limit,
       ["id", "customer_id", "status", "created_at"],
       [
         {
@@ -239,8 +280,12 @@ const getVendorOrders = async (userData, itemStatus) => {
               model: product,
               as: "product_info",
               required: true,
-              where: { vendor_id: { [Op.eq]: `${userData?.id}` } },
-              attributes: ["id", "name", "description", "price", "status"],
+              ...(userData?.role === "vendor" && {
+                where: { vendor_id: { [Op.eq]: `${userData?.id}` } },
+              }),
+              ...(userData?.role === "vendor" && {
+                attributes: ["id", "name", "description", "price", "status"],
+              }),
             },
           ],
         },
@@ -250,6 +295,8 @@ const getVendorOrders = async (userData, itemStatus) => {
 
     if (!result || result.length === 0)
       throw new Error("VENDOR_ORDERS_NOT_FOUND");
+
+    await redisClient.SET(cacheKey, result, 120);
 
     await t.commit();
     return result;
@@ -335,6 +382,8 @@ const updateOrderStatusById = async (id, data, userData, reqUrlMet) => {
       order_item_id: id,
       new_status: data?.status,
     });
+
+    await redisClient.INCREMENT_VERSION(`orders:version`);
 
     await t.commit();
     return result;
@@ -471,6 +520,9 @@ const cancelOrderItemById = async (item_id, userData, reqUrlMet) => {
       order_item_id: item_id,
       cancelled_by: userData?.role,
     });
+
+    await redisClient.INCREMENT_VERSION(`orders:version`);
+    await redisClient.INCREMENT_VERSION(`products:version`);
 
     await t.commit();
     return result;

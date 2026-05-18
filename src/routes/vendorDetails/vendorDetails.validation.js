@@ -1,5 +1,12 @@
 const Joi = require("joi");
 
+const getAllVendorDetails = {
+  query: Joi.object({
+    page: Joi.number().positive().default(1).optional(),
+    limit: Joi.number().positive().default(10).optional(),
+  }),
+};
+
 const getVendorDetailsById = {
   params: Joi.object({
     id: Joi.number().integer().positive().required(),
@@ -43,6 +50,7 @@ const removeVendorDetailsById = {
 };
 
 module.exports = {
+  getAllVendorDetails,
   getVendorDetailsById,
   createVendorDetails,
   updateVendorDetailsById,

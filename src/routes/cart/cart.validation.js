@@ -1,5 +1,12 @@
 const Joi = require("joi");
 
+const getCart = {
+  query: Joi.object({
+    page: Joi.number().positive().default(1).optional(),
+    limit: Joi.number().positive().default(10).optional(),
+  }),
+};
+
 const addToCart = {
   body: Joi.object({
     product_id: Joi.number().integer().required(),
@@ -23,6 +30,7 @@ const removeCartProductById = {
 };
 
 module.exports = {
+  getCart,
   addToCart,
   updateProductQuantityById,
   removeCartProductById,

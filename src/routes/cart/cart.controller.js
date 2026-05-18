@@ -3,8 +3,14 @@ const cartService = require("./cart.service");
 // getCart
 const getCart = async (req, res, next) => {
   const userData = req.user;
+  const { page, limit } = req.query;
+
   try {
-    const result = await cartService.getCart(userData);
+    const result = await cartService.getCart(
+      userData,
+      Number(page) || 1,
+      Number(limit) || 10,
+    );
 
     return res.status(200).json({ status: true, result });
   } catch (error) {

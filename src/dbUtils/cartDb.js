@@ -2,13 +2,18 @@ const { cart, cart_item } = require("../db/models");
 
 const findAll = async (
   query = {},
+  page,
+  limit,
   attributes = [],
   include = [],
   transaction,
 ) => {
   try {
+    const offset = (page - 1) * limit;
     const result = await cart.findAll({
       where: query,
+      limit,
+      offset,
       ...(attributes.length > 0 && { attributes }),
       ...(include.length > 0 && { include }),
       transaction,

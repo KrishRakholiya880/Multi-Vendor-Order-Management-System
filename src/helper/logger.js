@@ -10,6 +10,7 @@ const logger = createLogger({
   format: format.combine(
     format.timestamp({ format: "YYYY-MM-DD HH:mm:ss" }),
     format.printf(({ timestamp, level, message, ...meta }) => {
+      const { url, method, ...restMeta } = meta;
       const uuid = uuidv4();
 
       if (meta.email) {
@@ -18,13 +19,11 @@ const logger = createLogger({
         }
         attemptTracker[meta.email]++;
 
-        const { url, method, ...restMeta } = meta;
         return `[${uuid}] [${timestamp}] [${level.toUpperCase()}] ${method ? `[${method}]` : "[GET]"} [PATH: ${url || ""}] [ATTEMPTS: ${attemptTracker[meta.email]}] ${message} ${
           Object.keys(restMeta).length ? JSON.stringify(restMeta) : ""
         }`;
       }
 
-      const { url, method, ...restMeta } = meta;
       return `[${uuid}] [${timestamp}] [${level.toUpperCase()}] ${method ? `[${method}]` : "[GET]"} [PATH: ${url || ""}] ${message} ${
         Object.keys(restMeta).length ? JSON.stringify(restMeta) : ""
       }`;
@@ -40,7 +39,6 @@ const logger = createLogger({
       filename: "src/logs/combined.log",
       filter: (info) => {
         const method = info.method || "";
-        // only log POST, PUT, DELETE, PATCH (write operations)
         const allowedMethods = ["POST", "PUT", "DELETE", "PATCH"];
         return allowedMethods.includes(method);
       },

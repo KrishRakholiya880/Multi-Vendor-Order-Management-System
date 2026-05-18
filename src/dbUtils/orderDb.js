@@ -1,9 +1,20 @@
 const { order } = require("../db/models");
 
-const findAll = async (query, attributes = {}, include = [], transaction) => {
+const findAll = async (
+  query,
+  page,
+  limit,
+  attributes = {},
+  include = [],
+  transaction,
+) => {
+  const offset = (page - 1) * limit;
   try {
     const result = await order.findAll({
       where: query,
+      offset,
+      limit,
+      subQuery: false,
       attributes,
       ...(include.length > 0 && { include }),
       transaction,

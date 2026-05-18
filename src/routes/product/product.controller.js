@@ -30,8 +30,13 @@ const getProducts = async (req, res, next) => {
 const getProductById = async (req, res, next) => {
   const userData = req.user;
   const { id } = req.params;
+  const { url, method } = req;
+
   try {
-    const result = await productService.getProductById(userData, id);
+    const result = await productService.getProductById(userData, id, {
+      url,
+      method,
+    });
 
     return res.status(200).json({ status: true, result });
   } catch (error) {

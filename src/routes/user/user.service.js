@@ -19,7 +19,7 @@ const getUsers = async (role, status, sortBy = "desc", page, limit) => {
     if (role) query.role = { [Op.like]: `${role}` };
     if (status) query.status = { [Op.like]: `${status}` };
 
-    const result = await userDb.findAll(query, sortBy, page, limit);
+    const result = await userDb.findAll(query, sortBy, page, limit, t);
 
     if (!result) throw new Error("USER_NOT_FOUND");
 

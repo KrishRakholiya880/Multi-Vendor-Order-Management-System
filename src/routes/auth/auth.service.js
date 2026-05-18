@@ -186,8 +186,8 @@ const logout = async (refreshToken, userData, reqUrlMet) => {
 
     logger.info("Logout successful", {
       user_id: userData?.id,
-      url: reqUrlMet.url,
-      method: reqUrlMet.method,
+      url: reqUrlMet?.url,
+      method: reqUrlMet?.method,
     });
 
     await t.commit();
@@ -197,8 +197,8 @@ const logout = async (refreshToken, userData, reqUrlMet) => {
     logger.error("Logout error", {
       user_id: userData?.id,
       error: error.message,
-      url: reqUrlMet.url,
-      method: reqUrlMet.method,
+      url: reqUrlMet?.url,
+      method: reqUrlMet?.method,
     });
     throw error;
   }

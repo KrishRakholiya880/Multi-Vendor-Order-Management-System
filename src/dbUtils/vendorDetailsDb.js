@@ -1,9 +1,12 @@
 const { vendor_detail, user } = require("../db/models");
 
-const findAll = async (query = {}, transaction) => {
+const findAll = async (query = {}, page, limit, transaction) => {
+  const offset = (page - 1) * limit;
   try {
     const result = await vendor_detail.findAll({
       where: query,
+      limit,
+      offset,
       transaction,
     });
 

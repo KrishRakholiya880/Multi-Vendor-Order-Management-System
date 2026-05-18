@@ -3,6 +3,7 @@ const { sequelize } = require("../../db/models");
 const productDb = require("../../dbUtils/productDb");
 const { category, user, vendor_detail } = require("../../db/models");
 const { logger } = require("../../helper/logger");
+const redisClient = require("../../helper/redis");
 
 // generateRandomString
 const generateRandomString = () => {
@@ -35,7 +36,36 @@ const getProducts = async (
   let result;
 
   try {
-    const startTime = Date.now();
+    const versionKey = `products:version`;
+    const version = await redisClient.GET_VERSION(versionKey);
+    let cacheKey = `products:${userData?.role || "guest"}:${version}`;
+
+    if (status) cacheKey += `:status:${status}`;
+    if (search) cacheKey += `:search:${search}`;
+    if (sortBy) cacheKey += `:sortBy:${sortBy}`;
+    if (priceSort) cacheKey += `:priceSort:${priceSort}`;
+    if (categoryId) cacheKey += `:categoryId:${categoryId}`;
+    if (page) cacheKey += `:page:${page}`;
+    if (limit) cacheKey += `:limit:${limit}`;
+
+    const cachedData = await redisClient.GET(cacheKey);
+    if (cachedData) {
+      logger.info("Cache hit - Products fetched from cache", {
+        url: reqUrlMet.url,
+        method: reqUrlMet.method,
+        user_id: userData?.id,
+        cache_key: cacheKey,
+      });
+      await t.commit();
+      return cachedData;
+    }
+
+    logger.warn("Cache miss - Fetching products from DB", {
+      url: reqUrlMet.url,
+      method: reqUrlMet.method,
+      user_id: userData?.id,
+      cache_key: cacheKey,
+    });
 
     if (categoryId) query.category_id = { [Op.eq]: `${categoryId}` };
     if (search) {
@@ -94,22 +124,11 @@ const getProducts = async (
       priceSort,
       t,
     );
-
-    const duration = Date.now() - startTime;
-
     if (!result || (Array.isArray(result) && result.length === 0)) {
       throw new Error("PRODUCTS_NOT_FOUND");
     }
 
-    if (duration > 1000) {
-      logger.warn("Slow operation detected", {
-        url: reqUrlMet.url,
-        method: reqUrlMet.method,
-        operation: "getProducts",
-        duration: `${duration}ms`,
-        user_id: userData?.id,
-      });
-    }
+    await redisClient.SET(cacheKey, result, 10 * 60);
 
     logger.info("Products fetched successfully", {
       url: reqUrlMet.url,
@@ -133,9 +152,32 @@ const getProducts = async (
 };
 
 // getProductById
-const getProductById = async (userData, id) => {
+const getProductById = async (userData, id, reqUrlMet) => {
+  const t = await sequelize.transaction();
   try {
-    const t = await sequelize.transaction();
+    const versionKey = `products:version`;
+    const version = await redisClient.GET_VERSION(versionKey);
+    const cacheKey = `products:${userData?.role || "guest"}:${version}:id:${id}`;
+
+    const cachedData = await redisClient.GET(cacheKey);
+    if (cachedData) {
+      logger.info("Cache hit - Products fetched from cache", {
+        url: reqUrlMet.url,
+        method: reqUrlMet.method,
+        user_id: userData?.id,
+        cache_key: cacheKey,
+      });
+      await t.commit();
+      return cachedData;
+    }
+
+    logger.warn("Cache miss - Fetching products from DB", {
+      url: reqUrlMet.url,
+      method: reqUrlMet.method,
+      user_id: userData?.id,
+      cache_key: cacheKey,
+    });
+
     const query = { id: { [Op.eq]: `${id}` } };
     const attributes = [
       "id",
@@ -169,6 +211,15 @@ const getProductById = async (userData, id) => {
     const result = await productDb.findOne(query, attributes, include, t);
 
     if (!result) throw new Error("PRODUCT_NOT_FOUND");
+
+    if (
+      (userData?.role === "customer" && result?.status === "inactive") ||
+      result?.status === "out_of_stock"
+    ) {
+      throw new Error("PRODUCT_UNAVAILABLE");
+    }
+
+    await redisClient.SET(cacheKey, result, 5 * 60);
 
     await t.commit();
     return result;
@@ -215,6 +266,8 @@ const createProduct = async (userData, data, reqUrlMet) => {
       created_by: userData?.id,
     });
 
+    await redisClient.INCREMENT_VERSION(`products:version`);
+
     await t.commit();
     return result;
   } catch (error) {
@@ -245,6 +298,8 @@ const updateProductById = async (data, id, reqUrlMet) => {
       method: reqUrlMet.method,
       product_id: id,
     });
+
+    await redisClient.INCREMENT_VERSION(`products:version`);
 
     await t.commit();
     return result;
@@ -282,6 +337,8 @@ const changeProductStatusById = async (id, status, reqUrlMet) => {
       new_status: status,
     });
 
+    await redisClient.INCREMENT_VERSION(`products:version`);
+
     await t.commit();
     return result;
   } catch (error) {
@@ -312,6 +369,8 @@ const removeProductById = async (id, reqUrlMet) => {
       method: reqUrlMet.method,
       product_id: id,
     });
+
+    await redisClient.INCREMENT_VERSION(`products:version`);
 
     await t.commit();
     return result;
