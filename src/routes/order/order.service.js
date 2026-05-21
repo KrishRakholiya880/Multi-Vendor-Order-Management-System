@@ -148,6 +148,7 @@ const getOrder = async (userData, page, limit, status, itemStatus) => {
 const addToOrder = async (userData, reqUrlMet) => {
   const t = await sequelize.transaction();
   let result;
+  let productData;
 
   try {
     const cartData = await cartDb.findOne(
@@ -175,6 +176,14 @@ const addToOrder = async (userData, reqUrlMet) => {
     );
 
     for (const item of cartItems) {
+      productData = await productDb.findOne(
+        { id: { [Op.eq]: `${item?.product_id}` } },
+        {},
+        [],
+        t,
+      );
+      if (!productData) throw new Error("PRODUCT_NOT_FOUND");
+
       await orderItemDb.create(
         {
           order_id: result?.id,
@@ -185,19 +194,19 @@ const addToOrder = async (userData, reqUrlMet) => {
         t,
       );
 
-      const productData = await productDb.findOne(
-        { id: { [Op.eq]: `${item?.product_id}` } },
-        {},
-        [],
-        t,
-      );
-      if (!productData) throw new Error("PRODUCT_NOT_FOUND");
-
       await productDb.update(
         { stock: productData?.stock - item?.quantity },
         { id: { [Op.eq]: `${item?.product_id}` } },
         t,
       );
+
+      productData = await productDb.findOne(
+        { id: { [Op.eq]: `${item?.product_id}` } },
+        {},
+        [],
+        t,
+      );
+      if (productData?.stock === 0) throw new Error("PRODUCT_OUT_OF_STOCK");
     }
 
     const newOrderTotal = await recalculateOrderTotal(result?.id, t);
@@ -448,9 +457,12 @@ const cancelOrderItemById = async (item_id, userData, reqUrlMet) => {
 
     if (result[0] === 1) {
       if (productData) {
+        const updatedStock = productData?.stock + orderItemData?.quantity;
+
         await productDb.update(
           {
-            stock: productData?.stock + orderItemData?.quantity,
+            stock: updatedStock,
+            ...(productData?.status === "out_of_stock" && { status: "active" }),
           },
           {
             id: `${orderItemData?.product_id}`,

@@ -19,7 +19,8 @@ module.exports = {
     httpStatusCode: 403,
     body: {
       code: "forbidden",
-      message: "You can't update/delete other vendor's products!!!",
+      message:
+        "This product is owned by other vendor, so you can't access it!!!",
     },
   },
   ACCESS_TOKEN_REQUIRED: {
@@ -362,12 +363,49 @@ module.exports = {
     },
   },
 
+  // Analytics
+  SALES_DATA_NOT_FOUND: {
+    httpStatusCode: 404,
+    body: {
+      code: "not_found",
+      message: "Sales data not found!!!",
+    },
+  },
+  PURCHASE_DATA_NOT_FOUND: {
+    httpStatusCode: 404,
+    body: {
+      code: "not_found",
+      message: "Purchase data not found!!!",
+    },
+  },
+  REVENUE_DATA_NOT_FOUND: {
+    httpStatusCode: 404,
+    body: {
+      code: "not_found",
+      message: "Revenue data not found!!!",
+    },
+  },
+  PERFORMANCE_DATA_NOT_FOUND: {
+    httpStatusCode: 404,
+    body: {
+      code: "not_found",
+      message: "Product performance data not found!!!",
+    },
+  },
+
   // Others
   VENDOR_ID_REQUIRED: {
     httpStatusCode: 400,
     body: {
       code: "validation_error",
       message: "vendor_id is required for admin!!!",
+    },
+  },
+  VENDOR_UNAVAILABLE: {
+    httpStatusCode: 400,
+    body: {
+      code: "bad_request",
+      message: "Vendor is currently unavailable!!!",
     },
   },
 };

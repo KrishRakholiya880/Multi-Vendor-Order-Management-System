@@ -161,9 +161,28 @@ const changeUserStatusById = async (id, status, reqUrlMet) => {
       throw new Error("USER_STATUS_ALREADY_SAME");
 
     if (isUserExists?.role === "vendor") {
+      const vendorProducts = await productDb.findAll(
+        { vendor_id: id },
+        null,
+        null,
+        {},
+        [],
+        null,
+        null,
+        t,
+      );
+
       await vendorDetailsDb.update(
         { vendor_status: status },
         { user_id: { [Op.eq]: `${id}` } },
+        t,
+      );
+
+      await productDb.update(
+        {
+          status: status,
+        },
+        { vendor_id: id },
         t,
       );
     }
