@@ -3,6 +3,7 @@ const express = require("express");
 const router = express.Router();
 
 const validate = require("../../middleware/validate");
+const { analyticsLimiter } = require("../../middleware/rateLimiter");
 const analyticsValidation = require("./analytics.validation");
 const analyticsController = require("./analytics.controller");
 const {
@@ -15,6 +16,7 @@ const {
 router
   .route("/vendors-sales-summary")
   .get(
+    analyticsLimiter,
     isUserLoggedIn,
     isVendorOrAdmin,
     validate(analyticsValidation.getVendorsSalesSummary),
@@ -24,6 +26,7 @@ router
 router
   .route("/customers-purchase-summary")
   .get(
+    analyticsLimiter,
     isUserLoggedIn,
     isAdminOrCustomer,
     validate(analyticsValidation.getCustomersPurchaseSummary),
@@ -33,6 +36,7 @@ router
 router
   .route("/revenue")
   .get(
+    analyticsLimiter,
     isUserLoggedIn,
     isVendorOrAdmin,
     validate(analyticsValidation.getRevenue),
@@ -42,6 +46,7 @@ router
 router
   .route("/product-metrics")
   .get(
+    analyticsLimiter,
     isUserLoggedIn,
     isVendorOrAdmin,
     validate(analyticsValidation.getProductPerformanceMetrics),
@@ -51,6 +56,7 @@ router
 router
   .route("/product-sales-stock-summary")
   .get(
+    analyticsLimiter,
     isUserLoggedIn,
     isVendorOrAdmin,
     validate(analyticsValidation.getProductSalesStockSummary),
@@ -60,6 +66,7 @@ router
 router
   .route("/product-metrics/:id")
   .get(
+    analyticsLimiter,
     isUserLoggedIn,
     isVendorOrAdmin,
     checkVendorProductOrNot,
@@ -70,6 +77,7 @@ router
 router
   .route("/product-sales-stock-summary/:productId")
   .get(
+    analyticsLimiter,
     isUserLoggedIn,
     isVendorOrAdmin,
     checkVendorProductOrNot,

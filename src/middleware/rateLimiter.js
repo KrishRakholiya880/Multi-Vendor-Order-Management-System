@@ -10,24 +10,34 @@ const authLimiter = rateLimit({
   max: 5,
   message,
 });
+
 const productLimiter = rateLimit({
   windowMs,
-  max: 30,
+  max: 10,
   message,
 });
+
 const cartLimiter = rateLimit({
   windowMs,
   max: 10,
   message,
 });
+
 const orderLimiter = rateLimit({
   windowMs,
   max: 10,
   message,
 });
+
 const adminLimiter = rateLimit({
   windowMs,
-  max: 50,
+  max: 10,
+  message,
+});
+
+const analyticsLimiter = rateLimit({
+  windowMs,
+  max: 10,
   message,
 });
 
@@ -37,4 +47,5 @@ module.exports = {
   cartLimiter,
   orderLimiter,
   adminLimiter,
+  analyticsLimiter,
 };
