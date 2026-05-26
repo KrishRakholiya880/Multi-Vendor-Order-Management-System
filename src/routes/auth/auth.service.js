@@ -22,7 +22,11 @@ const register = async (body, reqUrlMet) => {
   try {
     const { email, password } = body;
 
-    logger.info("Registration attempt", { email, url: reqUrlMet.url });
+    logger.info("Registration attempt", {
+      email,
+      url: reqUrlMet.url,
+      method: reqUrlMet.method,
+    });
 
     const isExists = await authDb.findOne(
       { email: { [Op.eq]: `${email}` } },
@@ -30,9 +34,7 @@ const register = async (body, reqUrlMet) => {
       t,
     );
 
-    if (isExists) {
-      throw new Error("USER_EXISTS");
-    }
+    if (isExists) throw new Error("USER_EXISTS");
 
     const hashedPassword = await hashPassword(password);
     const data = await authDb.create(
@@ -105,22 +107,17 @@ const login = async (body, reqUrlMet) => {
       t,
     );
 
-    if (!existingUser) {
-      throw new Error("USER_NOT_FOUND");
-    }
+    if (!existingUser) throw new Error("USER_NOT_FOUND");
 
-    if (existingUser?.status === "inactive") {
+    if (existingUser?.status === "inactive")
       throw new Error("ACCOUNT_DEACTIVATED");
-    }
 
     const isSamePassword = await comparePassword(
       password,
       existingUser?.hash_password,
     );
 
-    if (!isSamePassword) {
-      throw new Error("INVALID_PASSWORD");
-    }
+    if (!isSamePassword) throw new Error("INVALID_PASSWORD");
 
     logger.info("Login successful", {
       user_id: existingUser?.id,
@@ -175,9 +172,7 @@ const login = async (body, reqUrlMet) => {
 const logout = async (refreshToken, userData, reqUrlMet) => {
   const t = await sequelize.transaction();
   try {
-    if (!refreshToken) {
-      throw new Error("REFRESH_TOKEN_REQUIRED");
-    }
+    if (!refreshToken) throw new Error("REFRESH_TOKEN_REQUIRED");
 
     const result = await refreshTokenDb.remove(
       { token: { [Op.eq]: `${refreshToken}` } },
@@ -204,25 +199,21 @@ const logout = async (refreshToken, userData, reqUrlMet) => {
   }
 };
 
-// refreshToken
-const refreshToken = async (oldRefreshToken, reqUrlMet) => {
+// renewAccessToken
+const renewAccessToken = async (oldRefreshToken, reqUrlMet) => {
   const t = await sequelize.transaction();
   try {
-    if (!oldRefreshToken) {
-      throw new Error("REFRESH_TOKEN_REQUIRED");
-    }
+    if (!oldRefreshToken) throw new Error("REFRESH_TOKEN_REQUIRED");
 
     const result = await refreshTokenDb.findOne(
       { token: { [Op.eq]: `${oldRefreshToken}` } },
       t,
     );
 
-    if (!result) {
-      throw new Error("INVALID_REFRESH_TOKEN");
-    }
+    if (!result) throw new Error("TOKEN_NOT_FOUND");
 
     if (new Date() > new Date(result?.expires_at)) {
-      await refreshTokenDb.remove({ user_id: result?.user_id }, t);
+      await refreshTokenDb.remove({ user_id: result.user_id });
       throw new Error("INVALID_REFRESH_TOKEN");
     }
 
@@ -230,16 +221,15 @@ const refreshToken = async (oldRefreshToken, reqUrlMet) => {
       id: result?.user_id,
     });
 
-    await refreshTokenDb.update(
+    await refreshTokenDb.create(
       { token: refreshToken, expires_at: getExpiryDate() },
-      { user_id: result?.user_id },
       t,
     );
 
     logger.info("Token refreshed successfully", {
       user_id: result?.user_id,
-      url: reqUrlMet.url,
-      method: reqUrlMet.method,
+      url: reqUrlMet?.url,
+      method: reqUrlMet?.method,
     });
 
     await t.commit();
@@ -248,8 +238,8 @@ const refreshToken = async (oldRefreshToken, reqUrlMet) => {
     await t.rollback();
     logger.error("Refresh token error", {
       error: error.message,
-      url: reqUrlMet.url,
-      method: reqUrlMet.method,
+      url: reqUrlMet?.url,
+      method: reqUrlMet?.method,
     });
     throw error;
   }
@@ -266,9 +256,7 @@ const profile = async (userData, reqUrlMet) => {
       method: reqUrlMet.method,
     });
 
-    if (!userData) {
-      throw new Error("USER_DATA_NOT_FOUND");
-    }
+    if (!userData) throw new Error("USER_DATA_NOT_FOUND");
 
     if (userData?.role !== "vendor") {
       logger.info("Profile fetched successfully", {
@@ -301,9 +289,7 @@ const profile = async (userData, reqUrlMet) => {
       t,
     );
 
-    if (!result) {
-      throw new Error("USER_DATA_NOT_FOUND");
-    }
+    if (!result) throw new Error("USER_DATA_NOT_FOUND");
 
     logger.info("Profile fetched successfully", {
       user_id: userData?.id,
@@ -351,9 +337,7 @@ const changePassword = async (userData, data, reqUrlMet) => {
       existingUser?.hash_password,
     );
 
-    if (!isSamePassword) {
-      throw new Error("INVALID_PASSWORD");
-    }
+    if (!isSamePassword) throw new Error("INVALID_PASSWORD");
 
     const newHashedPassword = await hashPassword(data.new_password);
 
@@ -387,7 +371,7 @@ module.exports = {
   register,
   login,
   logout,
-  refreshToken,
+  renewAccessToken,
   profile,
   changePassword,
 };

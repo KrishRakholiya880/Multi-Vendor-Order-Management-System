@@ -6,11 +6,11 @@ const queryForPagination = {
 };
 
 const getVendorsSalesSummary = {
-  query: Joi.object({ queryForPagination }),
+  query: Joi.object({ ...queryForPagination }),
 };
 
 const getCustomersPurchaseSummary = {
-  query: Joi.object({ queryForPagination }),
+  query: Joi.object({ ...queryForPagination }),
 };
 
 const getRevenue = {
@@ -28,7 +28,7 @@ const getRevenue = {
 };
 
 const getProductPerformanceMetrics = {
-  query: Joi.object({ queryForPagination }),
+  query: Joi.object({ ...queryForPagination }),
 };
 
 const getProductPerformanceMetricsById = {
@@ -51,8 +51,8 @@ const getProductSalesStockSummaryById = {
     days: Joi.number().integer().positive().optional(),
   }),
   params: Joi.object({
-    productId: Joi.number().integer().positive().optional(),
-  }).optional(),
+    id: Joi.number().integer().positive().required(),
+  }),
 };
 
 module.exports = {

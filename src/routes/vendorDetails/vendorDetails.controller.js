@@ -19,11 +19,14 @@ const getVendorDetailsById = async (req, res, next) => {
 
 // getAllVendorDetails
 const getAllVendorDetails = async (req, res, next) => {
-  const { page, limit } = req.query;
+  const { search, status, sortBy, page, limit } = req.query;
   try {
     const result = await vendorDetailsService.getAllVendorDetails(
-      Number(page),
-      Number(limit),
+      search,
+      status,
+      sortBy,
+      Number(page) || 1,
+      Number(limit) || 30,
     );
 
     return res.status(200).json({ status: true, result });

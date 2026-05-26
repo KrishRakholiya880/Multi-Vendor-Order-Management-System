@@ -130,7 +130,7 @@ const addToCart = async (data, userData, reqUrlMet) => {
     if (!productData) throw new Error("PRODUCT_NOT_FOUND");
     if (productData?.status === "inactive")
       throw new Error("PRODUCT_UNAVAILABLE");
-    if (productData?.stock === 0) throw new Error("PRODUCT_OUT_OF_STOCK");
+    if (productData?.stock === 0) throw new Error("OUT_OF_STOCK");
     if (productData?.stock < data?.quantity)
       throw new Error("INSUFFICIENT_STOCK");
 

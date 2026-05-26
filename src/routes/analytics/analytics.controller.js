@@ -104,12 +104,12 @@ const getProductSalesStockSummary = async (req, res, next) => {
 const getProductSalesStockSummaryById = async (req, res, next) => {
   const userData = req.user;
   const { minStock, days } = req.query;
-  const { productId } = req.params;
+  const { id } = req.params;
 
   try {
     const result = await analyticsService.getProductSalesStockSummaryById(
       userData,
-      productId,
+      id,
       Number(days),
       Number(minStock),
     );

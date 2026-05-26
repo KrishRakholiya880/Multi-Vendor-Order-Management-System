@@ -36,7 +36,7 @@ const updateOrderStatusById = {
 
 const cancelOrderItemById = {
   params: Joi.object({
-    item_id: Joi.number().integer().positive().required(),
+    id: Joi.number().integer().positive().required(),
   }).required(),
 };
 

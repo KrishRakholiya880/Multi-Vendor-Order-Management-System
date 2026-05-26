@@ -78,12 +78,12 @@ const updateOrderStatusById = async (req, res, next) => {
 
 // cancelOrderItemById
 const cancelOrderItemById = async (req, res, next) => {
-  const { item_id } = req.params;
+  const { id } = req.params;
   const userData = req.user;
   const { url, method } = req;
 
   try {
-    const result = await orderService.cancelOrderItemById(item_id, userData, {
+    const result = await orderService.cancelOrderItemById(id, userData, {
       url,
       method,
     });

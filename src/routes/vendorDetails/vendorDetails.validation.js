@@ -2,8 +2,11 @@ const Joi = require("joi");
 
 const getAllVendorDetails = {
   query: Joi.object({
-    page: Joi.number().positive().default(1).optional(),
-    limit: Joi.number().positive().default(10).optional(),
+    search: Joi.string().trim().optional(),
+    status: Joi.string().trim().valid("active", "inactive").optional(),
+    sortBy: Joi.string().trim().optional(),
+    page: Joi.number().positive().optional(),
+    limit: Joi.number().positive().optional(),
   }),
 };
 

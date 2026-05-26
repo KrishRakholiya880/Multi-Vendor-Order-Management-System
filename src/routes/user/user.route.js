@@ -6,9 +6,7 @@ const validate = require("../../middleware/validate");
 const userValidation = require("./user.validation");
 const userController = require("./user.controller");
 const {
-  isVendorOrAdmin,
   isUserLoggedIn,
-  checkVendorProductOrNot,
   isAdmin,
 } = require("../../middleware/authorizationMiddleware");
 const { adminLimiter } = require("../../middleware/rateLimiter");

@@ -149,6 +149,8 @@ const getProductSalesStockSummary = async (
   let cacheKey = `analytics:product-sales-stock-summary:${userData?.role}`;
 
   if (userData?.role === "vendor") cacheKey += `:${userData?.id}`;
+  if (minStock) cacheKey += `:minStock:${minStock}`;
+  if (days) cacheKey += `:days:${days}`;
   if (page) cacheKey += `:page:${page}`;
   if (limit) cacheKey += `:limit:${limit}`;
 

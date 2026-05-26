@@ -1,5 +1,6 @@
 const express = require("express");
 const app = express();
+const { sequelize } = require("./db/models");
 
 // config
 const { application } = require("./config");
@@ -19,4 +20,13 @@ app.use(cookieParser());
 app.use("/api", indexRoute);
 app.use(errorHandler);
 
+const connectDb = async () => {
+  try {
+    await sequelize.authenticate();
+    console.log("Database connected successfully");
+  } catch (err) {
+    console.error("Database connection failed:", err);
+  }
+};
+connectDb();
 app.listen(PORT, () => console.log(`Server started at PORT: ${PORT}`));

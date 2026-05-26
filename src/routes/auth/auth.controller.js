@@ -85,11 +85,15 @@ const logout = async (req, res, next) => {
   }
 };
 
-// refreshToken
-const refreshToken = async (req, res, next) => {
+// renewAccessToken
+const renewAccessToken = async (req, res, next) => {
   const refreshToken = req.cookies?.refreshToken;
+  const { method, url } = req;
   try {
-    const result = await authService.refreshToken(refreshToken);
+    const result = await authService.renewAccessToken(refreshToken, {
+      method,
+      url,
+    });
 
     // cookie
     res.cookie("accessToken", result?.accessToken);
@@ -137,7 +141,7 @@ module.exports = {
   register,
   login,
   logout,
-  refreshToken,
+  renewAccessToken,
   profile,
   changePassword,
 };

@@ -1,12 +1,15 @@
 const { vendor_detail, user } = require("../db/models");
 
-const findAll = async (query = {}, page, limit, transaction) => {
+const findAll = async (query = {}, sortBy, page, limit, transaction) => {
   const offset = (page - 1) * limit;
+  const order = sortBy === "asc" ? "ASC" : "DESC";
+
   try {
     const result = await vendor_detail.findAll({
       where: query,
       limit,
       offset,
+      order: [["created_at", order]],
       transaction,
     });
 

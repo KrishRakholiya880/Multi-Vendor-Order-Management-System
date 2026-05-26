@@ -34,7 +34,7 @@ router
   );
 
 router
-  .route("/revenue")
+  .route("/revenue-trends")
   .get(
     analyticsLimiter,
     isUserLoggedIn,
@@ -75,7 +75,7 @@ router
   );
 
 router
-  .route("/product-sales-stock-summary/:productId")
+  .route("/product-sales-stock-summary/:id")
   .get(
     analyticsLimiter,
     isUserLoggedIn,

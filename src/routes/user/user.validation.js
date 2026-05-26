@@ -2,8 +2,9 @@ const Joi = require("joi");
 
 const getUsers = {
   query: Joi.object({
+    search: Joi.string().trim().optional(),
     role: Joi.string().trim().optional(),
-    status: Joi.string().trim().optional(),
+    status: Joi.string().trim().valid("active", "inactive").optional(),
     sortBy: Joi.string().trim().optional(),
     page: Joi.number().integer().optional(),
     limit: Joi.number().integer().optional(),
@@ -40,7 +41,7 @@ const updateUserById = {
     phone_number: Joi.string().length(10).optional(),
     role: Joi.string()
       .optional()
-      .valid("vendor", "customer")
+      .valid("vendor", "customer", "admin")
       .default("customer"),
     status: Joi.string()
       .optional()

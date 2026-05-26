@@ -212,12 +212,15 @@ const getProductById = async (userData, id, reqUrlMet) => {
 
     if (!result) throw new Error("PRODUCT_NOT_FOUND");
 
+    if (userData?.role === "vendor" && result?.vendor_id !== userData?.id) {
+      throw new Error("ACCESS_DENIED_FOR_PRODUCT");
+    }
+
     if (
       (userData?.role === "customer" && result?.status === "inactive") ||
       result?.status === "out_of_stock"
-    ) {
+    )
       throw new Error("PRODUCT_UNAVAILABLE");
-    }
 
     await redisClient.SET(cacheKey, result, 5 * 60);
 

@@ -206,7 +206,7 @@ const addToOrder = async (userData, reqUrlMet) => {
         [],
         t,
       );
-      if (productData?.stock === 0) throw new Error("PRODUCT_OUT_OF_STOCK");
+      if (productData?.stock === 0) throw new Error("OUT_OF_STOCK");
     }
 
     const newOrderTotal = await recalculateOrderTotal(result?.id, t);
@@ -250,7 +250,7 @@ const getVendorOrders = async (userData, page, limit, itemStatus) => {
   try {
     const versionKey = `orders:version`;
     const version = await redisClient.GET_VERSION(versionKey);
-    let cacheKey = `orders:${userData?.role}:${version}`;
+    let cacheKey = `orders:${userData?.role}:${userData?.id}:${version}`;
 
     if (page) cacheKey += `:page:${page}`;
     if (limit) cacheKey += `:limit:${limit}`;

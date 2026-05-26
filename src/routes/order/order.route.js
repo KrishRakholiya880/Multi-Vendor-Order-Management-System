@@ -48,7 +48,7 @@ router
   );
 
 router
-  .route("/:item_id")
+  .route("/:id")
   .delete(
     isUserLoggedIn,
     validate(orderValidation.cancelOrderItemById),

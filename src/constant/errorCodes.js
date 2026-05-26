@@ -255,7 +255,7 @@ module.exports = {
       message: "Cart items not found!!!",
     },
   },
-  PRODUCT_OUT_OF_STOCK: {
+  OUT_OF_STOCK: {
     httpStatusCode: 400,
     body: {
       code: "out_of_stock",

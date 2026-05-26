@@ -6,12 +6,12 @@ const redisClient = require("../../helper/redis");
 const { logger } = require("../../helper/logger");
 
 // getVendorDetailsById
-const getVendorDetailsById = async (paramsId) => {
+const getVendorDetailsById = async (id) => {
   const t = await sequelize.transaction();
   try {
     const vendorDetails = await vendorDetailsDb.findOne(
       {
-        id: { [Op.eq]: `${paramsId}` },
+        id: { [Op.eq]: `${id}` },
       },
       t,
     );
@@ -27,13 +27,22 @@ const getVendorDetailsById = async (paramsId) => {
 };
 
 // getAllVendorDetails
-const getAllVendorDetails = async (page, limit) => {
+const getAllVendorDetails = async (
+  search,
+  status,
+  sortBy = "desc",
+  page,
+  limit,
+) => {
   const t = await sequelize.transaction();
+  let query = {};
+
   try {
     const versionKey = `vendorDetails:version`;
     const version = await redisClient.GET_VERSION(versionKey);
     let cacheKey = `vendorDetails:${version}`;
 
+    if (status) cacheKey += `:status:${status}`;
     if (page) cacheKey += `:page:${page}`;
     if (limit) cacheKey += `:limit:${limit}`;
 
@@ -43,7 +52,10 @@ const getAllVendorDetails = async (page, limit) => {
       return cachedData;
     }
 
-    const result = await vendorDetailsDb.findAll({}, page, limit, t);
+    if (search) query.company_name = { [Op.like]: `%${search}%` };
+    if (status) query.vendor_status = { [Op.like]: `${status}` };
+
+    const result = await vendorDetailsDb.findAll(query, sortBy, page, limit, t);
     if (!result) throw new Error("VENDOR_DETAILS_NOT_FOUND");
 
     await redisClient.SET(cacheKey, result, 5 * 60);
@@ -154,6 +166,7 @@ const updateVendorDetailsById = async (data, id, userData, reqUrlMet) => {
       },
       t,
     );
+
     logger.info("Vendor details updated successfully", {
       url: reqUrlMet.url,
       method: reqUrlMet.method,
