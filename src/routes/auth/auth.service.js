@@ -29,7 +29,12 @@ const register = async (body, reqUrlMet) => {
     });
 
     const isExists = await authDb.findOne(
-      { email: { [Op.eq]: `${email}` } },
+      {
+        [Op.or]: [
+          { email: { [Op.eq]: `${email}` } },
+          { phone_number: { [Op.eq]: `${body?.phone_number}` } },
+        ],
+      },
       {},
       t,
     );

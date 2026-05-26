@@ -87,7 +87,7 @@ module.exports = {
     httpStatusCode: 409,
     body: {
       code: "duplicate_user",
-      message: "An account with this email already exists!!!",
+      message: "An account with this email or phone_number already exists!!!",
     },
   },
   INVALID_PASSWORD: {
