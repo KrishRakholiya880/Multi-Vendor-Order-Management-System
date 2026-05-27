@@ -89,7 +89,7 @@ const getCart = async (userData, page, limit) => {
         {
           customer_id: { [Op.eq]: `${userData?.id}` },
         },
-        {},
+        ["id"],
         [],
         t,
       );
@@ -136,7 +136,7 @@ const addToCart = async (data, userData, reqUrlMet) => {
 
     const existingCart = await cartDb.findOne(
       { customer_id: { [Op.eq]: `${userData?.id}` } },
-      {},
+      ["id"],
       [],
       t,
     );
@@ -251,7 +251,7 @@ const updateProductQuantityById = async (
   try {
     const customerCartData = await cartDb.findOne(
       { customer_id: { [Op.eq]: `${userData?.id}` } },
-      {},
+      ["id"],
       [],
       t,
     );
@@ -317,7 +317,7 @@ const clearCart = async (userData, reqUrlMet) => {
   try {
     const existingCustomerCart = await cartDb.findOne(
       { customer_id: { [Op.eq]: `${userData?.id}` } },
-      {},
+      ["id"],
       [],
       t,
     );
@@ -361,7 +361,7 @@ const removeCartProductById = async (product_id, userData, reqUrlMet) => {
   try {
     const existingCustomerCart = await cartDb.findOne(
       { customer_id: { [Op.eq]: `${userData?.id}` } },
-      {},
+      ["id"],
       [],
       t,
     );

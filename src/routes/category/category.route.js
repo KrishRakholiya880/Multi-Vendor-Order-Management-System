@@ -10,11 +10,12 @@ const {
   isUserLoggedIn,
   checkVendorProductOrNot,
   isAdmin,
+  optionalAuth,
 } = require("../../middleware/authorizationMiddleware");
 
 router
   .route("/")
-  .get(categoryController.getCategories)
+  .get(optionalAuth, categoryController.getCategories)
   .post(
     isUserLoggedIn,
     isAdmin,
@@ -25,6 +26,7 @@ router
 router
   .route("/:id")
   .get(
+    optionalAuth,
     validate(categoryValidation.getCategoryById),
     categoryController.getCategoryById,
   )

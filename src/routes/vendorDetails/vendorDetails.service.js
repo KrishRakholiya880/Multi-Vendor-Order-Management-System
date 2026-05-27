@@ -3,6 +3,7 @@ const { sequelize } = require("../../db/models");
 const vendorDetailsDb = require("../../dbUtils/vendorDetailsDb");
 const userDb = require("../../dbUtils/userDb");
 const redisClient = require("../../helper/redis");
+const { user } = require("../../db/models");
 const { logger } = require("../../helper/logger");
 
 // getVendorDetailsById
@@ -13,6 +14,9 @@ const getVendorDetailsById = async (id) => {
       {
         id: { [Op.eq]: `${id}` },
       },
+      {},
+      // { exclude: ["created_at", "updated_at", "deleted_at"] },
+      [{ model: user, as: "user_data" }],
       t,
     );
 
@@ -69,7 +73,7 @@ const getAllVendorDetails = async (
 };
 
 // createVendorDetails
-const createVendorDetails = async (data, userData, paramsId, reqUrlMet) => {
+const createVendorDetails = async (data, userData, reqUrlMet) => {
   const t = await sequelize.transaction();
   try {
     let newData;
@@ -79,6 +83,8 @@ const createVendorDetails = async (data, userData, paramsId, reqUrlMet) => {
         {
           user_id: { [Op.eq]: `${userData?.id}` },
         },
+        ["id"],
+        [],
         t,
       );
       if (isDetailsExists?.id) throw new Error("USER_DETAILS_ALREADY_FILLED");
@@ -89,10 +95,14 @@ const createVendorDetails = async (data, userData, paramsId, reqUrlMet) => {
         vendor_status: userData?.status,
       };
     } else {
+      if (userData?.role === "admin" && !data?.user_id)
+        throw new Error("USER_ID_IS_REQUIRED");
+
       const userDetails = await userDb.findOne(
         {
-          id: { [Op.eq]: `${paramsId}` },
+          id: { [Op.eq]: `${data?.user_id}` },
         },
+        ["id"],
         [],
         t,
       );
@@ -101,18 +111,21 @@ const createVendorDetails = async (data, userData, paramsId, reqUrlMet) => {
         {
           user_id: { [Op.eq]: `${userDetails?.id}` },
         },
+        ["id"],
+        [],
         t,
       );
       if (isDetailsExists?.id) throw new Error("USER_DETAILS_ALREADY_FILLED");
 
       newData = {
         ...data,
-        user_id: paramsId,
+        user_id: data?.user_id,
         vendor_status: userDetails?.status,
       };
     }
 
     const result = await vendorDetailsDb.create(newData, t);
+    if (!result) throw new Error("VENDOR_DETAILS_NOT_FOUND");
 
     logger.info("Vendor details created successfully", {
       url: reqUrlMet.url,
@@ -120,8 +133,6 @@ const createVendorDetails = async (data, userData, paramsId, reqUrlMet) => {
       user_id: newData?.user_id,
       created_by: userData?.id,
     });
-
-    if (!result) throw new Error("VENDOR_DETAILS_NOT_FOUND");
 
     await redisClient.INCREMENT_VERSION(`vendorDetails:version`);
 
@@ -148,9 +159,11 @@ const updateVendorDetailsById = async (data, id, userData, reqUrlMet) => {
       {
         id: { [Op.eq]: `${id}` },
       },
+      ["user_id"],
+      [],
       t,
     );
-    if (!isVendorDetailsExists) throw new Error("VENDOR_DETAILS_NOT_FOUND");
+    if (isVendorDetailsExists) throw new Error("VENDOR_DETAILS_NOT_FOUND");
 
     if (
       userData?.role === "vendor" &&
@@ -198,6 +211,8 @@ const removeVendorDetailsById = async (id, userData, reqUrlMet) => {
       {
         id: { [Op.eq]: `${id}` },
       },
+      ["user_id"],
+      [],
       t,
     );
     if (!isVendorDetailsExists) throw new Error("VENDOR_DETAILS_NOT_FOUND");
@@ -217,7 +232,7 @@ const removeVendorDetailsById = async (id, userData, reqUrlMet) => {
     logger.info("Vendor details removed successfully", {
       url: reqUrlMet.url,
       method: reqUrlMet.method,
-      user_id: newData?.user_id,
+      user_id: isVendorDetailsExists?.user_id,
       created_by: userData?.id,
     });
 

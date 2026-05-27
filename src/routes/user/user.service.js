@@ -11,6 +11,7 @@ const vendorDetailsDb = require("../../dbUtils/vendorDetailsDb");
 const { product, user, vendor_detail } = require("../../db/models");
 const { hashPassword } = require("../../helper/bcrypt");
 const { logger } = require("../../helper/logger");
+const redisClient = require("../../helper/redis");
 
 // getUsers
 const getUsers = async (search, role, status, sortBy = "desc", page, limit) => {
@@ -70,7 +71,7 @@ const createUser = async (body, reqUrlMet) => {
 
     const isExists = await userDb.findOne(
       { email: { [Op.eq]: `${email}` } },
-      {},
+      ["email"],
       [],
       t,
     );
@@ -95,7 +96,11 @@ const createUser = async (body, reqUrlMet) => {
     return result;
   } catch (error) {
     await t.rollback();
-    logger.error("Create user error", { url, error: error.message });
+    logger.error("Create user error", {
+      url: reqUrlMet.url,
+      method: reqUrlMet.method,
+      error: error.message,
+    });
     throw error;
   }
 };
@@ -108,7 +113,7 @@ const updateUserById = async (data, id, reqUrlMet) => {
 
     const existingUser = await userDb.findOne(
       { id: { [Op.eq]: `${id}` } },
-      {},
+      ["id"],
       [],
       t,
     );
@@ -150,7 +155,7 @@ const changeUserStatusById = async (id, status, reqUrlMet) => {
   try {
     const isUserExists = await userDb.findOne(
       { id: { [Op.eq]: `${id}` } },
-      {},
+      ["status", "role"],
       [],
       t,
     );
@@ -186,6 +191,8 @@ const changeUserStatusById = async (id, status, reqUrlMet) => {
         { vendor_id: id },
         t,
       );
+
+      await redisClient.INCREMENT_VERSION("vendorDetails:version");
     }
     const result = await userDb.update(
       { status },
@@ -220,7 +227,7 @@ const removeUserById = async (id, reqUrlMet) => {
   try {
     const isUserExist = await userDb.findOne(
       { id: { [Op.eq]: `${id}` } },
-      {},
+      ["role"],
       [],
       t,
     );
@@ -286,6 +293,9 @@ const removeUserById = async (id, reqUrlMet) => {
       // remove vendorDetails & products
       await vendorDetailsDb.remove({ user_id: `${id}` }, t);
       await productDb.remove({ vendor_id: `${id}` }, t);
+
+      await redisClient.INCREMENT_VERSION("vendorDetails:version");
+      await redisClient.INCREMENT_VERSION("products:version");
     } else if (isUserExist?.role === "customer") {
       await orderItemDb.remove(
         {
@@ -312,6 +322,9 @@ const removeUserById = async (id, reqUrlMet) => {
     }
 
     const result = await userDb.remove({ id: { [Op.eq]: `${id}` } }, t);
+
+    await redisClient.INCREMENT_VERSION("cart:version");
+    await redisClient.INCREMENT_VERSION("orders:version");
 
     logger.info("User removed successfully", {
       url: reqUrlMet.url,

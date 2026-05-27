@@ -38,7 +38,7 @@ const getProducts = async (
   try {
     const versionKey = `products:version`;
     const version = await redisClient.GET_VERSION(versionKey);
-    let cacheKey = `products:${userData?.role || "guest"}:${version}`;
+    let cacheKey = `products:${userData?.role || "guest"}${userData ? `:${userData?.id}` : ""}:${version}`;
 
     if (status) cacheKey += `:status:${status}`;
     if (search) cacheKey += `:search:${search}`;
@@ -248,7 +248,7 @@ const createProduct = async (userData, data, reqUrlMet) => {
       {
         sku: { [Op.eq]: `${sku}` },
       },
-      {},
+      ["id", "name"],
       [],
       t,
     );
@@ -257,9 +257,6 @@ const createProduct = async (userData, data, reqUrlMet) => {
 
     const newDataObj = { ...data, sku, vendor_id };
     const result = await productDb.create(newDataObj, t);
-
-    delete result?.created_at;
-    delete result?.updated_at;
 
     logger.info("Product created successfully", {
       url: reqUrlMet.url,
@@ -291,7 +288,12 @@ const updateProductById = async (data, id, reqUrlMet) => {
   try {
     const query = { id: { [Op.eq]: `${id}` } };
 
-    const isProductExists = await productDb.findOne(query, {}, [], t);
+    const isProductExists = await productDb.findOne(
+      query,
+      ["id", "name"],
+      [],
+      t,
+    );
     if (!isProductExists) throw new Error("PRODUCT_NOT_FOUND");
 
     const result = await productDb.update(data, query, t);
@@ -324,7 +326,12 @@ const changeProductStatusById = async (id, status, reqUrlMet) => {
   try {
     const query = { id: { [Op.eq]: `${id}` } };
 
-    const isProductExists = await productDb.findOne(query, {}, [], t);
+    const isProductExists = await productDb.findOne(
+      query,
+      ["id", "name", "status"],
+      [],
+      t,
+    );
     if (!isProductExists) throw new Error("PRODUCT_NOT_FOUND");
 
     if (isProductExists?.status === status) {
@@ -362,7 +369,12 @@ const removeProductById = async (id, reqUrlMet) => {
   try {
     const query = { id: { [Op.eq]: `${id}` } };
 
-    const isProductExists = await productDb.findOne(query, {}, [], t);
+    const isProductExists = await productDb.findOne(
+      query,
+      ["id", "name"],
+      [],
+      t,
+    );
     if (!isProductExists) throw new Error("PRODUCT_NOT_FOUND");
 
     const result = await productDb.remove(query, t);

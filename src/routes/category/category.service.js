@@ -4,14 +4,19 @@ const categoryDb = require("../../dbUtils/categoryDb");
 const { logger } = require("../../helper/logger");
 
 // getCategories
-const getCategories = async (reqUrlMet) => {
+const getCategories = async (userData, reqUrlMet) => {
   const t = await sequelize.transaction();
+  let result;
 
   try {
-    const result = await categoryDb.findAll({}, t);
+    result = await categoryDb.findAll({}, {}, t);
 
     if (!result) {
       throw new Error("CATEGORIES_NOT_FOUND");
+    }
+
+    if (userData?.role === "customer" || userData?.role === "vendor") {
+      result = result.map(({ created_at, updated_at, ...resData }) => resData);
     }
 
     logger.info("Categories found", {
@@ -29,7 +34,7 @@ const getCategories = async (reqUrlMet) => {
 };
 
 // getCategoryById
-const getCategoryById = async (id) => {
+const getCategoryById = async (userData, id) => {
   const t = await sequelize.transaction();
   try {
     const query = {
@@ -37,10 +42,15 @@ const getCategoryById = async (id) => {
         [Op.eq]: `${id}`,
       },
     };
-    const result = await categoryDb.findOne(query, ["id", "name"], t);
+    const result = await categoryDb.findOne(query, {}, t);
 
     if (!result) {
       throw new Error("CATEGORY_NOT_FOUND");
+    }
+
+    if (userData?.role === "customer" || userData?.role === "vendor") {
+      delete result?.created_at;
+      delete result?.updated_at;
     }
 
     await t.commit();
@@ -61,7 +71,7 @@ const createCategory = async (data, reqUrlMet) => {
       },
     };
 
-    const isCategoryExists = await categoryDb.findOne(query, {}, t);
+    const isCategoryExists = await categoryDb.findOne(query, ["id"], t);
 
     if (isCategoryExists) {
       throw new Error("CATEGORY_EXISTS");
@@ -101,7 +111,7 @@ const updateCategoryById = async (data, id, reqUrlMet) => {
       },
     };
 
-    const category = await categoryDb.findOne(query, {}, t);
+    const category = await categoryDb.findOne(query, ["id"], t);
 
     if (!category) {
       throw new Error("CATEGORY_NOT_FOUND");
@@ -137,7 +147,7 @@ const removeCategoryById = async (id, reqUrlMet) => {
       },
     };
 
-    const category = await categoryDb.findOne(query, {}, t);
+    const category = await categoryDb.findOne(query, ["id"], t);
 
     if (!category) {
       throw new Error("CATEGORY_NOT_FOUND");

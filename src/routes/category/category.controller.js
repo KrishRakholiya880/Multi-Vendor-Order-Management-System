@@ -3,9 +3,13 @@ const categoryService = require("./category.service");
 // getCategories
 const getCategories = async (req, res, next) => {
   const { url, method } = req;
+  const userData = req.user;
 
   try {
-    const result = await categoryService.getCategories({ url, method });
+    const result = await categoryService.getCategories(userData, {
+      url,
+      method,
+    });
 
     return res.status(200).json({ status: true, result });
   } catch (error) {
@@ -16,8 +20,10 @@ const getCategories = async (req, res, next) => {
 // getCategoryById
 const getCategoryById = async (req, res, next) => {
   const { id } = req.params;
+  const userData = req.user;
+
   try {
-    const result = await categoryService.getCategoryById(id);
+    const result = await categoryService.getCategoryById(userData, id);
 
     return res.status(200).json({ status: true, result });
   } catch (error) {

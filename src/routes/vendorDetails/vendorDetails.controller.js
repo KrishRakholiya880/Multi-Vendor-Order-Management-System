@@ -37,7 +37,6 @@ const getAllVendorDetails = async (req, res, next) => {
 
 // createVendorDetails
 const createVendorDetails = async (req, res, next) => {
-  const { id } = req.params;
   const body = req.body;
   const userData = req?.user;
   const { url, method } = req;
@@ -46,7 +45,6 @@ const createVendorDetails = async (req, res, next) => {
     const result = await vendorDetailsService.createVendorDetails(
       body,
       userData,
-      Number(id),
       { url, method },
     );
 

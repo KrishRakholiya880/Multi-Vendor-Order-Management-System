@@ -1,8 +1,12 @@
 const { order_item } = require("../db/models");
 
-const findOne = async (query, transaction) => {
+const findOne = async (query, attributes = {}, transaction) => {
   try {
-    const result = await order_item.findOne({ where: query, transaction });
+    const result = await order_item.findOne({
+      where: query,
+      attributes,
+      transaction,
+    });
 
     return result.toJSON() || null;
   } catch (error) {

@@ -153,7 +153,7 @@ const addToOrder = async (userData, reqUrlMet) => {
   try {
     const cartData = await cartDb.findOne(
       { customer_id: { [Op.eq]: `${userData?.id}` } },
-      {},
+      ["id", "total_amount"],
       [],
       t,
     );
@@ -178,11 +178,16 @@ const addToOrder = async (userData, reqUrlMet) => {
     for (const item of cartItems) {
       productData = await productDb.findOne(
         { id: { [Op.eq]: `${item?.product_id}` } },
-        {},
+        ["stock", "status"],
         [],
         t,
       );
+
       if (!productData) throw new Error("PRODUCT_NOT_FOUND");
+      if (productData?.stock < item?.quantity)
+        throw new Error("INSUFFICIENT_STOCK");
+
+      const updatedStock = productData?.stock - item?.quantity;
 
       await orderItemDb.create(
         {
@@ -194,19 +199,19 @@ const addToOrder = async (userData, reqUrlMet) => {
         t,
       );
 
-      await productDb.update(
-        { stock: productData?.stock - item?.quantity },
-        { id: { [Op.eq]: `${item?.product_id}` } },
-        t,
-      );
+      if (productData?.stock === 0 || productData?.status === "out_of_stock") {
+        await orderItemDb.remove({ product_id: `${item?.product_id}` });
+        throw new Error("OUT_OF_STOCK");
+      }
 
-      productData = await productDb.findOne(
+      await productDb.update(
+        {
+          stock: updatedStock,
+          ...(updatedStock === 0 && { status: "out_of_stock" }),
+        },
         { id: { [Op.eq]: `${item?.product_id}` } },
-        {},
-        [],
         t,
       );
-      if (productData?.stock === 0) throw new Error("OUT_OF_STOCK");
     }
 
     const newOrderTotal = await recalculateOrderTotal(result?.id, t);
@@ -319,7 +324,11 @@ const getVendorOrders = async (userData, page, limit, itemStatus) => {
 const updateOrderStatusById = async (id, data, userData, reqUrlMet) => {
   const t = await sequelize.transaction();
   try {
-    const orderItemData = await orderItemDb.findOne({ id: `${id}` }, t);
+    const orderItemData = await orderItemDb.findOne(
+      { id: `${id}` },
+      ["product_id", "status", "order_id"],
+      t,
+    );
     if (!orderItemData) throw new Error("ORDER_ITEM_NOT_FOUND");
 
     if (userData?.role === "vendor") {
@@ -327,7 +336,7 @@ const updateOrderStatusById = async (id, data, userData, reqUrlMet) => {
         {
           id: `${orderItemData?.product_id}`,
         },
-        {},
+        ["vendor_id"],
         [],
         t,
       );
@@ -415,6 +424,7 @@ const cancelOrderItemById = async (item_id, userData, reqUrlMet) => {
   try {
     const orderItemData = await orderItemDb.findOne(
       { id: { [Op.eq]: `${item_id}` } },
+      ["product_id", "order_id", "quantity", "status"],
       t,
     );
     if (!orderItemData) throw new Error("ORDER_ITEMS_NOT_FOUND");

@@ -15,7 +15,7 @@ const findOne = async (
       transaction,
     });
 
-    return result;
+    return result.toJSON();
   } catch (error) {
     console.log(error?.message || error);
   }

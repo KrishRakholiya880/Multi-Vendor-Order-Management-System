@@ -1,10 +1,11 @@
 const { category } = require("../db/models");
 
 // findAll
-const findAll = async (query = {}, transaction) => {
+const findAll = async (query = {}, attributes = {}, transaction) => {
   try {
     const result = await category.findAll({
       where: query,
+      attributes,
       transaction,
     });
 

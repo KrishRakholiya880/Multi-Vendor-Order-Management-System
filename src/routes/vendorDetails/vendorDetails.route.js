@@ -19,6 +19,12 @@ router
     isAdmin,
     validate(vendorDetailsValidation.getAllVendorDetails),
     vendorDetailsController.getAllVendorDetails,
+  )
+  .post(
+    isUserLoggedIn,
+    isVendorOrAdmin,
+    validate(vendorDetailsValidation.createVendorDetails),
+    vendorDetailsController.createVendorDetails,
   );
 
 router
@@ -28,12 +34,6 @@ router
     isAdmin,
     validate(vendorDetailsValidation.getVendorDetailsById),
     vendorDetailsController.getVendorDetailsById,
-  )
-  .post(
-    isUserLoggedIn,
-    isVendorOrAdmin,
-    validate(vendorDetailsValidation.createVendorDetails),
-    vendorDetailsController.createVendorDetails,
   )
   .patch(
     isUserLoggedIn,

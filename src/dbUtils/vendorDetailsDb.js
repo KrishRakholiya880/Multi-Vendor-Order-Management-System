@@ -1,4 +1,4 @@
-const { vendor_detail, user } = require("../db/models");
+const { vendor_detail } = require("../db/models");
 
 const findAll = async (query = {}, sortBy, page, limit, transaction) => {
   const offset = (page - 1) * limit;
@@ -7,6 +7,9 @@ const findAll = async (query = {}, sortBy, page, limit, transaction) => {
   try {
     const result = await vendor_detail.findAll({
       where: query,
+      // attributes: {
+      //   exclude: ["created_at", "updated_at", "deleted_at"],
+      // },
       limit,
       offset,
       order: [["created_at", order]],
@@ -19,14 +22,17 @@ const findAll = async (query = {}, sortBy, page, limit, transaction) => {
   }
 };
 
-const findOne = async (query = {}, transaction) => {
+const findOne = async (
+  query = {},
+  attributes = {},
+  include = [],
+  transaction,
+) => {
   try {
     const result = await vendor_detail.findOne({
       where: query,
-      include: {
-        model: user,
-        as: "user_data",
-      },
+      attributes,
+      include,
       transaction,
     });
 

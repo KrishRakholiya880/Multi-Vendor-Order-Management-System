@@ -217,6 +217,13 @@ module.exports = {
       message: "Vendor's details not found!!!",
     },
   },
+  USER_ID_IS_REQUIRED: {
+    httpStatusCode: 400,
+    body: {
+      code: "bad_request",
+      message: "user_id is required to add vendor's details!!!",
+    },
+  },
   USER_DETAILS_ALREADY_FILLED: {
     httpStatusCode: 400,
     body: {
