@@ -1,3 +1,4 @@
+const { sequelize } = require("../db/models");
 const { decodeToken } = require("../helper/authHelper");
 const authDb = require("../dbUtils/authDb");
 const productDb = require("../dbUtils/productDb");
@@ -24,44 +25,47 @@ const optionalAuth = async (req, res, next) => {
 };
 
 const isUserLoggedIn = async (req, res, next) => {
-  const accessToken = req.cookies.accessToken;
-  const refreshToken = req.cookies.refreshToken;
+  const t = await sequelize.transaction();
+  try {
+    const accessToken = req.cookies.accessToken;
+    const refreshToken = req.cookies.refreshToken;
 
-  if (!accessToken && !refreshToken) {
-    logger.warn("Unauthorized access attempt", {
-      url: req.originalUrl,
-      method: req.method,
-      ip: req.ip,
-    });
-    throw new Error("TOKEN_REQUIRED");
+    if (!accessToken && !refreshToken) {
+      logger.warn("Unauthorized access attempt", {
+        url: req.originalUrl,
+        method: req.method,
+        ip: req.ip,
+      });
+      throw new Error("TOKEN_REQUIRED");
+    }
+
+    const tokenData = await refreshTokenDb.findOne({ token: refreshToken }, t);
+    if (!tokenData || new Date() > new Date(tokenData?.expires_at)) {
+      throw new Error("SESSION_EXPIRED");
+    }
+
+    const decodedData = decodeToken(accessToken);
+
+    if (!decodedData) {
+      throw new Error("INVALID_ACCESS_TOKEN");
+    }
+
+    const userData = await authDb.findOne(
+      { id: decodedData?.id },
+      ["id", "full_name", "email", "phone_number", "status", "role"],
+      t,
+    );
+
+    if (!userData) {
+      throw new Error("USER_NOT_FOUND");
+    }
+
+    req.user = userData;
+    await t.commit();
+    next();
+  } catch (error) {
+    await t.rollback();
   }
-
-  const tokenData = await refreshTokenDb.findOne({ token: refreshToken });
-  if (!tokenData || new Date() > new Date(tokenData?.expires_at)) {
-    throw new Error("SESSION_EXPIRED");
-  }
-
-  const decodedData = decodeToken(accessToken);
-
-  if (!decodedData) {
-    throw new Error("INVALID_ACCESS_TOKEN");
-  }
-
-  const userData = await authDb.findOne({ id: decodedData?.id }, [
-    "id",
-    "full_name",
-    "email",
-    "phone_number",
-    "status",
-    "role",
-  ]);
-
-  if (!userData) {
-    throw new Error("USER_NOT_FOUND");
-  }
-
-  req.user = userData;
-  next();
 };
 
 const isAdmin = (req, res, next) => {
@@ -145,33 +149,44 @@ const isAdminOrCustomer = async (req, res, next) => {
 };
 
 const checkVendorProductOrNot = async (req, res, next) => {
-  const userData = req.user;
+  const t = await sequelize.transaction();
+  try {
+    const userData = req.user;
 
-  if (userData?.role === "vendor") {
-    const { id } = req.params;
+    if (userData?.role === "vendor") {
+      const { id } = req.params;
 
-    const product = await productDb.findOne({ id: id });
-
-    if (!product) {
-      throw new Error("PRODUCT_NOT_FOUND");
-    }
-
-    if (product?.vendor_id !== userData?.id) {
-      logger.error(
-        "Unauthorized access - vendor trying to access another vendor's product",
-        {
-          user_id: userData?.id,
-          url: req.originalUrl,
-          method: req.method,
-          ip: req.ip,
-        },
+      const product = await productDb.findOne(
+        { id: id },
+        ["id", "name"],
+        [],
+        t,
       );
-      throw new Error("ACCESS_DENIED_FOR_PRODUCT");
-    }
 
-    next();
-  } else {
-    next();
+      if (!product) {
+        throw new Error("PRODUCT_NOT_FOUND");
+      }
+
+      if (product?.vendor_id !== userData?.id) {
+        logger.error(
+          "Unauthorized access - vendor trying to access another vendor's product",
+          {
+            user_id: userData?.id,
+            url: req.originalUrl,
+            method: req.method,
+            ip: req.ip,
+          },
+        );
+        throw new Error("ACCESS_DENIED_FOR_PRODUCT");
+      }
+
+      await t.commit();
+      next();
+    } else {
+      next();
+    }
+  } catch (error) {
+    await t.rollback();
   }
 };
 

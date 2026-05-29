@@ -41,6 +41,7 @@ const cartAttributes = ["id", "customer_id", "total_amount"];
 const recalculateTotalAmount = async (cart_id, t) => {
   const allCartItems = await cartItemDb.findAll(
     { cart_id: { [Op.eq]: cart_id } },
+    ["quantity", "unit_price"],
     [],
     t,
   );
@@ -76,10 +77,10 @@ const getCart = async (userData, page, limit) => {
     if (userData?.role === "admin") {
       result = await cartDb.findAll(
         {},
-        page,
-        limit,
         cartAttributes,
         cartItemsInclude(true),
+        page,
+        limit,
         t,
       );
 
@@ -178,6 +179,7 @@ const addToCart = async (data, userData, reqUrlMet) => {
         cart_id: `${existingCart?.id}`,
         product_id: `${data?.product_id}`,
       },
+      {},
       [],
       t,
     );
@@ -262,6 +264,7 @@ const updateProductQuantityById = async (
         cart_id: { [Op.eq]: `${customerCartData?.id}` },
         product_id: { [Op.eq]: `${product_id}` },
       },
+      {},
       [],
       t,
     );
@@ -372,6 +375,7 @@ const removeCartProductById = async (product_id, userData, reqUrlMet) => {
         cart_id: { [Op.eq]: `${existingCustomerCart?.id}` },
         product_id: { [Op.eq]: `${product_id}` },
       },
+      {},
       [],
       t,
     );

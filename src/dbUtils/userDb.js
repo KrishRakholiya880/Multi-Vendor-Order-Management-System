@@ -5,7 +5,7 @@ const findOne = async (
   query = {},
   attributes = {},
   include = [],
-  transaction,
+  transaction = null,
 ) => {
   try {
     const result = await user.findOne({
@@ -22,7 +22,7 @@ const findOne = async (
 };
 
 // findAll
-const findAll = async (query = {}, sortBy, page, limit, transaction) => {
+const findAll = async (query = {}, sortBy, page, limit, transaction = null) => {
   const offset = (page - 1) * limit;
   const order = sortBy === "asc" ? "ASC" : "DESC";
   try {
@@ -41,7 +41,7 @@ const findAll = async (query = {}, sortBy, page, limit, transaction) => {
 };
 
 // create
-const create = async (data, transaction) => {
+const create = async (data, transaction = null) => {
   try {
     const result = await user.create(data, { transaction });
 
@@ -52,7 +52,7 @@ const create = async (data, transaction) => {
 };
 
 // update
-const update = async (data, query, transaction) => {
+const update = async (data, query, transaction = null) => {
   try {
     const result = await user.update(data, {
       where: query,
@@ -66,7 +66,7 @@ const update = async (data, query, transaction) => {
 };
 
 // remove
-const remove = async (query, transaction) => {
+const remove = async (query, transaction = null) => {
   try {
     const result = await user.destroy({
       where: query,

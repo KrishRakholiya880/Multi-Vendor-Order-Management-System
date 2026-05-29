@@ -1,9 +1,15 @@
 const { cart_item } = require("../db/models");
 
-const findAll = async (query, include = [], transaction) => {
+const findAll = async (
+  query,
+  attributes = {},
+  include = [],
+  transaction = null,
+) => {
   try {
     const result = await cart_item.findAll({
       where: query,
+      attributes,
       include,
       transaction,
     });
@@ -14,10 +20,16 @@ const findAll = async (query, include = [], transaction) => {
   }
 };
 
-const findOne = async (query, include = [], transaction) => {
+const findOne = async (
+  query,
+  attributes = {},
+  include = [],
+  transaction = null,
+) => {
   try {
     const result = await cart_item.findOne({
       where: query,
+      attributes,
       include,
       transaction,
     });
@@ -28,7 +40,7 @@ const findOne = async (query, include = [], transaction) => {
   }
 };
 
-const create = async (body, transaction) => {
+const create = async (body, transaction = null) => {
   try {
     const result = await cart_item.create(body, { transaction });
 
@@ -38,7 +50,7 @@ const create = async (body, transaction) => {
   }
 };
 
-const update = async (body, query, transaction) => {
+const update = async (body, query, transaction = null) => {
   try {
     const result = await cart_item.update(body, {
       where: query,
@@ -51,7 +63,7 @@ const update = async (body, query, transaction) => {
   }
 };
 
-const remove = async (query, transaction) => {
+const remove = async (query, transaction = null) => {
   try {
     const result = await cart_item.destroy({
       where: query,

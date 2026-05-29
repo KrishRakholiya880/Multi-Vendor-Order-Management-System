@@ -161,6 +161,7 @@ const addToOrder = async (userData, reqUrlMet) => {
 
     const cartItems = await cartItemDb.findAll(
       { cart_id: { [Op.eq]: `${cartData?.id}` } },
+      ["product_id", "quantity", "unit_price"],
       [],
       t,
     );

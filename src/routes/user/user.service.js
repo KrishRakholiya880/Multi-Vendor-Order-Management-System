@@ -167,10 +167,10 @@ const changeUserStatusById = async (id, status, reqUrlMet) => {
     if (isUserExists?.role === "vendor") {
       const vendorProducts = await productDb.findAll(
         { vendor_id: id },
-        null,
-        null,
         {},
         [],
+        null,
+        null,
         null,
         null,
         t,
@@ -238,10 +238,12 @@ const removeUserById = async (id, reqUrlMet) => {
     if (isUserExist?.role === "vendor") {
       const vendorProducts = await productDb.findAll(
         { vendor_id: `${id}` },
-        1,
-        1000,
         ["id"],
         [],
+        null,
+        null,
+        null,
+        null,
         t,
       );
       const productIds = vendorProducts.map((p) => p.id);

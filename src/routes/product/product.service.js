@@ -1,6 +1,8 @@
 const { Op } = require("sequelize");
 const { sequelize } = require("../../db/models");
 const productDb = require("../../dbUtils/productDb");
+const cartDb = require("../../dbUtils/cartDb");
+const cartItemDb = require("../../dbUtils/cartItemDb");
 const { category, user, vendor_detail } = require("../../db/models");
 const { logger } = require("../../helper/logger");
 const redisClient = require("../../helper/redis");
@@ -17,6 +19,66 @@ const generateRandomString = () => {
     result += chars.charAt(Math.floor(Math.random() * chars.length));
   }
   return result;
+};
+
+// recalculateTotalAmount
+const recalculateTotalAmount = async (cart_id, t) => {
+  const allCartItems = await cartItemDb.findAll(
+    { cart_id: { [Op.eq]: cart_id } },
+    ["quantity", "unit_price"],
+    [],
+    t,
+  );
+
+  const rawTotal = allCartItems.reduce((acc, item) => {
+    const qty = parseInt(item.quantity);
+    const price = parseFloat(item.unit_price);
+    return acc + qty * price;
+  }, 0);
+
+  return parseFloat(rawTotal.toFixed(2));
+};
+
+// changesToCartAfterUpdateOrRemoveProduct
+const changesToCartAfterUpdateOrRemoveProduct = async (productId) => {
+  const t = await sequelize.transaction();
+  try {
+    const cartItemsData = await cartItemDb.findAll(
+      { product_id: Number(productId) },
+      ["id", "cart_id", "product_id"],
+      [],
+      t,
+    );
+
+    if (cartItemsData && cartItemsData.length > 0) {
+      for (const item of cartItemsData) {
+        await cartItemDb.remove({ id: item?.id }, t);
+
+        const remainingItems = await cartItemDb.findAll(
+          { cart_id: item?.cart_id },
+          ["quantity", "unit_price"],
+          [],
+          t,
+        );
+
+        if (!remainingItems || remainingItems.length === 0) {
+          await cartDb.remove({ id: item?.cart_id }, t);
+        } else {
+          const newTotal = await recalculateTotalAmount(item?.cart_id, t);
+          await cartDb.update(
+            { total_amount: newTotal },
+            { id: { [Op.eq]: item?.cart_id } },
+            t,
+          );
+        }
+      }
+    }
+
+    await t.commit();
+  } catch (error) {
+    await t.rollback();
+    throw error;
+  }
 };
 
 // getProducts
@@ -116,12 +178,12 @@ const getProducts = async (
 
     result = await productDb.findAll(
       query,
-      page,
-      limit,
       attributes,
       include,
       sortBy,
       priceSort,
+      page,
+      limit,
       t,
     );
     if (!result || (Array.isArray(result) && result.length === 0)) {
@@ -340,6 +402,10 @@ const changeProductStatusById = async (id, status, reqUrlMet) => {
 
     const result = await productDb.update({ status }, query, t);
 
+    if (result && status === "inactive") {
+      await changesToCartAfterUpdateOrRemoveProduct(id);
+    }
+
     logger.info("Product status changed successfully", {
       url: reqUrlMet.url,
       method: reqUrlMet.method,
@@ -378,6 +444,10 @@ const removeProductById = async (id, reqUrlMet) => {
     if (!isProductExists) throw new Error("PRODUCT_NOT_FOUND");
 
     const result = await productDb.remove(query, t);
+
+    if (result) {
+      await changesToCartAfterUpdateOrRemoveProduct(id);
+    }
 
     logger.info("Product removed successfully", {
       url: reqUrlMet.url,

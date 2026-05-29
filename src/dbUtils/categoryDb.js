@@ -1,7 +1,7 @@
 const { category } = require("../db/models");
 
 // findAll
-const findAll = async (query = {}, attributes = {}, transaction) => {
+const findAll = async (query = {}, attributes = {}, transaction = null) => {
   try {
     const result = await category.findAll({
       where: query,
@@ -16,7 +16,7 @@ const findAll = async (query = {}, attributes = {}, transaction) => {
 };
 
 // findOne
-const findOne = async (query = {}, attributes = {}, transaction) => {
+const findOne = async (query = {}, attributes = {}, transaction = null) => {
   try {
     const result = await category.findOne({
       where: query,
@@ -31,7 +31,7 @@ const findOne = async (query = {}, attributes = {}, transaction) => {
 };
 
 // create
-const create = async (data, transaction) => {
+const create = async (data, transaction = null) => {
   try {
     const result = await category.create(data, { transaction });
 
@@ -42,7 +42,7 @@ const create = async (data, transaction) => {
 };
 
 // update
-const update = async (data, query, transaction) => {
+const update = async (data, query, transaction = null) => {
   try {
     const result = await category.update(data, {
       where: query,
@@ -56,7 +56,7 @@ const update = async (data, query, transaction) => {
 };
 
 // remove
-const remove = async (query, transaction) => {
+const remove = async (query, transaction = null) => {
   try {
     const result = await category.destroy({
       where: query,

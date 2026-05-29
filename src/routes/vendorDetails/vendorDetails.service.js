@@ -59,7 +59,14 @@ const getAllVendorDetails = async (
     if (search) query.company_name = { [Op.like]: `%${search}%` };
     if (status) query.vendor_status = { [Op.like]: `${status}` };
 
-    const result = await vendorDetailsDb.findAll(query, sortBy, page, limit, t);
+    const result = await vendorDetailsDb.findAll(
+      query,
+      {},
+      sortBy,
+      page,
+      limit,
+      t,
+    );
     if (!result) throw new Error("VENDOR_DETAILS_NOT_FOUND");
 
     await redisClient.SET(cacheKey, result, 5 * 60);

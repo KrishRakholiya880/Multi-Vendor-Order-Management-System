@@ -2,11 +2,11 @@ const { cart, cart_item } = require("../db/models");
 
 const findAll = async (
   query = {},
-  page,
-  limit,
   attributes = [],
   include = [],
-  transaction,
+  page,
+  limit,
+  transaction = null,
 ) => {
   try {
     const offset = (page - 1) * limit;
@@ -29,7 +29,7 @@ const findOne = async (
   query = {},
   attributes = [],
   include = [],
-  transaction,
+  transaction = null,
 ) => {
   try {
     const result = await cart.findOne({
@@ -45,7 +45,7 @@ const findOne = async (
   }
 };
 
-const create = async (data, transaction) => {
+const create = async (data, transaction = null) => {
   try {
     const cartResult = await cart.create(data, { transaction });
     return cartResult;
@@ -54,7 +54,7 @@ const create = async (data, transaction) => {
   }
 };
 
-const update = async (data, query, transaction) => {
+const update = async (data, query, transaction = null) => {
   try {
     const result = await cart.update(data, {
       where: query,
@@ -66,7 +66,7 @@ const update = async (data, query, transaction) => {
   }
 };
 
-const remove = async (query, transaction) => {
+const remove = async (query, transaction = null) => {
   try {
     const result = await cart.destroy({
       where: query,

@@ -1,6 +1,6 @@
 const { order_item } = require("../db/models");
 
-const findOne = async (query, attributes = {}, transaction) => {
+const findOne = async (query, attributes = {}, transaction = null) => {
   try {
     const result = await order_item.findOne({
       where: query,
@@ -14,7 +14,12 @@ const findOne = async (query, attributes = {}, transaction) => {
   }
 };
 
-const findAll = async (query, attributes = [], include = [], transaction) => {
+const findAll = async (
+  query,
+  attributes = [],
+  include = [],
+  transaction = null,
+) => {
   try {
     const result = await order_item.findAll({
       where: query,
@@ -28,7 +33,7 @@ const findAll = async (query, attributes = [], include = [], transaction) => {
   }
 };
 
-const create = async (data, transaction) => {
+const create = async (data, transaction = null) => {
   try {
     const result = await order_item.create(data, { transaction });
 
@@ -38,7 +43,7 @@ const create = async (data, transaction) => {
   }
 };
 
-const update = async (data, query, transaction) => {
+const update = async (data, query, transaction = null) => {
   try {
     const result = await order_item.update(data, {
       where: query,
@@ -51,7 +56,7 @@ const update = async (data, query, transaction) => {
   }
 };
 
-const remove = async (query, transaction) => {
+const remove = async (query, transaction = null) => {
   try {
     const result = await order_item.destroy({
       where: query,

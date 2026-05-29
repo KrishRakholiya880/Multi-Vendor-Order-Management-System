@@ -6,7 +6,7 @@ const findAll = async (
   limit,
   attributes = {},
   include = [],
-  transaction,
+  transaction = null,
 ) => {
   const offset = (page - 1) * limit;
   try {
@@ -25,7 +25,12 @@ const findAll = async (
   }
 };
 
-const findOne = async (query, attributes = {}, include = [], transaction) => {
+const findOne = async (
+  query,
+  attributes = {},
+  include = [],
+  transaction = null,
+) => {
   try {
     const result = await order.findOne({
       where: query,
@@ -39,7 +44,7 @@ const findOne = async (query, attributes = {}, include = [], transaction) => {
   }
 };
 
-const create = async (data, transaction) => {
+const create = async (data, transaction = null) => {
   try {
     const result = await order.create(data, { transaction });
 
@@ -49,7 +54,7 @@ const create = async (data, transaction) => {
   }
 };
 
-const update = async (data, query = {}, transaction) => {
+const update = async (data, query = {}, transaction = null) => {
   try {
     const result = await order.update(data, {
       where: query,
@@ -61,7 +66,7 @@ const update = async (data, query = {}, transaction) => {
   }
 };
 
-const remove = async (query = {}, transaction) => {
+const remove = async (query = {}, transaction = null) => {
   try {
     const result = await order.destroy({
       where: query,
