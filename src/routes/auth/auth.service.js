@@ -35,7 +35,7 @@ const register = async (body, reqUrlMet) => {
           { phone_number: { [Op.eq]: `${body?.phone_number}` } },
         ],
       },
-      {},
+      ["id", "full_name", "email"],
       t,
     );
 

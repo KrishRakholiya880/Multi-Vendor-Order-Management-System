@@ -2,10 +2,10 @@ const { order } = require("../db/models");
 
 const findAll = async (
   query,
-  page,
-  limit,
   attributes = {},
   include = [],
+  page,
+  limit,
   transaction = null,
 ) => {
   const offset = (page - 1) * limit;

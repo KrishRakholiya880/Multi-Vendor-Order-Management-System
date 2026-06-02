@@ -6,22 +6,34 @@ const refreshTokenDb = require("../dbUtils/refreshTokenDb");
 const { logger } = require("../helper/logger");
 
 const optionalAuth = async (req, res, next) => {
-  const accessToken = req.cookies.accessToken;
+  const t = await sequelize.transaction();
+  try {
+    const accessToken = req.cookies.accessToken;
 
-  if (!accessToken) {
-    req.user = null;
-    return next();
+    if (!accessToken) {
+      req.user = null;
+      return next();
+    }
+
+    const decodedData = decodeToken(accessToken);
+    if (!decodedData) {
+      req.user = null;
+      return next();
+    }
+
+    const userData = await authDb.findOne(
+      { id: decodedData?.id },
+      {
+        exclude: ["created_at", "updated_at", "deleted_at", "hashed_password"],
+      },
+      t,
+    );
+    req.user = userData;
+    next();
+  } catch (error) {
+    await t.rollback();
+    console.log(error?.message || error);
   }
-
-  const decodedData = decodeToken(accessToken);
-  if (!decodedData) {
-    req.user = null;
-    return next();
-  }
-
-  const userData = await authDb.findOne({ id: decodedData?.id });
-  req.user = userData;
-  next();
 };
 
 const isUserLoggedIn = async (req, res, next) => {

@@ -167,7 +167,7 @@ const changeUserStatusById = async (id, status, reqUrlMet) => {
     if (isUserExists?.role === "vendor") {
       const vendorProducts = await productDb.findAll(
         { vendor_id: id },
-        {},
+        ["id", "name"],
         [],
         null,
         null,
@@ -313,7 +313,7 @@ const removeUserById = async (id, reqUrlMet) => {
 
       const cartData = await cartDb.findOne(
         { customer_id: `${id}` },
-        {},
+        ["id"],
         [],
         t,
       );

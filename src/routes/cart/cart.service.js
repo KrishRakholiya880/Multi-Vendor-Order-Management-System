@@ -123,7 +123,7 @@ const addToCart = async (data, userData, reqUrlMet) => {
   try {
     const productData = await productDb.findOne(
       { id: { [Op.eq]: `${data?.product_id}` } },
-      {},
+      ["stock", "status", "price"],
       [],
       t,
     );
@@ -179,7 +179,7 @@ const addToCart = async (data, userData, reqUrlMet) => {
         cart_id: `${existingCart?.id}`,
         product_id: `${data?.product_id}`,
       },
-      {},
+      ["id", "quantity"],
       [],
       t,
     );
@@ -264,7 +264,7 @@ const updateProductQuantityById = async (
         cart_id: { [Op.eq]: `${customerCartData?.id}` },
         product_id: { [Op.eq]: `${product_id}` },
       },
-      {},
+      ["id", "cart_id", "product_id"],
       [],
       t,
     );
@@ -375,7 +375,7 @@ const removeCartProductById = async (product_id, userData, reqUrlMet) => {
         cart_id: { [Op.eq]: `${existingCustomerCart?.id}` },
         product_id: { [Op.eq]: `${product_id}` },
       },
-      {},
+      ["id", "cart_id", "product_id"],
       [],
       t,
     );

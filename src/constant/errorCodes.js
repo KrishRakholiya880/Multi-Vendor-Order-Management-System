@@ -341,6 +341,14 @@ module.exports = {
       message: "Order item is already cancelled!!!",
     },
   },
+  ORDER_ITEM_ALREADY_DELIVERED: {
+    httpStatusCode: 400,
+    body: {
+      code: "already_delivered",
+      message:
+        "Order item is already delivered, you can't cancel this order!!!",
+    },
+  },
   ORDER_ITEM_CREATION_FAILED: {
     httpStatusCode: 500,
     body: {

@@ -33,18 +33,6 @@ const orderItemsInclude = (itemStatus = null) => [
     ...(itemStatus
       ? { where: { status: { [Op.eq]: itemStatus } }, required: false }
       : {}),
-    attributes: [
-      "id",
-      "order_id",
-      "product_id",
-      "quantity",
-      "price_at_purchase",
-      "status",
-      "placed_at",
-      "shipped_at",
-      "delivered_at",
-      "cancelled_at",
-    ],
     include: [
       {
         model: product,
@@ -69,7 +57,7 @@ const recalculateOrderTotal = async (order_id, t) => {
       order_id: { [Op.eq]: order_id },
       status: { [Op.ne]: "cancelled" },
     },
-    {},
+    ["quantity", "price_at_purchase"],
     [],
     t,
   );
@@ -105,27 +93,25 @@ const getOrder = async (userData, page, limit, status, itemStatus) => {
       return cachedData;
     }
 
+    if (status) query.status = { [Op.eq]: status };
     if (userData?.role === "admin") {
-      if (status) query.status = { [Op.eq]: status };
-
       result = await orderDb.findAll(
         query,
-        page,
-        limit,
         orderAttributes,
         orderItemsInclude(itemStatus),
+        page,
+        limit,
         t,
       );
     } else {
       query.customer_id = { [Op.eq]: `${userData?.id}` };
-      if (status) query.status = { [Op.eq]: status };
 
       result = await orderDb.findAll(
         query,
-        page,
-        limit,
         orderAttributes,
         orderItemsInclude(itemStatus),
+        page,
+        limit,
         t,
       );
     }
@@ -201,8 +187,7 @@ const addToOrder = async (userData, reqUrlMet) => {
       );
 
       if (productData?.stock === 0 || productData?.status === "out_of_stock") {
-        await orderItemDb.remove({ product_id: `${item?.product_id}` });
-        throw new Error("OUT_OF_STOCK");
+        await orderItemDb.remove({ product_id: `${item?.product_id}` }, t);
       }
 
       await productDb.update(
@@ -270,8 +255,6 @@ const getVendorOrders = async (userData, page, limit, itemStatus) => {
 
     const result = await orderDb.findAll(
       {},
-      page,
-      limit,
       ["id", "customer_id", "status", "created_at"],
       [
         {
@@ -279,17 +262,7 @@ const getVendorOrders = async (userData, page, limit, itemStatus) => {
           as: "order_items",
           required: true,
           ...(itemStatus ? { where: { status: { [Op.eq]: itemStatus } } } : {}),
-          attributes: [
-            "id",
-            "product_id",
-            "status",
-            "quantity",
-            "price_at_purchase",
-            "placed_at",
-            "shipped_at",
-            "delivered_at",
-            "cancelled_at",
-          ],
+          attributes: { exclude: ["order_id"] },
           include: [
             {
               model: product,
@@ -305,6 +278,8 @@ const getVendorOrders = async (userData, page, limit, itemStatus) => {
           ],
         },
       ],
+      page,
+      limit,
       t,
     );
 
@@ -360,7 +335,7 @@ const updateOrderStatusById = async (id, data, userData, reqUrlMet) => {
     if (data?.status === "delivered" || data?.status === "cancelled") {
       const allOrderedItems = await orderItemDb.findAll(
         { order_id: `${orderItemData?.order_id}` },
-        [],
+        ["id", "status"],
         [],
         t,
       );
@@ -429,12 +404,14 @@ const cancelOrderItemById = async (item_id, userData, reqUrlMet) => {
       t,
     );
     if (!orderItemData) throw new Error("ORDER_ITEMS_NOT_FOUND");
+    if (orderItemData?.status === "delivered")
+      throw new Error("ORDER_ITEM_ALREADY_DELIVERED");
     if (orderItemData?.status === "cancelled")
       throw new Error("ORDER_ITEM_ALREADY_CANCELLED");
 
     const productData = await productDb.findOne(
       { id: { [Op.eq]: `${orderItemData?.product_id}` } },
-      {},
+      ["vendor_id", "stock", "status"],
       [],
       t,
     );
@@ -446,7 +423,7 @@ const cancelOrderItemById = async (item_id, userData, reqUrlMet) => {
           id: `${orderItemData?.order_id}`,
           customer_id: `${userData?.id}`,
         },
-        {},
+        ["id", "customer_id"],
         [],
         t,
       );
@@ -494,7 +471,7 @@ const cancelOrderItemById = async (item_id, userData, reqUrlMet) => {
 
       const allOrderedItems = await orderItemDb.findAll(
         { order_id: orderItemData?.order_id },
-        {},
+        ["id", "status", "quantity", "price_at_purchase"],
         [],
         t,
       );
