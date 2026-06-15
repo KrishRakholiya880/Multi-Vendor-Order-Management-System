@@ -6,37 +6,16 @@ const cartItemDb = require("../../dbUtils/cartItemDb");
 const { category, user, vendor_detail } = require("../../db/models");
 const { logger } = require("../../helper/logger");
 const redisClient = require("../../helper/redis");
+const calculateTotalAmount = require("../../helper/calculateTotalAmount");
 
-// generateRandomString
-const generateRandomString = () => {
-  const chars =
-    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-  // Randomly choose length 8 or 9
-  const length = Math.floor(Math.random() * 2) + 8;
+// generateSKU
+const generateSKU = (name, category_id, vendor_id) => {
+  const pNamePrefix = name.slice(0, 3).toUpperCase();
+  const categoryCode = `C${String(category_id).padStart(2, "0")}`;
+  const vendorCode = `V${String(vendor_id).padStart(3, "0")}`;
+  const random = Math.random().toString(36).slice(2, 8).toUpperCase();
 
-  let result = "";
-  for (let i = 0; i < length; i++) {
-    result += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return result;
-};
-
-// recalculateTotalAmount
-const recalculateTotalAmount = async (cart_id, t) => {
-  const allCartItems = await cartItemDb.findAll(
-    { cart_id: { [Op.eq]: cart_id } },
-    ["quantity", "unit_price"],
-    [],
-    t,
-  );
-
-  const rawTotal = allCartItems.reduce((acc, item) => {
-    const qty = parseInt(item.quantity);
-    const price = parseFloat(item.unit_price);
-    return acc + qty * price;
-  }, 0);
-
-  return parseFloat(rawTotal.toFixed(2));
+  return `${pNamePrefix}-${categoryCode}-${vendorCode}-${random}`;
 };
 
 // changesToCartAfterUpdateOrRemoveProduct
@@ -64,7 +43,7 @@ const changesToCartAfterUpdateOrRemoveProduct = async (productId) => {
         if (!remainingItems || remainingItems.length === 0) {
           await cartDb.remove({ id: item?.cart_id }, t);
         } else {
-          const newTotal = await recalculateTotalAmount(item?.cart_id, t);
+          const newTotal = await calculateTotalAmount("cart", item?.cart_id, t);
           await cartDb.update(
             { total_amount: newTotal },
             { id: { [Op.eq]: item?.cart_id } },
@@ -115,6 +94,7 @@ const getProducts = async (
       logger.info("Cache hit - Products fetched from cache", {
         url: reqUrlMet.url,
         method: reqUrlMet.method,
+        requestId: reqUrlMet.requestId,
         user_id: userData?.id,
         cache_key: cacheKey,
       });
@@ -125,6 +105,7 @@ const getProducts = async (
     logger.warn("Cache miss - Fetching products from DB", {
       url: reqUrlMet.url,
       method: reqUrlMet.method,
+      requestId: reqUrlMet.requestId,
       user_id: userData?.id,
       cache_key: cacheKey,
     });
@@ -186,8 +167,10 @@ const getProducts = async (
       limit,
       t,
     );
+
     if (!result || (Array.isArray(result) && result.length === 0)) {
-      throw new Error("PRODUCTS_NOT_FOUND");
+      await t.commit();
+      return [];
     }
 
     await redisClient.SET(cacheKey, result, 10 * 60);
@@ -195,6 +178,7 @@ const getProducts = async (
     logger.info("Products fetched successfully", {
       url: reqUrlMet.url,
       method: reqUrlMet.method,
+      requestId: reqUrlMet.requestId,
       total: result?.length,
       user_id: userData?.id,
     });
@@ -203,9 +187,10 @@ const getProducts = async (
     return result;
   } catch (error) {
     await t.rollback();
-    logger.error("Get products error", {
+    logger.error("Get products error:", {
       url: reqUrlMet.url,
       method: reqUrlMet.method,
+      requestId: reqUrlMet.requestId,
       user_id: userData?.id,
       error: error.message,
     });
@@ -219,13 +204,14 @@ const getProductById = async (userData, id, reqUrlMet) => {
   try {
     const versionKey = `products:version`;
     const version = await redisClient.GET_VERSION(versionKey);
-    const cacheKey = `products:${userData?.role || "guest"}:${version}:id:${id}`;
+    const cacheKey = `products:${userData?.role || "guest"}${userData?.role === "vendor" ? `:${userData?.id}` : ""}:${version}:id:${id}`;
 
     const cachedData = await redisClient.GET(cacheKey);
     if (cachedData) {
       logger.info("Cache hit - Products fetched from cache", {
         url: reqUrlMet.url,
         method: reqUrlMet.method,
+        requestId: reqUrlMet.requestId,
         user_id: userData?.id,
         cache_key: cacheKey,
       });
@@ -236,6 +222,7 @@ const getProductById = async (userData, id, reqUrlMet) => {
     logger.warn("Cache miss - Fetching products from DB", {
       url: reqUrlMet.url,
       method: reqUrlMet.method,
+      requestId: reqUrlMet.requestId,
       user_id: userData?.id,
       cache_key: cacheKey,
     });
@@ -279,10 +266,11 @@ const getProductById = async (userData, id, reqUrlMet) => {
     }
 
     if (
-      (userData?.role === "customer" && result?.status === "inactive") ||
-      result?.status === "out_of_stock"
-    )
+      (!userData || userData?.role === "customer") &&
+      (result?.status === "inactive" || result?.status === "out_of_stock")
+    ) {
       throw new Error("PRODUCT_UNAVAILABLE");
+    }
 
     await redisClient.SET(cacheKey, result, 5 * 60);
 
@@ -304,7 +292,8 @@ const createProduct = async (userData, data, reqUrlMet) => {
 
     const vendor_id =
       userData?.role === "vendor" ? userData?.id : data?.vendor_id;
-    const sku = data?.sku || generateRandomString();
+    const sku =
+      data?.sku || generateSKU(data?.name, data?.category_id, vendor_id);
 
     const isProductExists = await productDb.findOne(
       {
@@ -323,8 +312,9 @@ const createProduct = async (userData, data, reqUrlMet) => {
     logger.info("Product created successfully", {
       url: reqUrlMet.url,
       method: reqUrlMet.method,
+      requestId: reqUrlMet.requestId,
       product_id: result?.id,
-      vendor_id: vendor_id,
+      user_id: vendor_id,
       created_by: userData?.id,
     });
 
@@ -334,10 +324,11 @@ const createProduct = async (userData, data, reqUrlMet) => {
     return result;
   } catch (error) {
     await t.rollback();
-    logger.error("Create product error", {
+    logger.error("Create product error:", {
       url: reqUrlMet.url,
       method: reqUrlMet.method,
-      vendor_id: userData?.id,
+      requestId: reqUrlMet.requestId,
+      user_id: userData?.id,
       error: error.message,
     });
     throw error;
@@ -345,7 +336,7 @@ const createProduct = async (userData, data, reqUrlMet) => {
 };
 
 // updateProductById
-const updateProductById = async (data, id, reqUrlMet) => {
+const updateProductById = async (data, id, userData, reqUrlMet) => {
   const t = await sequelize.transaction();
   try {
     const query = { id: { [Op.eq]: `${id}` } };
@@ -363,6 +354,8 @@ const updateProductById = async (data, id, reqUrlMet) => {
     logger.info("Product updated successfully", {
       url: reqUrlMet.url,
       method: reqUrlMet.method,
+      requestId: reqUrlMet.requestId,
+      user_id: userData?.id,
       product_id: id,
     });
 
@@ -372,9 +365,11 @@ const updateProductById = async (data, id, reqUrlMet) => {
     return result;
   } catch (error) {
     await t.rollback();
-    logger.error("Update product error", {
+    logger.error("Update product error:", {
       url: reqUrlMet.url,
       method: reqUrlMet.method,
+      requestId: reqUrlMet.requestId,
+      user_id: userData?.id,
       product_id: id,
       error: error.message,
     });
@@ -383,7 +378,7 @@ const updateProductById = async (data, id, reqUrlMet) => {
 };
 
 // changeProductStatusById
-const changeProductStatusById = async (id, status, reqUrlMet) => {
+const changeProductStatusById = async (id, status, userData, reqUrlMet) => {
   const t = await sequelize.transaction();
   try {
     const query = { id: { [Op.eq]: `${id}` } };
@@ -409,7 +404,9 @@ const changeProductStatusById = async (id, status, reqUrlMet) => {
     logger.info("Product status changed successfully", {
       url: reqUrlMet.url,
       method: reqUrlMet.method,
+      requestId: reqUrlMet.requestId,
       product_id: id,
+      user_id: userData?.id,
       new_status: status,
     });
 
@@ -419,9 +416,11 @@ const changeProductStatusById = async (id, status, reqUrlMet) => {
     return result;
   } catch (error) {
     await t.rollback();
-    logger.error("Change product status error", {
+    logger.error("Change product status error:", {
       url: reqUrlMet.url,
       method: reqUrlMet.method,
+      requestId: reqUrlMet.requestId,
+      user_id: userData?.id,
       product_id: id,
       error: error.message,
     });
@@ -430,7 +429,7 @@ const changeProductStatusById = async (id, status, reqUrlMet) => {
 };
 
 // removeProductById
-const removeProductById = async (id, reqUrlMet) => {
+const removeProductById = async (id, userData, reqUrlMet) => {
   const t = await sequelize.transaction();
   try {
     const query = { id: { [Op.eq]: `${id}` } };
@@ -452,6 +451,8 @@ const removeProductById = async (id, reqUrlMet) => {
     logger.info("Product removed successfully", {
       url: reqUrlMet.url,
       method: reqUrlMet.method,
+      requestId: reqUrlMet.requestId,
+      user_id: userData?.id,
       product_id: id,
     });
 
@@ -461,9 +462,11 @@ const removeProductById = async (id, reqUrlMet) => {
     return result;
   } catch (error) {
     await t.rollback();
-    logger.error("Remove product error", {
+    logger.error("Remove product error:", {
       url: reqUrlMet.url,
       method: reqUrlMet.method,
+      requestId: reqUrlMet.requestId,
+      user_id: userData?.id,
       product_id: id,
       error: error.message,
     });

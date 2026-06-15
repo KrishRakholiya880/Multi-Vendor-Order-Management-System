@@ -9,26 +9,6 @@ const SET = async (key, value, seconds) => {
   return await redisClient.set(key, JSON.stringify(value), { EX: seconds });
 };
 
-// const DESTROY = async (prefix) => {
-//   let cursor = "0";
-//   const pattern = `${prefix}:*`;
-//   try {
-//     do {
-//       const reply = await redisClient.scan(cursor, {
-//         MATCH: pattern,
-//         COUNT: 100,
-//       });
-//       cursor = reply.cursor;
-//       if (reply.keys?.length > 0) {
-//         await redisClient.unlink(reply.keys);
-//       }
-//     } while (cursor !== "0");
-//   } catch (err) {
-//     console.error("Error during deleteFolder operation:", err);
-//     throw err;
-//   }
-// };
-
 const GET_VERSION = async (versionKey) => {
   const v = await redisClient.get(versionKey);
   if (!v) {
@@ -42,4 +22,23 @@ const INCREMENT_VERSION = async (versionKey) => {
   return await redisClient.incr(versionKey);
 };
 
-module.exports = { GET, SET, GET_VERSION, INCREMENT_VERSION };
+const INCR_WITH_EXPIRY = async (key, expiry) => {
+  const count = await redisClient.incr(key);
+  if (count === 1) {
+    await redisClient.expire(key, expiry);
+  }
+  return count;
+};
+
+const DELETE = async (key) => {
+  return await redisClient.del(key);
+};
+
+module.exports = {
+  GET,
+  SET,
+  GET_VERSION,
+  INCREMENT_VERSION,
+  INCR_WITH_EXPIRY,
+  DELETE,
+};

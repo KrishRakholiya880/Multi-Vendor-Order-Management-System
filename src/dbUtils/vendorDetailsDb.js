@@ -26,7 +26,7 @@ const findAll = async (
 
     return result.map((item) => item.toJSON()) || null;
   } catch (error) {
-    console.log(error?.message || error);
+    throw new Error(error?.message || error);
   }
 };
 
@@ -46,7 +46,7 @@ const findOne = async (
 
     return result.toJSON() || null;
   } catch (error) {
-    console.log(error?.message || error);
+    throw new Error(error?.message || error);
   }
 };
 
@@ -56,7 +56,7 @@ const create = async (data, transaction = null) => {
 
     return result.toJSON() || result;
   } catch (error) {
-    console.log(error?.message || error);
+    throw new Error(error?.message || error);
   }
 };
 
@@ -69,7 +69,7 @@ const update = async (data, query = {}, transaction = null) => {
 
     return result;
   } catch (error) {
-    console.log(error?.message || error);
+    throw new Error(error?.message || error);
   }
 };
 
@@ -82,7 +82,7 @@ const remove = async (query, transaction = null) => {
 
     return result;
   } catch (error) {
-    console.log(error?.message || error);
+    throw new Error(error?.message || error);
   }
 };
 

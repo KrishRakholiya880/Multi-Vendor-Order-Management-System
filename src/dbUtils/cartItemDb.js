@@ -14,9 +14,9 @@ const findAll = async (
       transaction,
     });
 
-    return result.map((item) => item.toJSON()) || null;
+    return result ? result.map((item) => item.toJSON()) : null;
   } catch (error) {
-    console.log(error?.message || error);
+    throw new Error(error?.message || error);
   }
 };
 
@@ -34,9 +34,9 @@ const findOne = async (
       transaction,
     });
 
-    return result.toJSON() || null;
+    return result ? result.toJSON() : null;
   } catch (error) {
-    console.log(error?.message || error);
+    throw new Error(error?.message || error);
   }
 };
 
@@ -44,9 +44,9 @@ const create = async (body, transaction = null) => {
   try {
     const result = await cart_item.create(body, { transaction });
 
-    return result.toJSON() || null;
+    return result ? result.toJSON() : null;
   } catch (error) {
-    console.log(error?.message || error);
+    throw new Error(error?.message || error);
   }
 };
 
@@ -59,7 +59,7 @@ const update = async (body, query, transaction = null) => {
 
     return result;
   } catch (error) {
-    console.log(error?.message || error);
+    throw new Error(error?.message || error);
   }
 };
 
@@ -72,7 +72,7 @@ const remove = async (query, transaction = null) => {
 
     return result;
   } catch (error) {
-    console.log(error?.message || error);
+    throw new Error(error?.message || error);
   }
 };
 

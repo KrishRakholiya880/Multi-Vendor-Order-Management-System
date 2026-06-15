@@ -6,23 +6,19 @@ const validate = require("../../middleware/validate");
 const vendorDetailsValidation = require("./vendorDetails.validation");
 const vendorDetailsController = require("./vendorDetails.controller");
 const {
-  isUserLoggedIn,
-  isVendor,
-  isVendorOrAdmin,
-  isAdmin,
+  authorizeRole,
+  authenticate,
 } = require("../../middleware/authorizationMiddleware");
 
 router
   .route("/")
   .get(
-    isUserLoggedIn,
-    isAdmin,
+    authorizeRole("admin"),
     validate(vendorDetailsValidation.getAllVendorDetails),
     vendorDetailsController.getAllVendorDetails,
   )
   .post(
-    isUserLoggedIn,
-    isVendorOrAdmin,
+    authorizeRole("vendor", "admin"),
     validate(vendorDetailsValidation.createVendorDetails),
     vendorDetailsController.createVendorDetails,
   );
@@ -30,20 +26,17 @@ router
 router
   .route("/:id")
   .get(
-    isUserLoggedIn,
-    isAdmin,
+    authorizeRole("admin"),
     validate(vendorDetailsValidation.getVendorDetailsById),
     vendorDetailsController.getVendorDetailsById,
   )
   .patch(
-    isUserLoggedIn,
-    isVendorOrAdmin,
+    authorizeRole("vendor", "admin"),
     validate(vendorDetailsValidation.updateVendorDetailsById),
     vendorDetailsController.updateVendorDetailsById,
   )
   .delete(
-    isUserLoggedIn,
-    isVendorOrAdmin,
+    authorizeRole("vendor", "admin"),
     validate(vendorDetailsValidation.removeVendorDetailsById),
     vendorDetailsController.removeVendorDetailsById,
   );

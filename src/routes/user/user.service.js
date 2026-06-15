@@ -14,7 +14,16 @@ const { logger } = require("../../helper/logger");
 const redisClient = require("../../helper/redis");
 
 // getUsers
-const getUsers = async (search, role, status, sortBy = "desc", page, limit) => {
+const getUsers = async (
+  search,
+  role,
+  status,
+  sortBy = "desc",
+  from_date,
+  to_date,
+  page,
+  limit,
+) => {
   const t = await sequelize.transaction();
   try {
     const query = {};
@@ -23,9 +32,33 @@ const getUsers = async (search, role, status, sortBy = "desc", page, limit) => {
     if (role) query.role = { [Op.like]: `${role}` };
     if (status) query.status = { [Op.like]: `${status}` };
 
-    const result = await userDb.findAll(query, sortBy, page, limit, t);
+    if (from_date && to_date) {
+      const startDate = new Date(from_date);
+      const endDate = new Date(to_date);
+      endDate.setHours(23, 59, 59, 999);
 
-    if (!result) throw new Error("USER_NOT_FOUND");
+      query.created_at = { [Op.between]: [startDate, endDate] };
+    } else if (from_date) {
+      query.created_at = { [Op.gte]: new Date(from_date) };
+    } else if (to_date) {
+      const endDate = new Date(to_date);
+      endDate.setHours(23, 59, 59, 999);
+      console.log(endDate);
+      query.created_at = { [Op.lte]: endDate };
+    }
+
+    const result = await userDb.findAll(
+      query,
+      { exclude: ["hash_password"] },
+      sortBy,
+      page,
+      limit,
+      t,
+    );
+
+    if (!result) throw new Error("USERS_NOT_FOUND");
+
+    delete result?.hash_password;
 
     await t.commit();
     return result;
@@ -88,7 +121,7 @@ const createUser = async (body, reqUrlMet) => {
     logger.info("User created successfully", {
       url: reqUrlMet.url,
       method: reqUrlMet.method,
-      user_id: result?.id,
+      requestId: reqUrlMet.requestId,
       role: result?.role,
     });
 
@@ -96,9 +129,10 @@ const createUser = async (body, reqUrlMet) => {
     return result;
   } catch (error) {
     await t.rollback();
-    logger.error("Create user error", {
+    logger.error("Create user error:", {
       url: reqUrlMet.url,
       method: reqUrlMet.method,
+      requestId: reqUrlMet.requestId,
       error: error.message,
     });
     throw error;
@@ -132,17 +166,17 @@ const updateUserById = async (data, id, reqUrlMet) => {
     logger.info("User updated successfully", {
       url: reqUrlMet.url,
       method: reqUrlMet.method,
-      user_id: id,
+      requestId: reqUrlMet.requestId,
     });
 
     await t.commit();
     return result;
   } catch (error) {
     await t.rollback();
-    logger.error("Update user error", {
+    logger.error("Update user error:", {
       url: reqUrlMet.url,
       method: reqUrlMet.method,
-      user_id: id,
+      requestId: reqUrlMet.requestId,
       error: error.message,
     });
     throw error;
@@ -203,17 +237,17 @@ const changeUserStatusById = async (id, status, reqUrlMet) => {
     logger.info("User status updated successfully", {
       url: reqUrlMet.url,
       method: reqUrlMet.method,
-      user_id: id,
+      requestId: reqUrlMet.requestId,
     });
 
     await t.commit();
     return result;
   } catch (error) {
     await t.rollback();
-    logger.error("Update user status error", {
+    logger.error("Update user status error:", {
       url: reqUrlMet.url,
       method: reqUrlMet.method,
-      user_id: id,
+      requestId: reqUrlMet.requestId,
       error: error.message,
     });
     throw error;
@@ -249,50 +283,78 @@ const removeUserById = async (id, reqUrlMet) => {
       const productIds = vendorProducts.map((p) => p.id);
 
       if (productIds.length > 0) {
-        // remove cartItems & orderItems if vendor's products are in cartItems/orderItems
+        const affectedCartData = await sequelize.query(
+          `SELECT DISTINCT cart_id FROM cart_items WHERE product_id IN (:productIds)`,
+          {
+            type: sequelize.QueryTypes.SELECT,
+            replacements: { productIds },
+            transaction: t,
+          },
+        );
+        const cartIds = affectedCartData.map((c) => c.cart_id);
+
+        const affectedOrderData = await sequelize.query(
+          `SELECT DISTINCT order_id FROM order_items WHERE product_id IN (:productIds)`,
+          {
+            type: sequelize.QueryTypes.SELECT,
+            replacements: { productIds },
+            transaction: t,
+          },
+        );
+        const orderIds = affectedOrderData.map((o) => o.order_id);
+
         await cartItemDb.remove({ product_id: { [Op.in]: productIds } }, t);
-        await orderItemDb.remove({ product_id: { [Op.in]: productIds } }, t);
-
-        // if any customer has this vendor's products in cart
-        await cartDb.remove(
+        await orderItemDb.remove(
           {
-            id: {
-              [Op.notIn]: sequelize.literal(
-                `(SELECT DISTINCT cart_id FROM cart_items)`,
-              ),
-            },
+            product_id: { [Op.in]: productIds },
+            status: { [Op.notIn]: ["shipped", "delivered"] },
           },
           t,
         );
-        await sequelize.query(
-          `UPDATE carts c SET total_amount = (
-            SELECT (SUM(unit_price * quantity)) FROM cart_items WHERE cart_id = c.id
-          ) WHERE c.id IN (SELECT DISTINCT cart_id FROM cart_items)
-          `,
-          { transaction: t },
-        );
 
-        // if any customer has this vendor's products in order
-        await orderDb.remove(
-          {
-            id: {
-              [Op.notIn]: sequelize.literal(
-                `(SELECT DISTINCT order_id FROM order_items)`,
-              ),
+        if (cartIds.length > 0) {
+          await cartDb.remove(
+            {
+              id: {
+                [Op.in]: cartIds,
+                [Op.notIn]: sequelize.literal(
+                  `(SELECT DISTINCT cart_id FROM cart_items)`,
+                ),
+              },
             },
-          },
-          t,
-        );
-        await sequelize.query(
-          `UPDATE orders o SET total_amount = (
-            SELECT (SUM(price_at_purchase * quantity)) FROM order_items WHERE order_id = o.id
-          ) WHERE o.id IN (SELECT DISTINCT order_id FROM order_items)
-          `,
-          { transaction: t },
-        );
+            t,
+          );
+          await sequelize.query(
+            `UPDATE carts c SET total_amount = (SELECT SUM(quantity * unit_price) FROM cart_items WHERE cart_id = c.id) WHERE c.id IN (SELECT DISTINCT cart_id FROM cart_items) AND c.id IN (:cartIds)`,
+            {
+              transaction: t,
+              replacements: { cartIds },
+            },
+          );
+        }
+
+        if (orderIds.length > 0) {
+          await orderDb.remove(
+            {
+              id: {
+                [Op.in]: orderIds,
+                [Op.notIn]: sequelize.literal(
+                  `(SELECT DISTINCT order_id FROM order_items)`,
+                ),
+              },
+            },
+            t,
+          );
+          await sequelize.query(
+            `UPDATE orders o SET total_amount = (SELECT SUM(quantity * price_at_purchase) FROM order_items WHERE order_id = o.id) WHERE o.id IN (SELECT DISTINCT order_id FROM order_items) AND o.id IN (:orderIds)`,
+            {
+              transaction: t,
+              replacements: { orderIds },
+            },
+          );
+        }
       }
 
-      // remove vendorDetails & products
       await vendorDetailsDb.remove({ user_id: `${id}` }, t);
       await productDb.remove({ vendor_id: `${id}` }, t);
 
@@ -331,17 +393,17 @@ const removeUserById = async (id, reqUrlMet) => {
     logger.info("User removed successfully", {
       url: reqUrlMet.url,
       method: reqUrlMet.method,
-      user_id: id,
+      requestId: reqUrlMet.requestId,
     });
 
     await t.commit();
     return result;
   } catch (error) {
     await t.rollback();
-    logger.error("Remove user error", {
+    logger.error("Remove user error:", {
       url: reqUrlMet.url,
       method: reqUrlMet.method,
-      user_id: id,
+      requestId: reqUrlMet.requestId,
       error: error.message,
     });
     throw error;

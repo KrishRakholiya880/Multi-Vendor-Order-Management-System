@@ -6,6 +6,7 @@ const { product, cart_item, user } = require("../../db/models");
 const { Op } = require("sequelize");
 const { logger } = require("../../helper/logger");
 const redisClient = require("../../helper/redis");
+const calculateTotalAmount = require("../../helper/calculateTotalAmount");
 
 const cartItemsInclude = (withVendor = false) => [
   {
@@ -38,23 +39,6 @@ const cartItemsInclude = (withVendor = false) => [
 
 const cartAttributes = ["id", "customer_id", "total_amount"];
 
-const recalculateTotalAmount = async (cart_id, t) => {
-  const allCartItems = await cartItemDb.findAll(
-    { cart_id: { [Op.eq]: cart_id } },
-    ["quantity", "unit_price"],
-    [],
-    t,
-  );
-
-  const rawTotal = allCartItems.reduce((acc, item) => {
-    const qty = parseInt(item.quantity);
-    const price = parseFloat(item.unit_price);
-    return acc + qty * price;
-  }, 0);
-
-  return parseFloat(rawTotal.toFixed(2));
-};
-
 // getCart
 const getCart = async (userData, page, limit) => {
   const t = await sequelize.transaction();
@@ -63,7 +47,7 @@ const getCart = async (userData, page, limit) => {
   try {
     const versionKey = `cart:version`;
     const version = await redisClient.GET_VERSION(versionKey);
-    let cacheKey = `cart:${userData?.role || "guest"}:${version}`;
+    let cacheKey = `cart:${userData?.role}${userData?.role !== "admin" ? `:${userData?.id}:` : ""}${version}`;
 
     if (page) cacheKey += `:page:${page}`;
     if (limit) cacheKey += `:limit:${limit}`;
@@ -84,7 +68,11 @@ const getCart = async (userData, page, limit) => {
         t,
       );
 
-      if (!result || result.length === 0) throw new Error("CART_NOT_FOUND");
+      if (!result || result.length === 0) {
+        await redisClient.SET(cacheKey, [], 2 * 60);
+        await t.commit();
+        return [];
+      }
     } else {
       const customerCartData = await cartDb.findOne(
         {
@@ -95,7 +83,10 @@ const getCart = async (userData, page, limit) => {
         t,
       );
 
-      if (!customerCartData) throw new Error("CART_NOT_FOUND");
+      if (!customerCartData) {
+        await t.commit();
+        return [];
+      }
 
       result = await cartDb.findOne(
         { id: { [Op.eq]: `${customerCartData?.id}` } },
@@ -104,7 +95,10 @@ const getCart = async (userData, page, limit) => {
         t,
       );
 
-      if (!result) throw new Error("CART_NOT_FOUND");
+      if (!result) {
+        await t.commit();
+        return [];
+      }
     }
 
     await redisClient.SET(cacheKey, result, 2 * 60);
@@ -167,6 +161,7 @@ const addToCart = async (data, userData, reqUrlMet) => {
       logger.info("Product added to cart successfully", {
         method: reqUrlMet.method,
         url: reqUrlMet.url,
+        requestId: reqUrlMet.requestId,
         user_id: userData?.id,
         product_id: data?.product_id,
         quantity: data?.quantity,
@@ -204,7 +199,12 @@ const addToCart = async (data, userData, reqUrlMet) => {
       );
     }
 
-    const newTotalAmount = await recalculateTotalAmount(existingCart?.id, t);
+    const newTotalAmount = await calculateTotalAmount(
+      "cart",
+      existingCart?.id,
+      t,
+    );
+
     await cartDb.update(
       { total_amount: newTotalAmount },
       { id: { [Op.eq]: `${existingCart?.id}` } },
@@ -214,6 +214,7 @@ const addToCart = async (data, userData, reqUrlMet) => {
     logger.info("Product added to cart successfully", {
       method: reqUrlMet.method,
       url: reqUrlMet.url,
+      requestId: reqUrlMet.requestId,
       user_id: userData?.id,
       product_id: data?.product_id,
       quantity: data?.quantity,
@@ -232,9 +233,10 @@ const addToCart = async (data, userData, reqUrlMet) => {
     return latestCartData;
   } catch (error) {
     await t.rollback();
-    logger.error("Add to cart error", {
+    logger.error("Add to cart error:", {
       method: reqUrlMet.method,
       url: reqUrlMet.url,
+      requestId: reqUrlMet.requestId,
       user_id: userData?.id,
       error: error.message,
     });
@@ -279,7 +281,8 @@ const updateProductQuantityById = async (
       t,
     );
 
-    const newTotalAmount = await recalculateTotalAmount(
+    const newTotalAmount = await calculateTotalAmount(
+      "cart",
       customerCartData?.id,
       t,
     );
@@ -294,6 +297,7 @@ const updateProductQuantityById = async (
     logger.info("Cart item quantity updated successfully", {
       method: reqUrlMet.method,
       url: reqUrlMet.url,
+      requestId: reqUrlMet.requestId,
       user_id: userData?.id,
       product_id,
       new_quantity: body?.quantity,
@@ -304,9 +308,10 @@ const updateProductQuantityById = async (
     return result;
   } catch (error) {
     await t.rollback();
-    logger.error("Update cart quantity error", {
+    logger.error("Update cart quantity error:", {
       method: reqUrlMet.method,
       url: reqUrlMet.url,
+      requestId: reqUrlMet.requestId,
       user_id: userData?.id,
       error: error.message,
     });
@@ -339,6 +344,7 @@ const clearCart = async (userData, reqUrlMet) => {
     logger.info("Cart cleared successfully", {
       method: reqUrlMet.method,
       url: reqUrlMet.url,
+      requestId: reqUrlMet.requestId,
       user_id: userData?.id,
     });
 
@@ -348,9 +354,10 @@ const clearCart = async (userData, reqUrlMet) => {
     return result;
   } catch (error) {
     await t.rollback();
-    logger.error("Clear cart error", {
+    logger.error("Clear cart error:", {
       method: reqUrlMet.method,
       url: reqUrlMet.url,
+      requestId: reqUrlMet.requestId,
       user_id: userData?.id,
       error: error.message,
     });
@@ -389,7 +396,8 @@ const removeCartProductById = async (product_id, userData, reqUrlMet) => {
       t,
     );
 
-    const newTotalAmount = await recalculateTotalAmount(
+    const newTotalAmount = await calculateTotalAmount(
+      "cart",
       existingCustomerCart?.id,
       t,
     );
@@ -402,6 +410,7 @@ const removeCartProductById = async (product_id, userData, reqUrlMet) => {
     logger.info("Product removed from cart successfully", {
       method: reqUrlMet.method,
       url: reqUrlMet.url,
+      requestId: reqUrlMet.requestId,
       user_id: userData?.id,
       product_id,
     });
@@ -412,9 +421,10 @@ const removeCartProductById = async (product_id, userData, reqUrlMet) => {
     return result;
   } catch (error) {
     await t.rollback();
-    logger.error("Remove cart product error", {
+    logger.error("Remove cart product error:", {
       method: reqUrlMet.method,
       url: reqUrlMet.url,
+      requestId: reqUrlMet.requestId,
       user_id: userData?.id,
       error: error.message,
     });

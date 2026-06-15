@@ -8,6 +8,7 @@ const { sequelize } = require("../../db/models");
 const { order_item, product } = require("../../db/models");
 const { logger } = require("../../helper/logger");
 const redisClient = require("../../helper/redis");
+const calculateTotalAmount = require("../../helper/calculateTotalAmount");
 
 const isValidStatusTransition = (oldStatus, newStatus) => {
   const statusRank = {
@@ -51,33 +52,13 @@ const orderAttributes = [
   "created_at",
 ];
 
-const recalculateOrderTotal = async (order_id, t) => {
-  const allOrderItems = await orderItemDb.findAll(
-    {
-      order_id: { [Op.eq]: order_id },
-      status: { [Op.ne]: "cancelled" },
-    },
-    ["quantity", "price_at_purchase"],
-    [],
-    t,
-  );
-
-  const rawTotal = allOrderItems.reduce((acc, item) => {
-    const qty = parseInt(item.quantity);
-    const price = parseFloat(item.price_at_purchase);
-    return acc + qty * price;
-  }, 0);
-
-  return parseFloat(rawTotal.toFixed(2));
-};
-
 // getOrder
 const getOrder = async (userData, page, limit, status, itemStatus) => {
   const t = await sequelize.transaction();
   try {
     const versionKey = `orders:version`;
     const version = await redisClient.GET_VERSION(versionKey);
-    let cacheKey = `orders:${userData?.role}:${version}`;
+    let cacheKey = `orders:${userData?.role}:${userData?.id}:${version}`;
 
     if (page) cacheKey += `:page:${page}`;
     if (limit) cacheKey += `:limit:${limit}`;
@@ -117,7 +98,8 @@ const getOrder = async (userData, page, limit, status, itemStatus) => {
     }
 
     if (!result || (Array.isArray(result) && result.length === 0)) {
-      throw new Error("ORDERS_NOT_FOUND");
+      await t.commit();
+      return [];
     }
 
     await redisClient.SET(cacheKey, result, 180);
@@ -134,7 +116,8 @@ const getOrder = async (userData, page, limit, status, itemStatus) => {
 const addToOrder = async (userData, reqUrlMet) => {
   const t = await sequelize.transaction();
   let result;
-  let productData;
+  let addableProductsToOrder = [];
+  let total_amount = 0;
 
   try {
     const cartData = await cartDb.findOne(
@@ -154,57 +137,43 @@ const addToOrder = async (userData, reqUrlMet) => {
     if (!cartItems || cartItems.length === 0)
       throw new Error("CART_ITEMS_NOT_FOUND");
 
-    result = await orderDb.create(
-      {
-        customer_id: userData?.id,
-        total_amount: cartData?.total_amount || 0,
-      },
-      t,
-    );
-
     for (const item of cartItems) {
-      productData = await productDb.findOne(
+      const productData = await productDb.findOne(
         { id: { [Op.eq]: `${item?.product_id}` } },
-        ["stock", "status"],
+        ["stock", "status", "price"],
         [],
         t,
       );
 
       if (!productData) throw new Error("PRODUCT_NOT_FOUND");
       if (productData?.stock < item?.quantity)
-        throw new Error("INSUFFICIENT_STOCK");
+        return {
+          status: false,
+          statusCode: 400,
+          message: `insufficient stock!!! Only ${productData?.stock} items left in stock, but you have ${item?.quantity} in your cart`,
+        };
 
-      const updatedStock = productData?.stock - item?.quantity;
+      total_amount += Number(productData?.price) * item?.quantity;
 
-      await orderItemDb.create(
-        {
-          order_id: result?.id,
-          product_id: item?.product_id,
-          quantity: item?.quantity,
-          price_at_purchase: parseFloat(item?.unit_price).toFixed(2),
-        },
-        t,
-      );
-
-      if (productData?.stock === 0 || productData?.status === "out_of_stock") {
-        await orderItemDb.remove({ product_id: `${item?.product_id}` }, t);
-      }
-
-      await productDb.update(
-        {
-          stock: updatedStock,
-          ...(updatedStock === 0 && { status: "out_of_stock" }),
-        },
-        { id: { [Op.eq]: `${item?.product_id}` } },
-        t,
-      );
+      addableProductsToOrder.push({
+        product_id: item?.product_id,
+        quantity: item?.quantity,
+        price_at_purchase: productData?.price,
+      });
     }
 
-    const newOrderTotal = await recalculateOrderTotal(result?.id, t);
-    await orderDb.update(
-      { total_amount: newOrderTotal },
-      { id: { [Op.eq]: result?.id } },
+    result = await orderDb.create(
+      {
+        customer_id: userData?.id,
+        total_amount: total_amount,
+      },
       t,
+    );
+
+    addableProductsToOrder.forEach((item) => (item.order_id = result?.id));
+
+    const addOrderItemsInBulk = await orderItemDb.bulkCreate(
+      addableProductsToOrder,
     );
 
     await cartItemDb.remove({ cart_id: { [Op.eq]: `${cartData?.id}` } }, t);
@@ -213,9 +182,10 @@ const addToOrder = async (userData, reqUrlMet) => {
     logger.info("Order placed successfully", {
       method: reqUrlMet.method,
       url: reqUrlMet.url,
+      requestId: reqUrlMet.requestId,
       user_id: userData?.id,
       order_id: result?.id,
-      total_amount: newOrderTotal,
+      total_amount,
     });
 
     await redisClient.INCREMENT_VERSION(`orders:version`);
@@ -225,9 +195,10 @@ const addToOrder = async (userData, reqUrlMet) => {
     return result;
   } catch (error) {
     await t.rollback();
-    logger.error("Place order error", {
+    logger.error("Place order error:", {
       method: reqUrlMet.method,
       url: reqUrlMet.url,
+      requestId: reqUrlMet.requestId,
       user_id: userData?.id,
       error: error.message,
     });
@@ -372,6 +343,7 @@ const updateOrderStatusById = async (id, data, userData, reqUrlMet) => {
     logger.info("Order item status updated successfully", {
       method: reqUrlMet.method,
       url: reqUrlMet.url,
+      requestId: reqUrlMet.requestId,
       user_id: userData?.id,
       order_item_id: id,
       new_status: data?.status,
@@ -383,9 +355,10 @@ const updateOrderStatusById = async (id, data, userData, reqUrlMet) => {
     return result;
   } catch (error) {
     await t.rollback();
-    logger.error("Update order status error", {
+    logger.error("Update order status error:", {
       method: reqUrlMet.method,
       url: reqUrlMet.url,
+      requestId: reqUrlMet.requestId,
       user_id: userData?.id,
       order_item_id: id,
       error: error.message,
@@ -459,7 +432,8 @@ const cancelOrderItemById = async (item_id, userData, reqUrlMet) => {
         );
       }
 
-      const totalAmountAfterCancelItem = await recalculateOrderTotal(
+      const totalAmountAfterCancelItem = await calculateTotalAmount(
+        "order",
         orderItemData?.order_id,
         t,
       );
@@ -516,6 +490,7 @@ const cancelOrderItemById = async (item_id, userData, reqUrlMet) => {
     logger.info("Order item cancelled successfully", {
       method: reqUrlMet.method,
       url: reqUrlMet.url,
+      requestId: reqUrlMet.requestId,
       user_id: userData?.id,
       order_item_id: item_id,
       cancelled_by: userData?.role,
@@ -528,9 +503,10 @@ const cancelOrderItemById = async (item_id, userData, reqUrlMet) => {
     return result;
   } catch (error) {
     await t.rollback();
-    logger.error("Cancel order error", {
+    logger.error("Cancel order error:", {
       method: reqUrlMet.method,
       url: reqUrlMet.url,
+      requestId: reqUrlMet.requestId,
       user_id: userData?.id,
       order_item_id: item_id,
       error: error.message,

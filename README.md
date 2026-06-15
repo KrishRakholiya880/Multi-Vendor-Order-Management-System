@@ -1,16 +1,27 @@
 # Multi-Vendor-Order-Management-System
 
-Node.js | Express | PostgreSQL | Redis — Backend API for a multi-vendor platform with role-based access, order lifecycle management, stock control, caching, and structured logging.
+Node.js | Express | MySQL | Redis — Backend API for a multi-vendor platform with role-based access, order lifecycle management, stock control, caching, and structured logging.
 
 # Setup steps & environment variables
 
 - Add in .env:
   - I add .env.example file for sample keys:
+    <!-- SERVER -->
     - PORT= (random number between 0 & 65536 / random 4 digit number(preffered))
     - NODE_ENV=development for development mode only
+    <!-- DB_CONFIG -->
+    - DB_NAME= database name
+    - DB_PASSWORD= database password
+    - DB_USERNAME= database username
+    - DB_HOST= database host url
+    <!-- EXPRESS_SESSION -->
+    - HTTPONLY= (true/false)
+    - SECURE= (true/false)
+    - MAX_AGE_ACCESS= (in milliseconds for short terms, for instace: 15 mins: 900000 = 15 \* 60 \* 1000)
+    - MAX_AGE_REFRESH= (in milliseconds for long terms, for instace: 15 mins: 604800000 = 7 \* 24 \* 60 \* 60 \* 1000)
+    <!-- TOKEN_KEYS -->
     - ACCESS_TOKEN_SECRET= (random string by yourself)
     - ACCESS_TOKEN_EXPIRY= (15m or etc. for short term)
-    - REFRESH_TOKEN_SECRET= (random string by yourself)
     - REFRESH_TOKEN_EXPIRY= (7d or etc. for long term)
 
 - Run commands in terminal:
@@ -35,7 +46,7 @@ Node.js | Express | PostgreSQL | Redis — Backend API for a multi-vendor platfo
 ### API Modules:
 
 - Auth — register, login, logout, refresh token
-- Users — CRUD with role based permissions
+- Users — CRUD
 - Vendor Details — company info management
 - Products — CRUD with vendor ownership check
 - Cart — add, update, remove items
@@ -139,7 +150,7 @@ Node.js | Express | PostgreSQL | Redis — Backend API for a multi-vendor platfo
 
 # Sample credentials
 
-- One password for all: test1@123
+- One password for all: Test1@123
 
 ## Admin:
 

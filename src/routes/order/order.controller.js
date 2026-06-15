@@ -23,14 +23,20 @@ const getOrder = async (req, res, next) => {
 // addToOrder
 const addToOrder = async (req, res, next) => {
   const userData = req.user;
-  const { url, method } = req;
+  const { url, method, requestId } = req;
 
   try {
-    const result = await orderService.addToOrder(userData, { url, method });
+    const result = await orderService.addToOrder(userData, {
+      url,
+      method,
+      requestId,
+    });
 
-    return res
-      .status(200)
-      .json({ status: true, message: "Order added!!!", result });
+    return res.status(result?.statusCode || 200).json({
+      status: result?.status ?? true,
+      message: result?.message ?? "Order added!!!",
+      result: result?.statusCode === 400 ? [] : result,
+    });
   } catch (error) {
     next(error);
   }
@@ -60,14 +66,14 @@ const updateOrderStatusById = async (req, res, next) => {
   const { id } = req.params;
   const data = req.body;
   const userData = req.user;
-  const { url, method } = req;
+  const { url, method, requestId } = req;
 
   try {
     const result = await orderService.updateOrderStatusById(
       id,
       data,
       userData,
-      { url, method },
+      { url, method, requestId },
     );
 
     return res.status(200).json({ status: true, message: "Status Changed!!!" });
@@ -80,12 +86,13 @@ const updateOrderStatusById = async (req, res, next) => {
 const cancelOrderItemById = async (req, res, next) => {
   const { id } = req.params;
   const userData = req.user;
-  const { url, method } = req;
+  const { url, method, requestId } = req;
 
   try {
     const result = await orderService.cancelOrderItemById(id, userData, {
       url,
       method,
+      requestId,
     });
 
     return res

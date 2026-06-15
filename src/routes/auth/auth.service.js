@@ -8,11 +8,14 @@ const userDb = require("../../dbUtils/userDb");
 const { hashPassword, comparePassword } = require("../../helper/bcrypt");
 const { generateAccessAndRefreshTokens } = require("../../helper/authHelper");
 const { tokenKeys } = require("../../config/index");
-const { logger, attemptTracker } = require("../../helper/logger");
+const { logger } = require("../../helper/logger");
+const redisClient = require("../../helper/redis");
 
 const getExpiryDate = () => {
   const date = new Date();
-  date.setDate(date.getDate() + Number(tokenKeys.REFRESH_TOKEN_EXPIRY));
+  const expiry = tokenKeys.REFRESH_TOKEN_EXPIRY;
+  const days = parseInt(expiry);
+  date.setDate(date.getDate() + days);
   return date.toISOString();
 };
 
@@ -21,11 +24,13 @@ const register = async (body, reqUrlMet) => {
   const t = await sequelize.transaction();
   try {
     const { email, password } = body;
+    const attemptKey = `register-attempts:${email}`;
 
     logger.info("Registration attempt", {
       email,
       url: reqUrlMet.url,
       method: reqUrlMet.method,
+      requestId: reqUrlMet.requestId,
     });
 
     const isExists = await authDb.findOne(
@@ -39,7 +44,10 @@ const register = async (body, reqUrlMet) => {
       t,
     );
 
-    if (isExists) throw new Error("USER_EXISTS");
+    if (isExists) {
+      await redisClient.INCR_WITH_EXPIRY(attemptKey, 15 * 60);
+      throw new Error("USER_EXISTS");
+    }
 
     const hashedPassword = await hashPassword(password);
     const data = await authDb.create(
@@ -56,7 +64,10 @@ const register = async (body, reqUrlMet) => {
       email: data?.email,
       url: reqUrlMet.url,
       method: reqUrlMet.method,
+      requestId: reqUrlMet.requestId,
     });
+
+    await redisClient.DELETE(attemptKey);
 
     const { accessToken, refreshToken } = generateAccessAndRefreshTokens({
       id: data.id,
@@ -75,16 +86,16 @@ const register = async (body, reqUrlMet) => {
     delete data.updated_at;
     delete data.hash_password;
 
-    await attemptTracker[email];
     await t.commit();
     return { data, accessToken, refreshToken };
   } catch (error) {
     await t.rollback();
-    logger.error("Registration error", {
+    logger.error("Registration error:", {
       email: body?.email,
       error: error.message,
       url: reqUrlMet.url,
       method: reqUrlMet.method,
+      requestId: reqUrlMet.requestId,
     });
     throw error;
   }
@@ -95,8 +106,7 @@ const login = async (body, reqUrlMet) => {
   const t = await sequelize.transaction();
   try {
     const { email, password } = body;
-
-    logger.info("Login attempt", { email, url: reqUrlMet.url });
+    const attemptKey = `login-attempts:${email}`;
 
     const existingUser = await authDb.findOne(
       { email: { [Op.eq]: `${email}` } },
@@ -112,6 +122,13 @@ const login = async (body, reqUrlMet) => {
       t,
     );
 
+    logger.info("Login attempt", {
+      ...(existingUser?.id && { user_id: existingUser?.id }),
+      url: reqUrlMet.url,
+      method: reqUrlMet.method,
+      requestId: reqUrlMet.requestId,
+    });
+
     if (!existingUser) throw new Error("USER_NOT_FOUND");
 
     if (existingUser?.status === "inactive")
@@ -122,15 +139,19 @@ const login = async (body, reqUrlMet) => {
       existingUser?.hash_password,
     );
 
-    if (!isSamePassword) throw new Error("INVALID_PASSWORD");
+    if (!isSamePassword) {
+      const attempts = await redisClient.INCR_WITH_EXPIRY(attemptKey, 15 * 60);
+      throw new Error("INVALID_PASSWORD");
+    }
 
     logger.info("Login successful", {
       user_id: existingUser?.id,
-      email,
       url: reqUrlMet.url,
       method: reqUrlMet.method,
+      requestId: reqUrlMet.requestId,
     });
-    delete attemptTracker[email];
+
+    await redisClient.DELETE(attemptKey);
 
     const { accessToken, refreshToken } = generateAccessAndRefreshTokens({
       id: existingUser.id,
@@ -163,11 +184,14 @@ const login = async (body, reqUrlMet) => {
     return { data: existingUser, accessToken, refreshToken };
   } catch (error) {
     await t.rollback();
-    logger.error("Login error", {
-      email: body?.email,
-      error: error.message,
+    const attemptKey = `login-attempts:${body?.email}`;
+    const attempts = await redisClient.GET(attemptKey);
+    logger.error("Login error:", {
+      error: error?.message,
+      attempts: attempts ? Number(attempts) : undefined,
       url: reqUrlMet.url,
       method: reqUrlMet.method,
+      requestId: reqUrlMet.requestId,
     });
     throw error;
   }
@@ -188,46 +212,53 @@ const logout = async (refreshToken, userData, reqUrlMet) => {
       user_id: userData?.id,
       url: reqUrlMet?.url,
       method: reqUrlMet?.method,
+      requestId: reqUrlMet.requestId,
     });
 
     await t.commit();
     return result;
   } catch (error) {
     await t.rollback();
-    logger.error("Logout error", {
+    logger.error("Logout error:", {
       user_id: userData?.id,
       error: error.message,
       url: reqUrlMet?.url,
       method: reqUrlMet?.method,
+      requestId: reqUrlMet.requestId,
     });
     throw error;
   }
 };
 
 // renewAccessToken
-const renewAccessToken = async (oldRefreshToken, reqUrlMet) => {
+const renewAccessToken = async (oldRefreshToken, userData, reqUrlMet) => {
   const t = await sequelize.transaction();
   try {
     if (!oldRefreshToken) throw new Error("REFRESH_TOKEN_REQUIRED");
+    const attemptKey = `refresh-attempts:${userData?.id}`;
 
     const result = await refreshTokenDb.findOne(
-      { token: { [Op.eq]: `${oldRefreshToken}` } },
+      { token: { [Op.eq]: `${oldRefreshToken}` }, user_id: `${userData?.id}` },
       t,
     );
 
-    if (!result) throw new Error("TOKEN_NOT_FOUND");
+    if (!result) {
+      await redisClient.INCR_WITH_EXPIRY(attemptKey, 15 * 60);
+      throw new Error("TOKEN_NOT_FOUND");
+    }
 
     if (new Date() > new Date(result?.expires_at)) {
       await refreshTokenDb.remove({ user_id: result.user_id });
-      throw new Error("INVALID_REFRESH_TOKEN");
+      return { removeAccessAndData: true };
     }
 
     const { accessToken, refreshToken } = generateAccessAndRefreshTokens({
       id: result?.user_id,
     });
 
-    await refreshTokenDb.create(
+    await refreshTokenDb.update(
       { token: refreshToken, expires_at: getExpiryDate() },
+      { token: `${oldRefreshToken}` },
       t,
     );
 
@@ -235,16 +266,21 @@ const renewAccessToken = async (oldRefreshToken, reqUrlMet) => {
       user_id: result?.user_id,
       url: reqUrlMet?.url,
       method: reqUrlMet?.method,
+      requestId: reqUrlMet.requestId,
     });
+
+    await redisClient.DELETE(attemptKey);
 
     await t.commit();
     return { accessToken, refreshToken };
   } catch (error) {
     await t.rollback();
-    logger.error("Refresh token error", {
+    logger.error("Refresh token error:", {
+      user_id: userData?.id,
       error: error.message,
       url: reqUrlMet?.url,
       method: reqUrlMet?.method,
+      requestId: reqUrlMet.requestId,
     });
     throw error;
   }
@@ -259,6 +295,7 @@ const profile = async (userData, reqUrlMet) => {
       user_id: userData?.id,
       url: reqUrlMet.url,
       method: reqUrlMet.method,
+      requestId: reqUrlMet.requestId,
     });
 
     if (!userData) throw new Error("USER_DATA_NOT_FOUND");
@@ -268,6 +305,7 @@ const profile = async (userData, reqUrlMet) => {
         user_id: userData?.id,
         url: reqUrlMet.url,
         method: reqUrlMet.method,
+        requestId: reqUrlMet.requestId,
       });
       await t.commit();
       return userData;
@@ -300,17 +338,19 @@ const profile = async (userData, reqUrlMet) => {
       user_id: userData?.id,
       url: reqUrlMet.url,
       method: reqUrlMet.method,
+      requestId: reqUrlMet.requestId,
     });
 
     await t.commit();
     return result;
   } catch (error) {
     await t.rollback();
-    logger.error("Profile fetch error", {
+    logger.error("Profile fetch error:", {
       user_id: userData?.id,
       error: error.message,
       url: reqUrlMet.url,
       method: reqUrlMet.method,
+      requestId: reqUrlMet.requestId,
     });
     throw error;
   }
@@ -325,6 +365,7 @@ const changePassword = async (userData, data, reqUrlMet) => {
       user_id: userData?.id,
       url: reqUrlMet.url,
       method: reqUrlMet.method,
+      requestId: reqUrlMet.requestId,
     });
 
     const existingUser = await authDb.findOne(
@@ -333,9 +374,7 @@ const changePassword = async (userData, data, reqUrlMet) => {
       t,
     );
 
-    if (!existingUser) {
-      throw new Error("USER_NOT_FOUND");
-    }
+    if (!existingUser) throw new Error("USER_NOT_FOUND");
 
     const isSamePassword = await comparePassword(
       data.old_password,
@@ -356,16 +395,18 @@ const changePassword = async (userData, data, reqUrlMet) => {
       user_id: userData?.id,
       url: reqUrlMet.url,
       method: reqUrlMet.method,
+      requestId: reqUrlMet.requestId,
     });
 
     await t.commit();
     return result;
   } catch (error) {
     await t.rollback();
-    logger.error("Change password error", {
+    logger.error("Change password error:", {
       user_id: userData?.id,
       url: reqUrlMet.url,
       method: reqUrlMet.method,
+      requestId: reqUrlMet.requestId,
       error: error.message,
     });
     throw error;

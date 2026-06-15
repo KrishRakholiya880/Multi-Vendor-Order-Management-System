@@ -137,8 +137,9 @@ const createVendorDetails = async (data, userData, reqUrlMet) => {
     logger.info("Vendor details created successfully", {
       url: reqUrlMet.url,
       method: reqUrlMet.method,
-      user_id: newData?.user_id,
-      created_by: userData?.id,
+      requestId: reqUrlMet.requestId,
+      user_id: userData?.id,
+      created: newData?.user_id,
     });
 
     await redisClient.INCREMENT_VERSION(`vendorDetails:version`);
@@ -147,9 +148,10 @@ const createVendorDetails = async (data, userData, reqUrlMet) => {
     return result;
   } catch (error) {
     await t.rollback();
-    logger.error("Create vendor details error", {
+    logger.error("Create vendor details error:", {
       url: reqUrlMet.url,
       method: reqUrlMet.method,
+      requestId: reqUrlMet.requestId,
       user_id: userData?.id,
       error: error.message,
     });
@@ -170,7 +172,7 @@ const updateVendorDetailsById = async (data, id, userData, reqUrlMet) => {
       [],
       t,
     );
-    if (isVendorDetailsExists) throw new Error("VENDOR_DETAILS_NOT_FOUND");
+    if (!isVendorDetailsExists) throw new Error("VENDOR_DETAILS_NOT_FOUND");
 
     if (
       userData?.role === "vendor" &&
@@ -190,8 +192,9 @@ const updateVendorDetailsById = async (data, id, userData, reqUrlMet) => {
     logger.info("Vendor details updated successfully", {
       url: reqUrlMet.url,
       method: reqUrlMet.method,
-      user_id: isVendorDetailsExists?.user_id,
-      created_by: userData?.id,
+      requestId: reqUrlMet.requestId,
+      user_id: userData?.id,
+      created: isVendorDetailsExists?.user_id,
     });
 
     await redisClient.INCREMENT_VERSION(`vendorDetails:version`);
@@ -200,9 +203,10 @@ const updateVendorDetailsById = async (data, id, userData, reqUrlMet) => {
     return result;
   } catch (error) {
     await t.rollback();
-    logger.error("Update vendor details error", {
+    logger.error("Update vendor details error:", {
       url: reqUrlMet.url,
       method: reqUrlMet.method,
+      requestId: reqUrlMet.requestId,
       user_id: userData?.id,
       error: error.message,
     });
@@ -239,8 +243,9 @@ const removeVendorDetailsById = async (id, userData, reqUrlMet) => {
     logger.info("Vendor details removed successfully", {
       url: reqUrlMet.url,
       method: reqUrlMet.method,
-      user_id: isVendorDetailsExists?.user_id,
-      created_by: userData?.id,
+      requestId: reqUrlMet.requestId,
+      user_id: userData?.id,
+      created: isVendorDetailsExists?.user_id,
     });
 
     await redisClient.INCREMENT_VERSION(`vendorDetails:version`);
@@ -249,9 +254,10 @@ const removeVendorDetailsById = async (id, userData, reqUrlMet) => {
     return result;
   } catch (error) {
     await t.rollback();
-    logger.error("Remove vendor details error", {
+    logger.error("Remove vendor details error:", {
       url: reqUrlMet.url,
       method: reqUrlMet.method,
+      requestId: reqUrlMet.requestId,
       user_id: userData?.id,
       error: error.message,
     });

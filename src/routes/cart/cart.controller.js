@@ -22,10 +22,14 @@ const getCart = async (req, res, next) => {
 const addToCart = async (req, res, next) => {
   const userData = req.user;
   const body = req.body;
-  const { url, method } = req;
+  const { url, method, requestId } = req;
 
   try {
-    const result = await cartService.addToCart(body, userData, { url, method });
+    const result = await cartService.addToCart(body, userData, {
+      url,
+      method,
+      requestId,
+    });
 
     return res.status(201).json({
       status: true,
@@ -42,14 +46,14 @@ const updateProductQuantityById = async (req, res, next) => {
   const { product_id } = req.params;
   const body = req.body;
   const userData = req.user;
-  const { url, method } = req;
+  const { url, method, requestId } = req;
 
   try {
     const result = await cartService.updateProductQuantityById(
       product_id,
       body,
       userData,
-      { url, method },
+      { url, method, requestId },
     );
 
     return res.status(200).json({
@@ -65,10 +69,14 @@ const updateProductQuantityById = async (req, res, next) => {
 // clearCart
 const clearCart = async (req, res, next) => {
   const userData = req.user;
-  const { url, method } = req;
+  const { url, method, requestId } = req;
 
   try {
-    const result = await cartService.clearCart(userData, { url, method });
+    const result = await cartService.clearCart(userData, {
+      url,
+      method,
+      requestId,
+    });
 
     return res
       .status(200)
@@ -81,13 +89,13 @@ const clearCart = async (req, res, next) => {
 const removeCartProductById = async (req, res, next) => {
   const { product_id } = req.params;
   const userData = req.user;
-  const { url, method } = req;
+  const { url, method, requestId } = req;
 
   try {
     const result = await cartService.removeCartProductById(
       product_id,
       userData,
-      { url, method },
+      { url, method, requestId },
     );
 
     return res

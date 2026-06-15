@@ -6,9 +6,8 @@ const validate = require("../../middleware/validate");
 const orderValidation = require("./order.validation");
 const orderController = require("./order.controller");
 const {
-  isUserLoggedIn,
-  isVendorOrAdmin,
-  isAdminOrCustomer,
+  authorizeRole,
+  authenticate,
 } = require("../../middleware/authorizationMiddleware");
 const { orderLimiter } = require("../../middleware/rateLimiter");
 
@@ -16,23 +15,20 @@ router
   .route("/")
   .get(
     orderLimiter,
-    isUserLoggedIn,
-    isAdminOrCustomer,
+    authorizeRole("customer", "admin"),
     validate(orderValidation.getOrder),
     orderController.getOrder,
   )
   .post(
     orderLimiter,
-    isUserLoggedIn,
-    isAdminOrCustomer,
+    authorizeRole("customer", "admin"),
     orderController.addToOrder,
   );
 
 router
   .route("/vendor-orders")
   .get(
-    isUserLoggedIn,
-    isVendorOrAdmin,
+    authorizeRole("vendor", "admin"),
     validate(orderValidation.getVendorOrder),
     orderController.getVendorOrders,
   );
@@ -41,8 +37,7 @@ router
   .route("/vendor-orders/:id")
   .patch(
     orderLimiter,
-    isUserLoggedIn,
-    isVendorOrAdmin,
+    authorizeRole("vendor", "admin"),
     validate(orderValidation.updateOrderStatusById),
     orderController.updateOrderStatusById,
   );
@@ -50,7 +45,7 @@ router
 router
   .route("/:id")
   .delete(
-    isUserLoggedIn,
+    authenticate,
     validate(orderValidation.cancelOrderItemById),
     orderController.cancelOrderItemById,
   );

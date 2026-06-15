@@ -6,19 +6,15 @@ const validate = require("../../middleware/validate");
 const categoryValidation = require("./category.validation");
 const categoryController = require("./category.controller");
 const {
-  isVendorOrAdmin,
-  isUserLoggedIn,
-  checkVendorProductOrNot,
-  isAdmin,
   optionalAuth,
+  authorizeRole,
 } = require("../../middleware/authorizationMiddleware");
 
 router
   .route("/")
   .get(optionalAuth, categoryController.getCategories)
   .post(
-    isUserLoggedIn,
-    isAdmin,
+    authorizeRole("admin"),
     validate(categoryValidation.createCategory),
     categoryController.createCategory,
   );
@@ -31,14 +27,12 @@ router
     categoryController.getCategoryById,
   )
   .patch(
-    isUserLoggedIn,
-    isAdmin,
+    authorizeRole("admin"),
     validate(categoryValidation.updateCategoryById),
     categoryController.updateCategoryById,
   )
   .delete(
-    isUserLoggedIn,
-    isAdmin,
+    authorizeRole("admin"),
     validate(categoryValidation.removeCategoryById),
     categoryController.removeCategoryById,
   );

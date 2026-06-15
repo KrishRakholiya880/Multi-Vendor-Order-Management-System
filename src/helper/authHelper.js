@@ -15,16 +15,16 @@ const generateAccessAndRefreshTokens = (data) => {
 
     return { accessToken, refreshToken };
   } catch (error) {
-    console.log(error?.message || error);
+    throw new Error(error?.message || error);
   }
 };
 
 const decodeToken = (token) => {
   try {
-    const decodedData = jwt.decode(token, ACCESS_TOKEN_SECRET);
+    const decodedData = jwt.verify(token, ACCESS_TOKEN_SECRET);
     return decodedData;
   } catch (error) {
-    console.log(error?.message || error);
+    throw new Error(error?.message || error);
   }
 };
 

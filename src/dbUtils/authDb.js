@@ -10,7 +10,7 @@ const findOne = async (query = {}, attributes = {}, transaction = null) => {
     });
     return result.toJSON() || null;
   } catch (error) {
-    console.log(error.message || error);
+    throw new Error(error?.message || error);
   }
 };
 
@@ -20,7 +20,7 @@ const create = async (data, transaction = null) => {
     const result = await user.create(data, { transaction });
     return result.toJSON() || null;
   } catch (error) {
-    console.log(error.message || error);
+    throw new Error(error?.message || error);
   }
 };
 
@@ -33,7 +33,7 @@ const update = async (data, query, transaction = null) => {
     });
     return result;
   } catch (error) {
-    console.log(error.message || error);
+    throw new Error(error?.message || error);
   }
 };
 

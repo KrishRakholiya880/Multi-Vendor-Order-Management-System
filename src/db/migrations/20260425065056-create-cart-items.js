@@ -20,7 +20,7 @@ module.exports = {
       quantity: {
         type: DataTypes.INTEGER,
         allowNull: false,
-        defaultValue: 1,
+        defaultValue: 0,
       },
       unit_price: {
         type: DataTypes.DECIMAL(10, 2),
@@ -37,12 +37,6 @@ module.exports = {
         type: DataTypes.DATE,
         defaultValue: DataTypes.NOW,
       },
-    });
-
-    await queryInterface.addConstraint("cart_items", {
-      fields: ["cart_id", "product_id"],
-      type: "unique",
-      name: "unique_cart_product",
     });
   },
   async down(queryInterface, DataTypes) {

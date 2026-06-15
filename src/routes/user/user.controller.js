@@ -2,13 +2,16 @@ const userService = require("./user.service");
 
 // getUsers
 const getUsers = async (req, res, next) => {
-  const { search, role, status, sortBy, page, limit } = req.query;
+  const { search, role, status, sortBy, from_date, to_date, page, limit } =
+    req.query;
   try {
     const result = await userService.getUsers(
       search,
       role,
       status,
       sortBy,
+      from_date,
+      to_date,
       Number(page) || 1,
       Number(limit) || 30,
     );
@@ -34,10 +37,14 @@ const getUserById = async (req, res, next) => {
 // createUser
 const createUser = async (req, res, next) => {
   const body = req.body;
-  const { url, method } = req;
+  const { url, method, requestId } = req;
 
   try {
-    const result = await userService.createUser(body, { url, method });
+    const result = await userService.createUser(body, {
+      url,
+      method,
+      requestId,
+    });
 
     return res
       .status(201)
@@ -51,7 +58,7 @@ const createUser = async (req, res, next) => {
 const updateUserById = async (req, res, next) => {
   const { id } = req.params;
   const body = req.body;
-  const { url, method } = req;
+  const { url, method, requestId } = req;
 
   let updateData = {};
 
@@ -77,12 +84,13 @@ const updateUserById = async (req, res, next) => {
 const changeUserStatusById = async (req, res, next) => {
   const { id } = req.params;
   const { status } = req.body;
-  const { url, method } = req;
+  const { url, method, requestId } = req;
 
   try {
     const result = await userService.changeUserStatusById(id, status, {
       url,
       method,
+      requestId,
     });
 
     return res
@@ -96,10 +104,14 @@ const changeUserStatusById = async (req, res, next) => {
 // removeUserById
 const removeUserById = async (req, res, next) => {
   const { id } = req.params;
-  const { url, method } = req;
+  const { url, method, requestId } = req;
 
   try {
-    const result = await userService.removeUserById(id, { url, method });
+    const result = await userService.removeUserById(id, {
+      url,
+      method,
+      requestId,
+    });
 
     return res.status(200).json({ status: true, message: "User removed!!!" });
   } catch (error) {

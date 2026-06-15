@@ -17,17 +17,25 @@ const findOne = async (
 
     return result.toJSON();
   } catch (error) {
-    console.log(error?.message || error);
+    throw new Error(error?.message || error);
   }
 };
 
 // findAll
-const findAll = async (query = {}, sortBy, page, limit, transaction = null) => {
+const findAll = async (
+  query = {},
+  attributes = {},
+  sortBy,
+  page,
+  limit,
+  transaction = null,
+) => {
   const offset = (page - 1) * limit;
   const order = sortBy === "asc" ? "ASC" : "DESC";
   try {
     const result = await user.findAll({
       where: query,
+      attributes,
       limit,
       offset,
       order: [["created_at", order]],
@@ -36,7 +44,7 @@ const findAll = async (query = {}, sortBy, page, limit, transaction = null) => {
 
     return result;
   } catch (error) {
-    console.log(error?.message || error);
+    throw new Error(error?.message || error);
   }
 };
 
@@ -47,7 +55,7 @@ const create = async (data, transaction = null) => {
 
     return result.toJSON();
   } catch (error) {
-    console.log(error?.message || error);
+    throw new Error(error?.message || error);
   }
 };
 
@@ -61,7 +69,7 @@ const update = async (data, query, transaction = null) => {
 
     return result;
   } catch (error) {
-    console.log(error?.message || error);
+    throw new Error(error?.message || error);
   }
 };
 
@@ -74,7 +82,7 @@ const remove = async (query, transaction = null) => {
 
     return result;
   } catch (error) {
-    console.log(error?.message || error);
+    throw new Error(error?.message || error);
   }
 };
 

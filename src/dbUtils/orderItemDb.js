@@ -10,7 +10,7 @@ const findOne = async (query, attributes = {}, transaction = null) => {
 
     return result.toJSON() || null;
   } catch (error) {
-    console.log(error.message || error);
+    throw new Error(error?.message || error);
   }
 };
 
@@ -29,7 +29,7 @@ const findAll = async (
     });
     return result.map((item) => item.toJSON()) || null;
   } catch (error) {
-    console.log(error.message || error);
+    throw new Error(error?.message || error);
   }
 };
 
@@ -39,7 +39,19 @@ const create = async (data, transaction = null) => {
 
     return result.map((item) => item.toJSON()) || result.toJSON();
   } catch (error) {
-    console.log(error.message || error);
+    throw new Error(error?.message || error);
+  }
+};
+
+const bulkCreate = async (data, transaction = null) => {
+  try {
+    const result = await order_item.bulkCreate(data, { transaction });
+
+    return result
+      ? result.map((item) => item.toJSON())
+      : result.toJSON() || null;
+  } catch (error) {
+    throw new Error(error?.message || error);
   }
 };
 
@@ -52,7 +64,7 @@ const update = async (data, query, transaction = null) => {
 
     return result;
   } catch (error) {
-    console.log(error.message || error);
+    throw new Error(error?.message || error);
   }
 };
 
@@ -65,7 +77,7 @@ const remove = async (query, transaction = null) => {
 
     return result;
   } catch (error) {
-    console.log(error.message || error);
+    throw new Error(error?.message || error);
   }
 };
 
@@ -73,6 +85,7 @@ module.exports = {
   findOne,
   findAll,
   create,
+  bulkCreate,
   update,
   remove,
 };

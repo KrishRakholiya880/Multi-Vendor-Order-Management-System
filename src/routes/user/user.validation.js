@@ -6,9 +6,24 @@ const getUsers = {
     role: Joi.string().trim().optional(),
     status: Joi.string().trim().valid("active", "inactive").optional(),
     sortBy: Joi.string().trim().optional(),
+    from_date: Joi.date().iso().optional(),
+    to_date: Joi.date().iso().optional(),
     page: Joi.number().integer().optional(),
     limit: Joi.number().integer().optional(),
-  }).optional(),
+  })
+    .optional()
+    .custom((value, helpers) => {
+      if (
+        value.from_date &&
+        value.to_date &&
+        new Date(value.to_date) < new Date(value.from_date)
+      ) {
+        return helpers.error("any.invalid", {
+          message: "to_date must be after from_date",
+        });
+      }
+      return value;
+    }),
 };
 
 const getUserById = {

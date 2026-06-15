@@ -8,7 +8,7 @@ const findOne = async (query = {}, transaction = null) => {
     });
     return result.toJSON() || null;
   } catch (error) {
-    console.log(error?.message || error);
+    throw new Error(error?.message || error);
   }
 };
 
@@ -16,22 +16,30 @@ const create = async (data, transaction = null) => {
   try {
     await refresh_token.create(data, { transaction });
   } catch (error) {
-    console.log(error?.message || error);
+    throw new Error(error?.message || error);
   }
 };
 
 const update = async (data, query = {}, transaction = null) => {
-  await refresh_token.update(data, {
-    where: query,
-    transaction,
-  });
+  try {
+    await refresh_token.update(data, {
+      where: query,
+      transaction,
+    });
+  } catch (error) {
+    throw new Error(error?.message || error);
+  }
 };
 
 const remove = async (query = {}, transaction = null) => {
-  await refresh_token.destroy({
-    where: query,
-    transaction,
-  });
+  try {
+    await refresh_token.destroy({
+      where: query,
+      transaction,
+    });
+  } catch (error) {
+    throw new Error(error?.message || error);
+  }
 };
 
 module.exports = {

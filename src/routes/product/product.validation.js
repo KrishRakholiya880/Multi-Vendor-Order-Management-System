@@ -26,7 +26,7 @@ const createProduct = {
       .default("active"),
     vendor_id: Joi.number().precision(2).positive().optional(),
     price: Joi.number().precision(2).positive().required(),
-    stock: Joi.number().integer().min(1).positive().default(1),
+    stock: Joi.number().integer().min(0).max(500).positive().default(1),
   }),
 };
 
@@ -49,7 +49,7 @@ const updateProductById = {
       .valid("active", "inactive", "out_of_stock")
       .default("active"),
     price: Joi.number().precision(2).positive().optional(),
-    stock: Joi.number().integer().min(1).positive().default(1),
+    stock: Joi.number().integer().min(0).max(500).positive().default(1),
   }),
 };
 

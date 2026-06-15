@@ -2,13 +2,14 @@ const categoryService = require("./category.service");
 
 // getCategories
 const getCategories = async (req, res, next) => {
-  const { url, method } = req;
+  const { url, method, requestId } = req;
   const userData = req.user;
 
   try {
     const result = await categoryService.getCategories(userData, {
       url,
       method,
+      requestId,
     });
 
     return res.status(200).json({ status: true, result });
@@ -34,10 +35,15 @@ const getCategoryById = async (req, res, next) => {
 // createCategory
 const createCategory = async (req, res, next) => {
   const body = req.body;
-  const { url, method } = req;
+  const { url, method, requestId } = req;
+  const userData = req.user;
 
   try {
-    const result = await categoryService.createCategory(body, { url, method });
+    const result = await categoryService.createCategory(body, userData, {
+      url,
+      method,
+      requestId,
+    });
 
     return res
       .status(201)
@@ -51,13 +57,20 @@ const createCategory = async (req, res, next) => {
 const updateCategoryById = async (req, res, next) => {
   const { id } = req.params;
   const body = req.body;
-  const { url, method } = req;
+  const userData = req.user;
+  const { url, method, requestId } = req;
 
   try {
-    const result = await categoryService.updateCategoryById(body, id, {
-      url,
-      method,
-    });
+    const result = await categoryService.updateCategoryById(
+      body,
+      id,
+      userData,
+      {
+        url,
+        method,
+        requestId,
+      },
+    );
 
     return res
       .status(200)
@@ -70,12 +83,14 @@ const updateCategoryById = async (req, res, next) => {
 // removeCategoryById
 const removeCategoryById = async (req, res, next) => {
   const { id } = req.params;
-  const { url, method } = req;
+  const userData = req.user;
+  const { url, method, requestId } = req;
 
   try {
-    const result = await categoryService.removeCategoryById(id, {
+    const result = await categoryService.removeCategoryById(id, userData, {
       url,
       method,
+      requestId,
     });
 
     return res

@@ -5,7 +5,7 @@ const router = express.Router();
 const validate = require("../../middleware/validate");
 const authValidation = require("./auth.validation");
 const authController = require("./auth.controller");
-const { isUserLoggedIn } = require("../../middleware/authorizationMiddleware");
+const { authenticate } = require("../../middleware/authorizationMiddleware");
 const { authLimiter } = require("../../middleware/rateLimiter");
 
 router
@@ -22,17 +22,17 @@ router
 
 router.route("/logout").post(authLimiter, authController.logout);
 
-router.route("/refresh").post(authLimiter, authController.renewAccessToken);
-
 router
-  .route("/profile")
-  .get(authLimiter, isUserLoggedIn, authController.profile);
+  .route("/refresh")
+  .post(authLimiter, authenticate, authController.renewAccessToken);
+
+router.route("/profile").get(authLimiter, authenticate, authController.profile);
 
 router
   .route("/changePassword")
   .patch(
     authLimiter,
-    isUserLoggedIn,
+    authenticate,
     validate(authValidation.changePassword),
     authController.changePassword,
   );

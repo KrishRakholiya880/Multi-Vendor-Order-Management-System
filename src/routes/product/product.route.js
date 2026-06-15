@@ -6,10 +6,10 @@ const validate = require("../../middleware/validate");
 const productValidation = require("./product.validation");
 const productController = require("./product.controller");
 const {
-  isVendorOrAdmin,
-  isUserLoggedIn,
   checkVendorProductOrNot,
   optionalAuth,
+  authenticate,
+  authorizeRole,
 } = require("../../middleware/authorizationMiddleware");
 const { productLimiter } = require("../../middleware/rateLimiter");
 
@@ -23,8 +23,7 @@ router
   )
   .post(
     productLimiter,
-    isUserLoggedIn,
-    isVendorOrAdmin,
+    authorizeRole("vendor", "admin"),
     validate(productValidation.createProduct),
     productController.createProduct,
   );
@@ -33,22 +32,20 @@ router
   .route("/:id")
   .get(
     productLimiter,
-    isUserLoggedIn,
+    authenticate,
     validate(productValidation.getProductById),
     productController.getProductById,
   )
   .patch(
     productLimiter,
-    isUserLoggedIn,
-    isVendorOrAdmin,
+    authorizeRole("vendor", "admin"),
     checkVendorProductOrNot,
     validate(productValidation.updateProductById),
     productController.updateProductById,
   )
   .delete(
     productLimiter,
-    isUserLoggedIn,
-    isVendorOrAdmin,
+    authorizeRole("vendor", "admin"),
     checkVendorProductOrNot,
     validate(productValidation.removeProductById),
     productController.removeProductById,
@@ -58,8 +55,7 @@ router
   .route("/changeStatus/:id")
   .patch(
     productLimiter,
-    isUserLoggedIn,
-    isVendorOrAdmin,
+    authorizeRole("vendor", "admin"),
     checkVendorProductOrNot,
     validate(productValidation.changeProductStatusById),
     productController.changeProductStatusById,

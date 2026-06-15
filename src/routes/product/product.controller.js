@@ -5,7 +5,7 @@ const getProducts = async (req, res, next) => {
   const { status, search, sortBy, priceSort, categoryId, page, limit } =
     req.query;
   const userdata = req.user;
-  const { url, method } = req;
+  const { url, method, requestId } = req;
 
   try {
     const result = await productService.getProducts(
@@ -17,7 +17,7 @@ const getProducts = async (req, res, next) => {
       categoryId,
       Number(page) || 1,
       Number(limit) || 30,
-      { url, method },
+      { url, method, requestId },
     );
 
     return res.status(200).json({ status: true, result });
@@ -30,12 +30,13 @@ const getProducts = async (req, res, next) => {
 const getProductById = async (req, res, next) => {
   const userData = req.user;
   const { id } = req.params;
-  const { url, method } = req;
+  const { url, method, requestId } = req;
 
   try {
     const result = await productService.getProductById(userData, id, {
       url,
       method,
+      requestId,
     });
 
     return res.status(200).json({ status: true, result });
@@ -48,12 +49,13 @@ const getProductById = async (req, res, next) => {
 const createProduct = async (req, res, next) => {
   const body = req.body;
   const userData = req.user;
-  const { url, method } = req;
+  const { url, method, requestId } = req;
 
   try {
     const result = await productService.createProduct(userData, body, {
       url,
       method,
+      requestId,
     });
 
     return res
@@ -68,7 +70,8 @@ const createProduct = async (req, res, next) => {
 const updateProductById = async (req, res, next) => {
   const body = req.body;
   const { id } = req.params;
-  const { url, method } = req;
+  const userData = req.user;
+  const { url, method, requestId } = req;
 
   let updateData = {};
 
@@ -79,10 +82,16 @@ const updateProductById = async (req, res, next) => {
   }
 
   try {
-    const result = await productService.updateProductById(updateData, id, {
-      url,
-      method,
-    });
+    const result = await productService.updateProductById(
+      updateData,
+      id,
+      userData,
+      {
+        url,
+        method,
+        requestId,
+      },
+    );
 
     return res
       .status(200)
@@ -96,13 +105,20 @@ const updateProductById = async (req, res, next) => {
 const changeProductStatusById = async (req, res, next) => {
   const { id } = req.params;
   const { status } = req.body;
-  const { url, method } = req;
+  const userData = req.user;
+  const { url, method, requestId } = req;
 
   try {
-    const result = await productService.changeProductStatusById(id, status, {
-      url,
-      method,
-    });
+    const result = await productService.changeProductStatusById(
+      id,
+      status,
+      userData,
+      {
+        url,
+        method,
+        requestId,
+      },
+    );
 
     return res
       .status(200)
@@ -115,10 +131,15 @@ const changeProductStatusById = async (req, res, next) => {
 // removeProductById
 const removeProductById = async (req, res, next) => {
   const { id } = req.params;
-  const { url, method } = req;
+  const userData = req.user;
+  const { url, method, requestId } = req;
 
   try {
-    const result = await productService.removeProductById(id, { url, method });
+    const result = await productService.removeProductById(id, userData, {
+      url,
+      method,
+      requestId,
+    });
 
     return res.status(200).json({ status: true, message: "Product removed!!" });
   } catch (error) {

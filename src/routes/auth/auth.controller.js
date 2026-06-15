@@ -1,27 +1,34 @@
 const authService = require("./auth.service");
+const { expressSession } = require("../../config");
+const { v4: uuidV4 } = require("uuid");
 
 // register
 const register = async (req, res, next) => {
+  const requestId = uuidV4();
   const body = req.body;
   const { url, method } = req;
   try {
-    const result = await authService.register(body, { url, method });
+    const result = await authService.register(body, {
+      url,
+      method,
+      requestId,
+    });
 
     // cookie
     res.cookie("userdata", result.data, {
-      httpOnly: true,
-      secure: false,
-      maxAge: 24 * 60 * 60 * 1000,
+      httpOnly: expressSession.HTTPONLY,
+      secure: expressSession.SECURE,
+      maxAge: Number(expressSession.MAX_AGE_ACCESS),
     });
     res.cookie("accessToken", result.accessToken, {
-      httpOnly: true,
-      secure: false,
-      maxAge: 24 * 60 * 60 * 1000,
+      httpOnly: expressSession.HTTPONLY,
+      secure: expressSession.SECURE,
+      maxAge: Number(expressSession.MAX_AGE_ACCESS),
     });
     res.cookie("refreshToken", result.refreshToken, {
-      httpOnly: true,
-      secure: false,
-      maxAge: 7 * 24 * 60 * 60 * 1000,
+      httpOnly: expressSession.HTTPONLY,
+      secure: expressSession.SECURE,
+      maxAge: Number(expressSession.MAX_AGE_REFRESH),
     });
 
     return res
@@ -35,26 +42,31 @@ const register = async (req, res, next) => {
 // login
 const login = async (req, res, next) => {
   const body = req.body;
+  const requestId = uuidV4();
   const { url, method } = req;
 
   try {
-    const result = await authService.login(body, { url, method });
+    const result = await authService.login(body, {
+      url,
+      method,
+      requestId,
+    });
 
     // cookie
     res.cookie("userdata", result.data, {
-      httpOnly: true,
-      secure: false,
-      maxAge: 24 * 60 * 60 * 1000,
+      httpOnly: expressSession.HTTPONLY,
+      secure: expressSession.SECURE,
+      maxAge: Number(expressSession.MAX_AGE_ACCESS),
     });
     res.cookie("accessToken", result.accessToken, {
-      httpOnly: true,
-      secure: false,
-      maxAge: 24 * 60 * 60 * 1000,
+      httpOnly: expressSession.HTTPONLY,
+      secure: expressSession.SECURE,
+      maxAge: Number(expressSession.MAX_AGE_ACCESS),
     });
     res.cookie("refreshToken", result.refreshToken, {
-      httpOnly: true,
-      secure: false,
-      maxAge: 7 * 24 * 60 * 60 * 1000,
+      httpOnly: expressSession.HTTPONLY,
+      secure: expressSession.SECURE,
+      maxAge: Number(expressSession.MAX_AGE_REFRESH),
     });
 
     return res
@@ -68,10 +80,10 @@ const login = async (req, res, next) => {
 // logout
 const logout = async (req, res, next) => {
   const refreshToken = req.cookies?.refreshToken;
-  const { url, method } = req;
+  const { url, method, requestId } = req;
 
   try {
-    await authService.logout(refreshToken, { url, method });
+    await authService.logout(refreshToken, { url, method, requestId });
 
     res.clearCookie("userdata");
     res.clearCookie("accessToken");
@@ -88,16 +100,35 @@ const logout = async (req, res, next) => {
 // renewAccessToken
 const renewAccessToken = async (req, res, next) => {
   const refreshToken = req.cookies?.refreshToken;
-  const { method, url } = req;
+  const userData = req.user;
+  const { method, url, ip } = req;
   try {
-    const result = await authService.renewAccessToken(refreshToken, {
+    const result = await authService.renewAccessToken(refreshToken, userData, {
       method,
       url,
     });
 
+    if (result?.removeAccessAndData) {
+      res.clearCookie("accessToken");
+      res.clearCookie("refreshToken");
+
+      return res.status(403).json({
+        status: false,
+        message: "Your session has expired. Please login again",
+      });
+    }
+
     // cookie
-    res.cookie("accessToken", result?.accessToken);
-    res.cookie("refreshToken", result?.refreshToken);
+    res.cookie("accessToken", result.accessToken, {
+      httpOnly: expressSession.HTTPONLY,
+      secure: expressSession.SECURE,
+      maxAge: Number(expressSession.MAX_AGE_ACCESS),
+    });
+    res.cookie("refreshToken", result.refreshToken, {
+      httpOnly: expressSession.HTTPONLY,
+      secure: expressSession.SECURE,
+      maxAge: Number(expressSession.MAX_AGE_REFRESH),
+    });
 
     return res.status(200).json({
       status: true,
@@ -112,10 +143,14 @@ const renewAccessToken = async (req, res, next) => {
 // profile
 const profile = async (req, res, next) => {
   const userData = req.user;
-  const { url, method } = req;
+  const { url, method, requestId, ip } = req;
 
   try {
-    const result = await authService.profile(userData, { url, method });
+    const result = await authService.profile(userData, {
+      url,
+      method,
+      requestId,
+    });
 
     return res.status(200).json({ status: true, result });
   } catch (error) {
@@ -127,7 +162,7 @@ const profile = async (req, res, next) => {
 const changePassword = async (req, res, next) => {
   const userData = req?.user;
   const body = req.body;
-  const { url, method } = req;
+  const { url, method, requestId } = req;
 
   const result = await authService.changePassword(userData, body, {
     url,

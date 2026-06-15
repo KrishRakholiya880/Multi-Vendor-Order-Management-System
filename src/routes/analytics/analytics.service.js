@@ -16,7 +16,7 @@ const getVendorsSalesSummary = async (userData, page, limit) => {
   const result = await analyticsDb.vendorsSalesSummary(userData, page, limit);
 
   if (!result || (Array.isArray(result) && result.length === 0)) {
-    throw new Error("SALES_DATA_NOT_FOUND");
+    return [];
   }
 
   await redisClient.SET(cacheKey, result, 2 * 60);
@@ -43,7 +43,7 @@ const getCustomersPurchaseSummary = async (userData, page, limit) => {
   );
 
   if (!result || (Array.isArray(result) && result.length === 0)) {
-    throw new Error("PURCHASE_DATA_NOT_FOUND");
+    return [];
   }
 
   await redisClient.SET(cacheKey, result, 2 * 60);
@@ -67,6 +67,8 @@ const getRevenue = async (
   if (userData?.role === "admin" && limit) cacheKey += `:limit:${limit}`;
   if (year) cacheKey += `:year:${year}`;
   if (month) cacheKey += `:month:${month}`;
+  if (startDate) cacheKey += `:startDate:${startDate}`;
+  if (endDate) cacheKey += `:endDate:${endDate}`;
 
   const cachedData = await redisClient.GET(cacheKey);
   if (cachedData) {
@@ -84,7 +86,7 @@ const getRevenue = async (
   );
 
   if (!result || (Array.isArray(result) && result.length === 0)) {
-    throw new Error("REVENUE_DATA_NOT_FOUND");
+    return [];
   }
 
   await redisClient.SET(cacheKey, result, 2 * 60);
@@ -112,7 +114,7 @@ const getProductPerformanceMetrics = async (userData, page, limit) => {
   );
 
   if (!result || (Array.isArray(result) && result.length === 0)) {
-    throw new Error("PERFORMANCE_DATA_NOT_FOUND");
+    return [];
   }
 
   await redisClient.SET(cacheKey, result, 2 * 60);
@@ -121,7 +123,7 @@ const getProductPerformanceMetrics = async (userData, page, limit) => {
 };
 
 const getProductPerformanceMetricsById = async (userData, id) => {
-  let cacheKey = `analytics:product-metrics:${userData?.role}${id ? `:id:${id}` : ""}`;
+  let cacheKey = `analytics:product-metrics:${userData?.role}${userData?.role === "vendor" ? `:${userData?.id}` : ""}${id ? `:id:${id}` : ""}`;
 
   const cachedData = await redisClient.GET(cacheKey);
   if (cachedData) {
@@ -131,7 +133,7 @@ const getProductPerformanceMetricsById = async (userData, id) => {
   const result = await analyticsDb.productPerformanceMetrics(userData, id);
 
   if (!result || (Array.isArray(result) && result.length === 0)) {
-    throw new Error("PERFORMANCE_DATA_NOT_FOUND");
+    return [];
   }
 
   await redisClient.SET(cacheKey, result, 2 * 60);
@@ -169,7 +171,7 @@ const getProductSalesStockSummary = async (
   );
 
   if (!result || (Array.isArray(result) && result.length === 0)) {
-    throw new Error("PERFORMANCE_DATA_NOT_FOUND");
+    return [];
   }
 
   await redisClient.SET(cacheKey, result, 2 * 60);
@@ -183,7 +185,7 @@ const getProductSalesStockSummaryById = async (
   days,
   minStock,
 ) => {
-  let cacheKey = `analytics:product-sales-stock-summary:${userData?.role}${productId ? `:id:${productId}` : ""}`;
+  let cacheKey = `analytics:product-sales-stock-summary:${userData?.role}${userData?.role === "vendor" ? `:${userData?.id}` : ""}${productId ? `:id:${productId}` : ""}`;
 
   const cachedData = await redisClient.GET(cacheKey);
   if (cachedData) {
@@ -198,7 +200,7 @@ const getProductSalesStockSummaryById = async (
   );
 
   if (!result || (Array.isArray(result) && result.length === 0)) {
-    throw new Error("PERFORMANCE_DATA_NOT_FOUND");
+    return [];
   }
 
   await redisClient.SET(cacheKey, result, 2 * 60);

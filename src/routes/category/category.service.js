@@ -21,8 +21,10 @@ const getCategories = async (userData, reqUrlMet) => {
 
     logger.info("Categories found", {
       category_ids: result?.map((item) => item?.id),
+      user_id: userData?.id,
       url: reqUrlMet.url,
       method: reqUrlMet.method,
+      requestId: reqUrlMet.requestId,
     });
 
     await t.commit();
@@ -62,7 +64,7 @@ const getCategoryById = async (userData, id) => {
 };
 
 // createCategory
-const createCategory = async (data, reqUrlMet) => {
+const createCategory = async (data, userData, reqUrlMet) => {
   const t = await sequelize.transaction();
   try {
     const query = {
@@ -85,24 +87,28 @@ const createCategory = async (data, reqUrlMet) => {
 
     logger.info("Category created", {
       category_id: result?.id,
+      user_id: userData?.id,
       url: reqUrlMet.url,
       method: reqUrlMet.method,
+      requestId: reqUrlMet.requestId,
     });
 
     await t.commit();
     return result;
   } catch (error) {
     await t.rollback();
-    logger.error("Category create error", {
+    logger.error("Category create error:", {
+      user_id: userData?.id,
       url: reqUrlMet.url,
       method: reqUrlMet.method,
+      requestId: reqUrlMet.requestId,
     });
     throw error;
   }
 };
 
 // updateCategoryById
-const updateCategoryById = async (data, id, reqUrlMet) => {
+const updateCategoryById = async (data, id, userData, reqUrlMet) => {
   const t = await sequelize.transaction();
   try {
     const query = {
@@ -119,26 +125,30 @@ const updateCategoryById = async (data, id, reqUrlMet) => {
 
     const result = await categoryDb.update(data, query, t);
 
-    logger.error("Category updated", {
+    logger.info("Category updated:", {
       category_id: result?.id,
+      user_id: userData?.id,
       url: reqUrlMet.url,
       method: reqUrlMet.method,
+      requestId: reqUrlMet.requestId,
     });
 
     await t.commit();
     return result;
   } catch (error) {
     await t.rollback();
-    logger.error("Category update", {
+    logger.error("Category update error:", {
+      user_id: userData?.id,
       url: reqUrlMet.url,
       method: reqUrlMet.method,
+      requestId: reqUrlMet.requestId,
     });
     throw error;
   }
 };
 
 // removeCategoryById
-const removeCategoryById = async (id, reqUrlMet) => {
+const removeCategoryById = async (id, userData, reqUrlMet) => {
   const t = await sequelize.transaction();
   try {
     const query = {
@@ -155,19 +165,23 @@ const removeCategoryById = async (id, reqUrlMet) => {
 
     const result = await categoryDb.remove(query, t);
 
-    logger.error("Category removed", {
+    logger.info("Category removed:", {
       category_id: result?.id,
+      user_id: userData?.id,
       url: reqUrlMet.url,
       method: reqUrlMet.method,
+      requestId: reqUrlMet.requestId,
     });
 
     await t.commit();
     return result;
   } catch (error) {
     await t.rollback();
-    logger.error("Category remove error", {
+    logger.error("Category remove error:", {
+      user_id: userData?.id,
       url: reqUrlMet.url,
       method: reqUrlMet.method,
+      requestId: reqUrlMet.requestId,
     });
     throw error;
   }

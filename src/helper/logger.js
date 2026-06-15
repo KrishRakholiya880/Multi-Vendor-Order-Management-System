@@ -3,31 +3,26 @@ const { v4: uuidv4 } = require("uuid");
 const fs = require("fs");
 const path = require("path");
 
-const attemptTracker = {};
-
 const logger = createLogger({
   level: "info",
   format: format.combine(
     format.timestamp({ format: "YYYY-MM-DD HH:mm:ss" }),
-    format.printf(({ timestamp, level, message, ...meta }) => {
-      const { url, method, ...restMeta } = meta;
-      const uuid = uuidv4();
-
-      if (meta.email) {
-        if (!attemptTracker[meta.email]) {
-          attemptTracker[meta.email] = 0;
-        }
-        attemptTracker[meta.email]++;
-
-        return `[${uuid}] [${timestamp}] [${level.toUpperCase()}] ${method ? `[${method}]` : "[GET]"} [PATH: ${url || ""}] [ATTEMPTS: ${attemptTracker[meta.email]}] ${message} ${
-          Object.keys(restMeta).length ? JSON.stringify(restMeta) : ""
-        }`;
-      }
-
-      return `[${uuid}] [${timestamp}] [${level.toUpperCase()}] ${method ? `[${method}]` : "[GET]"} [PATH: ${url || ""}] ${message} ${
-        Object.keys(restMeta).length ? JSON.stringify(restMeta) : ""
-      }`;
-    }),
+    format.printf(
+      ({
+        timestamp,
+        level,
+        message,
+        url,
+        method,
+        user_id,
+        requestId,
+        attempts,
+        error,
+        ...meta
+      }) => {
+        return `[${requestId}] [${timestamp}] ${user_id ? `[user_id: ${user_id}]` : ""} [${level.toUpperCase()}] ${method ? `[${method}]` : ""} ${url ? `[PATH: ${url}]` : ""} ${attempts ? `[ATTEMPTS: ${attempts}]` : ""} ${message ? `${message}` : ""} ${error ? `${error}` : ""}`;
+      },
+    ),
   ),
   transports: [
     new transports.Console(),
@@ -39,11 +34,11 @@ const logger = createLogger({
       filename: "src/logs/combined.log",
       filter: (info) => {
         const method = info.method || "";
-        const allowedMethods = ["POST", "PUT", "DELETE", "PATCH"];
+        const allowedMethods = ["GET", "POST", "PUT", "DELETE", "PATCH"];
         return allowedMethods.includes(method);
       },
     }),
   ],
 });
 
-module.exports = { logger, attemptTracker };
+module.exports = { logger };

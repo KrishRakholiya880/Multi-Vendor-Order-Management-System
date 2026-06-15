@@ -34,7 +34,6 @@ module.exports = (sequelize, DataTypes) => {
       product_id: {
         type: DataTypes.INTEGER,
         allowNull: false,
-        unique: true,
       },
       quantity: {
         type: DataTypes.INTEGER,
@@ -62,8 +61,8 @@ module.exports = (sequelize, DataTypes) => {
       modelName: "cart_item",
       tableName: "cart_items",
       underscored: true,
-      createdAt: false,
-      updatedAt: false,
+      createdAt: "created_at",
+      updatedAt: "updated_at",
     },
   );
   return cart_item;

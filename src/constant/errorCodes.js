@@ -69,6 +69,13 @@ module.exports = {
         "Your account has been deactivated by admin. Please contact support!!!",
     },
   },
+  USERS_NOT_FOUND: {
+    httpStatusCode: 404,
+    body: {
+      code: "not_found",
+      message: "Users not found!!!",
+    },
+  },
   USER_NOT_FOUND: {
     httpStatusCode: 404,
     body: {
@@ -97,33 +104,12 @@ module.exports = {
       message: "The password you entered is incorrect. Please try again!!!",
     },
   },
-  USER_CREATION_FAILED: {
-    httpStatusCode: 500,
-    body: {
-      code: "creation_failed",
-      message: "Failed to add the user!!!",
-    },
-  },
-  USER_UPDATE_FAILED: {
-    httpStatusCode: 500,
-    body: {
-      code: "update_failed",
-      message: "Failed to update the user!!!",
-    },
-  },
   USER_STATUS_ALREADY_SAME: {
     httpStatusCode: 400,
     body: {
       code: "bad_request",
       message:
         "Status of user already same. You can't update status with same status!!!",
-    },
-  },
-  USER_REMOVE_FAILED: {
-    httpStatusCode: 500,
-    body: {
-      code: "remove_failed",
-      message: "Failed to remove the user!!!",
     },
   },
   ONLY_ADMIN_ACCESS: {
@@ -276,25 +262,11 @@ module.exports = {
       message: "Insufficient stock for the requested quantity!!!",
     },
   },
-  CART_UPDATE_FAILED: {
-    httpStatusCode: 500,
-    body: {
-      code: "update_failed",
-      message: "Failed to update the cart!!!",
-    },
-  },
   CART_PRODUCT_NOT_FOUND: {
     httpStatusCode: 404,
     body: {
       code: "not_found",
       message: "Cart product not found!!!",
-    },
-  },
-  CART_ITEM_REMOVE_FAILED: {
-    httpStatusCode: 404,
-    body: {
-      code: "remove_failed",
-      message: "Cart product remove failed!!!",
     },
   },
 
@@ -327,13 +299,6 @@ module.exports = {
       message: "Order item not found!!!",
     },
   },
-  ORDER_CREATION_FAILED: {
-    httpStatusCode: 500,
-    body: {
-      code: "server_error",
-      message: "Order creation failed!!!",
-    },
-  },
   ORDER_ITEM_ALREADY_CANCELLED: {
     httpStatusCode: 400,
     body: {
@@ -347,13 +312,6 @@ module.exports = {
       code: "already_delivered",
       message:
         "Order item is already delivered, you can't cancel this order!!!",
-    },
-  },
-  ORDER_ITEM_CREATION_FAILED: {
-    httpStatusCode: 500,
-    body: {
-      code: "server_error",
-      message: "Order item creation failed!!!",
     },
   },
   CHANGE_ORDER_STATUS_BY_WRONG_VENDOR: {
