@@ -6,7 +6,7 @@ const findOne = async (query = {}, transaction = null) => {
       where: query,
       transaction,
     });
-    return result.toJSON() || null;
+    return result ? result.toJSON() : null;
   } catch (error) {
     throw new Error(error?.message || error);
   }

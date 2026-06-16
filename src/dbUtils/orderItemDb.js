@@ -8,7 +8,7 @@ const findOne = async (query, attributes = {}, transaction = null) => {
       transaction,
     });
 
-    return result.toJSON() || null;
+    return result ? result.toJSON() : null;
   } catch (error) {
     throw new Error(error?.message || error);
   }
@@ -27,7 +27,7 @@ const findAll = async (
       ...(include.length > 0 && { include }),
       transaction,
     });
-    return result.map((item) => item.toJSON()) || null;
+    return result ? result.map((item) => item.toJSON()) : null;
   } catch (error) {
     throw new Error(error?.message || error);
   }
@@ -37,7 +37,9 @@ const create = async (data, transaction = null) => {
   try {
     const result = await order_item.create(data, { transaction });
 
-    return result.map((item) => item.toJSON()) || result.toJSON();
+    return result
+      ? result.map((item) => item.toJSON()) || null
+      : result.toJSON() || null;
   } catch (error) {
     throw new Error(error?.message || error);
   }
@@ -48,7 +50,7 @@ const bulkCreate = async (data, transaction = null) => {
     const result = await order_item.bulkCreate(data, { transaction });
 
     return result
-      ? result.map((item) => item.toJSON())
+      ? result.map((item) => item.toJSON()) || null
       : result.toJSON() || null;
   } catch (error) {
     throw new Error(error?.message || error);

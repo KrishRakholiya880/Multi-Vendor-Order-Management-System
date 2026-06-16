@@ -19,7 +19,7 @@ const findAll = async (
       ...(include.length > 0 && { include }),
       transaction,
     });
-    return result.map((item) => item.toJSON()) || null;
+    return result ? result.map((item) => item.toJSON()) : null;
   } catch (error) {
     throw new Error(error?.message || error);
   }
@@ -38,7 +38,7 @@ const findOne = async (
       ...(include.length > 0 && { include }),
       transaction,
     });
-    return result.toJSON() || null;
+    return result ? result.toJSON() : null;
   } catch (error) {
     throw new Error(error?.message || error);
   }
@@ -48,7 +48,7 @@ const create = async (data, transaction = null) => {
   try {
     const result = await order.create(data, { transaction });
 
-    return result.toJSON() || null;
+    return result ? result.toJSON() : null;
   } catch (error) {
     throw new Error(error?.message || error);
   }

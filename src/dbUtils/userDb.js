@@ -15,7 +15,7 @@ const findOne = async (
       transaction,
     });
 
-    return result.toJSON();
+    return result ? result.toJSON() : null;
   } catch (error) {
     throw new Error(error?.message || error);
   }
@@ -42,7 +42,7 @@ const findAll = async (
       transaction,
     });
 
-    return result;
+    return result ? result.map((u) => u.toJSON()) : null;
   } catch (error) {
     throw new Error(error?.message || error);
   }
@@ -53,7 +53,7 @@ const create = async (data, transaction = null) => {
   try {
     const result = await user.create(data, { transaction });
 
-    return result.toJSON();
+    return result ? result.toJSON() : null;
   } catch (error) {
     throw new Error(error?.message || error);
   }

@@ -8,7 +8,7 @@ const findOne = async (query = {}, attributes = {}, transaction = null) => {
       attributes,
       transaction,
     });
-    return result.toJSON() || null;
+    return result ? result.toJSON() : null;
   } catch (error) {
     throw new Error(error?.message || error);
   }
@@ -18,7 +18,7 @@ const findOne = async (query = {}, attributes = {}, transaction = null) => {
 const create = async (data, transaction = null) => {
   try {
     const result = await user.create(data, { transaction });
-    return result.toJSON() || null;
+    return result ? result.toJSON() : null;
   } catch (error) {
     throw new Error(error?.message || error);
   }

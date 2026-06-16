@@ -43,7 +43,6 @@ const getUsers = async (
     } else if (to_date) {
       const endDate = new Date(to_date);
       endDate.setHours(23, 59, 59, 999);
-      console.log(endDate);
       query.created_at = { [Op.lte]: endDate };
     }
 
