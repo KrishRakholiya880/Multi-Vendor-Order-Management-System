@@ -24,7 +24,7 @@ module.exports = {
       sku: {
         type: DataTypes.STRING,
         allowNull: false,
-        unqiue: true,
+        unique: true,
       },
       status: {
         type: DataTypes.ENUM(["active", "inactive", "out_of_stock"]),

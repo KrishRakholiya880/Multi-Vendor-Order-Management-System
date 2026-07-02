@@ -6,6 +6,7 @@ const findOne = async (
   attributes = {},
   include = [],
   transaction = null,
+  lock = false,
 ) => {
   try {
     const result = await product.findOne({
@@ -13,6 +14,7 @@ const findOne = async (
       attributes,
       ...(include.length > 0 && { include }),
       transaction,
+      ...(lock && transaction && { lock: transaction.LOCK.UPDATE }),
     });
     return result ? result.toJSON() : null;
   } catch (error) {

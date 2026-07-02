@@ -20,7 +20,7 @@ module.exports = {
       quantity: {
         type: DataTypes.INTEGER,
         allowNull: false,
-        defaultValue: 0,
+        defaultValue: 1,
       },
       unit_price: {
         type: DataTypes.DECIMAL(10, 2),

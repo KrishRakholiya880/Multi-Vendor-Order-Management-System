@@ -24,7 +24,7 @@ const decodeToken = (token) => {
     const decodedData = jwt.verify(token, ACCESS_TOKEN_SECRET);
     return decodedData;
   } catch (error) {
-    throw new Error(error?.message || error);
+    return null;
   }
 };
 

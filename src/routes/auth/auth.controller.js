@@ -164,12 +164,19 @@ const changePassword = async (req, res, next) => {
   const body = req.body;
   const { url, method, requestId } = req;
 
-  const result = await authService.changePassword(userData, body, {
-    url,
-    method,
-  });
+  try {
+    const result = await authService.changePassword(userData, body, {
+      url,
+      method,
+      requestId,
+    });
 
-  return res.status(200).json({ status: true, message: "Password changed!!!" });
+    return res
+      .status(200)
+      .json({ status: true, message: "Password changed!!!" });
+  } catch (error) {
+    next(error);
+  }
 };
 
 module.exports = {

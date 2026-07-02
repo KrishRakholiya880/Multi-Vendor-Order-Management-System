@@ -1,6 +1,6 @@
 const errorCodes = require("../constant/errorCodes");
 
-const errorHandler = async (err, req, res, next) => {
+const errorHandler = (err, req, res, next) => {
   const errorKey = Object.keys(errorCodes);
   const errMessage = err.message;
   const errorMatch = errorKey.includes(errMessage);

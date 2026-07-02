@@ -6,7 +6,7 @@ const vendorsSalesSummary = async (userData, page, limit) => {
     const offset = (page - 1) * limit;
 
     result = await sequelize.query(
-      `SELECT u.id as vendor_id, u.full_name as vendor_name, COUNT(DISTINCT o.id) as total_orders, SUM(oi.quantity) as total_products_sold, SUM(oi.price_at_purchase * oi.quantity) as total_revenue FROM users u JOIN products p ON p.vendor_id = u.id JOIN order_items oi ON oi.product_id = p.id JOIN orders o ON o.id = oi.order_id WHERE u.role = 'vendor' ${userData?.role === "vendor" ? "AND u.id = :vendorId" : ""} AND oi.status = "delivered" GROUP BY u.id, u.full_name LIMIT :limit OFFSET :offset`,
+      `SELECT u.id as vendor_id, u.full_name as vendor_name, COUNT(DISTINCT o.id) as total_orders, SUM(oi.quantity) as total_products_sold, SUM(oi.price_at_purchase * oi.quantity) as total_revenue FROM users u JOIN products p ON p.vendor_id = u.id JOIN order_items oi ON oi.product_id = p.id JOIN orders o ON o.id = oi.order_id WHERE u.role = 'vendor' ${userData?.role === "vendor" ? "AND u.id = :vendorId" : ""} AND oi.status = 'delivered' GROUP BY u.id, u.full_name LIMIT :limit OFFSET :offset`,
       {
         type: sequelize.QueryTypes.SELECT,
         replacements: {
@@ -78,7 +78,12 @@ const revenue = async (
   }
 };
 
-const productPerformanceMetrics = async (userData, productId, page, limit) => {
+const productPerformanceMetrics = async (
+  userData,
+  productId,
+  page = 1,
+  limit = 20,
+) => {
   let result;
   const offset = (page - 1) * limit;
   try {
@@ -106,8 +111,8 @@ const productSalesStockSummary = async (
   productId,
   minStock,
   days,
-  page,
-  limit,
+  page = 1,
+  limit = 20,
 ) => {
   let result;
   const offset = (page - 1) * limit;

@@ -26,7 +26,7 @@ const createProduct = {
       .default("active"),
     vendor_id: Joi.number().precision(2).positive().optional(),
     price: Joi.number().precision(2).positive().required(),
-    stock: Joi.number().integer().min(0).max(500).positive().default(1),
+    stock: Joi.number().integer().min(0).max(500).default(1),
   }),
 };
 
@@ -45,11 +45,9 @@ const updateProductById = {
     description: Joi.string().trim().min(10).max(200).optional(),
     category_id: Joi.number().optional(),
     sku: Joi.string().min(8).max(9).optional(),
-    status: Joi.string()
-      .valid("active", "inactive", "out_of_stock")
-      .default("active"),
+    status: Joi.string().valid("active", "inactive", "out_of_stock").optional(),
     price: Joi.number().precision(2).positive().optional(),
-    stock: Joi.number().integer().min(0).max(500).positive().default(1),
+    stock: Joi.number().integer().min(0).max(500).optional(),
   }),
 };
 

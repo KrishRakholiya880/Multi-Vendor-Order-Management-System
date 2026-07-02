@@ -10,7 +10,7 @@ const getCart = {
 const addToCart = {
   body: Joi.object({
     product_id: Joi.number().integer().required(),
-    quantity: Joi.number().integer().min(1).max(10).required(),
+    quantity: Joi.number().integer().min(1).max(15).required(),
   }),
 };
 

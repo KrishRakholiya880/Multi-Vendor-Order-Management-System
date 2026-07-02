@@ -143,9 +143,12 @@ const addToOrder = async (userData, reqUrlMet) => {
         ["stock", "status", "price"],
         [],
         t,
+        true,
       );
 
       if (!productData) throw new Error("PRODUCT_NOT_FOUND");
+      if (productData?.stock !== "active")
+        throw new Error("PRODUCT_UNAVAILABLE");
       if (productData?.stock < item?.quantity)
         return {
           status: false,
@@ -174,6 +177,7 @@ const addToOrder = async (userData, reqUrlMet) => {
 
     const addOrderItemsInBulk = await orderItemDb.bulkCreate(
       addableProductsToOrder,
+      t,
     );
 
     await cartItemDb.remove({ cart_id: { [Op.eq]: `${cartData?.id}` } }, t);

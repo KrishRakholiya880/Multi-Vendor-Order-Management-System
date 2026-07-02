@@ -78,6 +78,7 @@ const remove = async (query, transaction = null) => {
   try {
     const result = await user.destroy({
       where: query,
+      transaction,
     });
 
     return result;

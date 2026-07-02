@@ -18,7 +18,6 @@ const logger = createLogger({
         requestId,
         attempts,
         error,
-        ...meta
       }) => {
         return `[${requestId}] [${timestamp}] ${user_id ? `[user_id: ${user_id}]` : ""} [${level.toUpperCase()}] ${method ? `[${method}]` : ""} ${url ? `[PATH: ${url}]` : ""} ${attempts ? `[ATTEMPTS: ${attempts}]` : ""} ${message ? `${message}` : ""} ${error ? `${error}` : ""}`;
       },

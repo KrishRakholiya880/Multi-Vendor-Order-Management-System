@@ -17,8 +17,8 @@ module.exports = {
     host: process.env.DB_HOST,
   },
   expressSession: {
-    HTTPONLY: process.env.HTTPONLY,
-    SECURE: process.env.SECURE,
+    HTTPONLY: process.env.HTTPONLY === "true",
+    SECURE: process.env.SECURE === "true",
     MAX_AGE_ACCESS: process.env.MAX_AGE_ACCESS,
     MAX_AGE_REFRESH: process.env.MAX_AGE_REFRESH,
   },

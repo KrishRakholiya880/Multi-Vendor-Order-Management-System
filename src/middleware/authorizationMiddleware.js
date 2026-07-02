@@ -13,7 +13,7 @@ const authenticate = async (req, res, next) => {
     const accessToken = req.cookies.accessToken;
     const refreshToken = req.cookies.refreshToken;
 
-    if ((!accessToken && refreshToken) || (!accessToken && !refreshToken)) {
+    if (!accessToken) {
       logger.warn("Unauthorized access attempt:", {
         requestId: req.requestId,
         url: req.originalUrl,
@@ -32,6 +32,7 @@ const authenticate = async (req, res, next) => {
     );
 
     if (!userData) throw new Error("USER_NOT_FOUND");
+    if (userData?.status === "inactive") throw new Error("ACCOUNT_DEACTIVATED");
 
     req.user = userData;
     await t.commit();

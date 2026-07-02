@@ -37,9 +37,7 @@ const create = async (data, transaction = null) => {
   try {
     const result = await order_item.create(data, { transaction });
 
-    return result
-      ? result.map((item) => item.toJSON()) || null
-      : result.toJSON() || null;
+    return result ? result.map((item) => item.toJSON()) : null;
   } catch (error) {
     throw new Error(error?.message || error);
   }
@@ -49,9 +47,7 @@ const bulkCreate = async (data, transaction = null) => {
   try {
     const result = await order_item.bulkCreate(data, { transaction });
 
-    return result
-      ? result.map((item) => item.toJSON()) || null
-      : result.toJSON() || null;
+    return result ? result.map((item) => item.toJSON()) : null;
   } catch (error) {
     throw new Error(error?.message || error);
   }

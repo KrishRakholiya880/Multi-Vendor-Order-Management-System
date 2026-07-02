@@ -27,7 +27,6 @@ const register = async (body, reqUrlMet) => {
     const attemptKey = `register-attempts:${email}`;
 
     logger.info("Registration attempt", {
-      email,
       url: reqUrlMet.url,
       method: reqUrlMet.method,
       requestId: reqUrlMet.requestId,
@@ -204,7 +203,7 @@ const logout = async (refreshToken, userData, reqUrlMet) => {
     if (!refreshToken) throw new Error("REFRESH_TOKEN_REQUIRED");
 
     const result = await refreshTokenDb.remove(
-      { token: { [Op.eq]: `${refreshToken}` } },
+      { token: refreshToken, user_id: userData?.id },
       t,
     );
 

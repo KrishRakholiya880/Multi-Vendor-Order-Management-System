@@ -38,10 +38,7 @@ const createUser = {
     email: Joi.string().email().required(),
     password: Joi.string().min(6).max(15).required(),
     phone_number: Joi.string().length(10).required(),
-    status: Joi.string()
-      .optional()
-      .valid("active", "inactive")
-      .default("active"),
+    status: Joi.string().valid("active", "inactive").optional(),
   }).required(),
 };
 
